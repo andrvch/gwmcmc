@@ -29,6 +29,12 @@ typedef union wlk3u
     float par[NPRS];
 } Walker;
 
+struct Spectrum {
+  int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
+  float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts,
+        *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
+};
+
 /* Complex data type */
 typedef float2 Complex;
 

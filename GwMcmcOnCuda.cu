@@ -272,8 +272,9 @@ int main ( int argc, char *argv[] )
     printf ( " Exposure time                            = %.8E\n", srcExptm );
     printf ( " Exposure time (background)               = %.8E\n", bckgrndExptm );
 
-    int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
-    cudaMallocManaged ( ( void ** ) &rmfPntrInCsc, ( nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
+    Spectrum spec;
+    int *rmfIndxInCsc, *rmfPntr, *rmfIndx;
+    cudaMallocManaged ( ( void ** ) &spec.rmfPntrInCsc, ( nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &rmfIndxInCsc, nmbrOfRmfVls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &rmfPntr, ( nmbrOfChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &rmfIndx, nmbrOfRmfVls * sizeof ( int ) );
@@ -289,7 +290,7 @@ int main ( int argc, char *argv[] )
     cudaMallocManaged ( ( void ** ) &gdQltChnnls, nmbrOfChnnls * sizeof ( float ) );
 
     ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls,
-                   srcCnts, bckgrndCnts, arfFctrs, rmfVlsInCsc, rmfIndxInCsc, rmfPntrInCsc, gdQltChnnls, lwrChnnlBndrs, hghrChnnlBndrs, enrgChnnls );
+                   srcCnts, bckgrndCnts, arfFctrs, rmfVlsInCsc, rmfIndxInCsc, spec.rmfPntrInCsc, gdQltChnnls, lwrChnnlBndrs, hghrChnnlBndrs, enrgChnnls );
 
     /* Compute absorption crosssections */
     float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
@@ -334,7 +335,7 @@ int main ( int argc, char *argv[] )
     dim3 dimGrid_4 ( ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfStps + thrdsPerBlck - 1 ) / thrdsPerBlck );
 
     /* Transpose RMF matrix: */
-    cusparseStat = cusparseScsr2csc ( cusparseHandle, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls, rmfVlsInCsc, rmfPntrInCsc, rmfIndxInCsc,
+    cusparseStat = cusparseScsr2csc ( cusparseHandle, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls, rmfVlsInCsc, spec.rmfPntrInCsc, rmfIndxInCsc,
                        rmfVls, rmfIndx, rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); return 1; }
     /* Assemble array of noticed channels, ntcdChnnls[nmbrOfChnnls] */
@@ -499,7 +500,7 @@ int main ( int argc, char *argv[] )
     cudaFree ( absrptnFctrs );
     cudaFree ( rmfVlsInCsc );
     cudaFree ( rmfIndxInCsc );
-    cudaFree ( rmfPntrInCsc );
+    cudaFree ( spec.rmfPntrInCsc );
     cudaFree ( rmfVls );
     cudaFree ( rmfIndx );
     cudaFree ( rmfPntr );
