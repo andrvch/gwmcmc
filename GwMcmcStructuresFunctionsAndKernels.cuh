@@ -31,7 +31,7 @@ typedef union wlk3u
 
 struct Spectrum
 {
-  int int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
+  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts,
         *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
