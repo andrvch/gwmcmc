@@ -43,7 +43,7 @@ for j in range(npars):
             xqu = [eqh_inter[i,0],eqh_inter[i,-1],eqh_inter[i,-1],eqh_inter[i,0]]
             yqu = [zin.min(),zin.min(),zin.max()+3*(zin.max()-zin.min()),zin.max()+3*(zin.max()-zin.min())]
             ax[i,i].fill(xqu,yqu,color='0.75')
-            ax[i,i].plot([eqh_inter[i,1],eqh_inter[i,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)                
+            ax[i,i].plot([eqh_inter[i,1],eqh_inter[i,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
             zizi.append(zin)
         elif i > j:
             xi,yi,zi = kde_gauss_cuda2d(pars[j],pars[i],nbins2D)
@@ -58,7 +58,7 @@ print time.time()-sttime
 for i in range(npars):
     ax[i,i].set_ylabel(r'$\rm p.d.f.$',fontsize=18)
     ax[i,i].yaxis.set_label_position("right")
-    
+
 for i in range(1,npars):
     ax[i,i].yaxis.tick_right()
     setp([a.get_xticklabels() for a in ax[:npars-1,i]], visible=False)
@@ -69,7 +69,7 @@ for i in range(npars):
         setp(ax[i,j].get_xticklabels(), rotation=45)
 
 ax[0,0].yaxis.tick_right()
-setp([a.get_xticklabels() for a in ax[:npars-1,0]], visible=False)  
+setp([a.get_xticklabels() for a in ax[:npars-1,0]], visible=False)
 
 for i in range(npars):
     print eqh_inter[i,:]

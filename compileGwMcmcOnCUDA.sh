@@ -7,7 +7,7 @@ photo.f gphoto.f phfit2.f
 nvcc \
 -Wno-deprecated-gpu-targets \
 --device-c \
-GwMcmcOnCuda.cu GwMcmcStructuresFunctionsAndKernels.cu ReadFitsData.cu 
+GwMcmcOnCuda.cu GwMcmcStructuresFunctionsAndKernels.cu ReadFitsData.cu
 
 nvcc \
 -Wno-deprecated-gpu-targets \

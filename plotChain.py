@@ -10,7 +10,7 @@ lines = f.readlines()
 ChainOut = []
 for i in range(len(lines)):
     ChainOut.append(np.array([float(x) for x in lines[i].split()]))
-    
+
 nwalkers = int(len(ChainOut[0])/6)
 nsteps   = len(ChainOut)
 

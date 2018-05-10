@@ -17,7 +17,7 @@
 #include "ReadFitsData.cuh"
 
 /* Functions and Kernels: */
-__host__ __device__ int PriorCondition ( const Walker wlkr ) 
+__host__ __device__ int PriorCondition ( const Walker wlkr )
 {
     int indx, cndtn = 1;
     indx = 0;
@@ -35,12 +35,12 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
     return cndtn;
 }
 
-__host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh, const float sNh ) 
-{    
+__host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh, const float sNh )
+{
     int indx = NHINDX; // Hydrogen column density
     float prr = 0, sum = 0, mean = 0, sigma = 0.06;
     float theta = powf ( sNh, 2 ) / mNh;
-    float kk = mNh / theta; 
+    float kk = mNh / theta;
     sum = sum + ( kk - 1 ) * logf ( wlkr.par[indx] ) - wlkr.par[indx] / theta;
     //sum = sum + powf ( ( wlkr.par[indx] - mNh ) / sNh, 2 );
     indx = NHINDX + 1;
@@ -54,16 +54,16 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
 }
 
 __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts,
-                                                   const float *crssctns, const float *abndncs, const int *atmcNmbrs, const Walker *wlkrs, 
+                                                   const float *crssctns, const float *abndncs, const int *atmcNmbrs, const Walker *wlkrs,
                                                    float *absrptnFctrs )
 {
     int enIndx = threadIdx.x + blockDim.x * blockIdx.x;
     int wlIndx = threadIdx.y + blockDim.y * blockIdx.y;
-    
+
     int ttIndx = enIndx + wlIndx * nmbrOfEnrgChnnls;
     int elIndx, effElIndx, crIndx, prIndx;
     float xsctn, clmn, nh;
-    if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) ) 
+    if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) )
     {
         elIndx = 0;
         prIndx = elIndx + NHINDX;
@@ -97,7 +97,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int nmbrOfWlkrs, const int nm
     {
 //        mdlFlxs[ttIndx] =  arfFctrs[enIndx] * absrptnFctrs[ttIndx] * BlackBody ( wlkrs[wlIndx].par[0], wlkrs[wlIndx].par[1], enrgChnnls[enIndx], enrgChnnls[enIndx+1] );
 //        mdlFlxs[ttIndx] =  arfFctrs[enIndx] * absrptnFctrs[ttIndx] * PowerLaw ( wlkrs[wlIndx].par[0], wlkrs[wlIndx].par[1], enrgChnnls[enIndx], enrgChnnls[enIndx+1] );
-        mdlFlxs[ttIndx] =  arfFctrs[enIndx] * absrptnFctrs[ttIndx] * ( PowerLaw ( wlkrs[wlIndx].par[0], wlkrs[wlIndx].par[1], enrgChnnls[enIndx], enrgChnnls[enIndx+1] ) 
+        mdlFlxs[ttIndx] =  arfFctrs[enIndx] * absrptnFctrs[ttIndx] * ( PowerLaw ( wlkrs[wlIndx].par[0], wlkrs[wlIndx].par[1], enrgChnnls[enIndx], enrgChnnls[enIndx+1] )
         + BlackBody ( wlkrs[wlIndx].par[2], wlkrs[wlIndx].par[3], enrgChnnls[enIndx], enrgChnnls[enIndx+1] ) );
 
     }
@@ -107,11 +107,11 @@ __global__ void AssembleArrayOfModelFluxes ( const int nmbrOfWlkrs, const int nm
  * Host main routine
  */
 int main ( int argc, char *argv[] )
-{   
+{
     /* cuda succes status: */
     cudaError_t err = cudaSuccess;
     /* cuda runtime version */
-    int runtimeVersion[4], driverVersion[4]; 
+    int runtimeVersion[4], driverVersion[4];
     cudaRuntimeGetVersion ( runtimeVersion );
     cudaDriverGetVersion ( driverVersion );
     printf ( "\n" );
@@ -128,7 +128,7 @@ int main ( int argc, char *argv[] )
     printf ( " CUDA device Name: %s\n", prop.name );
     printf ( ".................................................................\n" );
     /* cuSparse related things */
-    cusparseStatus_t cusparseStat;                  
+    cusparseStatus_t cusparseStat;
     cusparseHandle_t cusparseHandle = 0;
     cusparseMatDescr_t MatDescr = 0;
     cusparseStat = cusparseCreate ( &cusparseHandle );
@@ -136,24 +136,24 @@ int main ( int argc, char *argv[] )
     cusparseStat = cusparseCreateMatDescr ( &MatDescr );
     if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of matrix descriptor failed " ); return 1; }
     cusparseStat = cusparseSetMatType ( MatDescr, CUSPARSE_MATRIX_TYPE_GENERAL );
-    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting matrix type to general failed " ); return 1; }   
+    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting matrix type to general failed " ); return 1; }
     cusparseStat = cusparseSetMatIndexBase ( MatDescr, CUSPARSE_INDEX_BASE_ZERO );
     if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting to base zero index failed " ); return 1; }
     /* cuBlas related things */
-    cublasStatus_t cublasStat;                
+    cublasStatus_t cublasStat;
     cublasHandle_t cublasHandle = 0;
     cublasStat = cublasCreate ( &cublasHandle );
     if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Creation of cuBlas context failed " ); return 1; }
     /* cuRand related things */
     curandGenerator_t curandGnrtr, curandGnrtrHst;
     curandCreateGenerator ( &curandGnrtr, CURAND_RNG_PSEUDO_DEFAULT );
-    curandCreateGeneratorHost ( &curandGnrtrHst, CURAND_RNG_PSEUDO_DEFAULT ); 
+    curandCreateGeneratorHost ( &curandGnrtrHst, CURAND_RNG_PSEUDO_DEFAULT );
     curandSetPseudoRandomGeneratorSeed ( curandGnrtr, 1234ULL );
     curandSetPseudoRandomGeneratorSeed ( curandGnrtrHst, 1234ULL );
     /* cuFfft related things */
     cufftResult_t cufftRes;
     cufftHandle cufftPlan;
-    
+
     /* Set up initial parameters: */
     const char *spcFl = argv[2];
     const char *thrdNm = argv[3];
@@ -169,25 +169,25 @@ int main ( int argc, char *argv[] )
     int atmcNmbrs[nmbrOfElmnts] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
     int sgFlg = 3; // Xset.xsect = "bcmc"
     const float dlt = 1.E-4;
-    const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 }; 
-    
+    const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
+
 //    const char *spLst[] = { "psrj0633.pi", "psrj0633.pi" };
 //    int *spDim;
 //    int nmbrOfSp = 2;
 //    cudaMallocManaged ( ( void ** ) &spDim, nmbrOfSp * sizeof ( int ) );
 //    ReadAllTheFitsData ( spLst, spDim );
-//    printf ( " Attention! -- %i\n ", spDim[0] );    
+//    printf ( " Attention! -- %i\n ", spDim[0] );
 
     /* Allocate array to hold random numbers */
-    float *rndmVls; 
+    float *rndmVls;
     cudaMallocManaged ( ( void ** ) &rndmVls, nmbrOfRndmVls * sizeof ( float ) );
-    
+
     /* Set up initial walkers */
     int prmtrIndx = 0;
-    Walker strtngWlkr; 
+    Walker strtngWlkr;
     float *lstWlkrsAndSttstcs;
     cudaMallocManaged ( ( void ** ) &lstWlkrsAndSttstcs, ( NPRS + 1 ) * nmbrOfWlkrs * sizeof ( float ) );
-    if ( thrdIndx > 0 ) 
+    if ( thrdIndx > 0 )
     {
         ReadLastPositionOfWalkersFromFile ( thrdNm, thrdIndx-1, nmbrOfWlkrs, lstWlkrsAndSttstcs );
     }
@@ -197,7 +197,7 @@ int main ( int argc, char *argv[] )
         strtngWlkr.par[1] = phbsPwrlwInt[1];
         strtngWlkr.par[2] = phbsPwrlwInt[2];
         strtngWlkr.par[3] = phbsPwrlwInt[3];
-        strtngWlkr.par[4] = phbsPwrlwInt[4];        
+        strtngWlkr.par[4] = phbsPwrlwInt[4];
         strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
         curandGenerateUniform ( curandGnrtrHst, rndmVls, nmbrOfElmnts - 1 );
         prmtrIndx = NHINDX + 1;
@@ -230,9 +230,9 @@ int main ( int argc, char *argv[] )
 
     const char *rddnngFl = "reddening0633.data";
     SimpleReadReddenningData ( rddnngFl, nmbrOfDistBins, RedData, Dist, EBV, errDist, errEBV );
-    
+
     int numNsaE = 1000;
-    int numNsaT = 14;    
+    int numNsaT = 14;
 
     float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
     cudaMallocManaged ( ( void ** ) &nsaDt, ( numNsaE + 1 ) * ( numNsaT + 1 ) * sizeof ( float ) );
@@ -253,14 +253,14 @@ int main ( int argc, char *argv[] )
     {
         atNmbrs[i] = atmcNmbrs[i];
     }
-    
+
     /* Read FITS information and data: */
     int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
     float srcExptm, bckgrndExptm;
     char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
 
     ReadFitsInfo ( spcFl, &nmbrOfEnrgChnnls, &nmbrOfChnnls, &nmbrOfRmfVls, &srcExptm, &bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
-    
+
     printf ( " Spectrum table   -- %s\n", srcTbl );
     printf ( " ARF table        -- %s\n", arfTbl );
     printf ( " RMF table        -- %s\n", rmfTbl );
@@ -271,7 +271,7 @@ int main ( int argc, char *argv[] )
     printf ( " Number of nonzero elements of RMF matrix = %i\n", nmbrOfRmfVls );
     printf ( " Exposure time                            = %.8E\n", srcExptm );
     printf ( " Exposure time (background)               = %.8E\n", bckgrndExptm );
-    
+
     int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
     cudaMallocManaged ( ( void ** ) &rmfPntrInCsc, ( nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &rmfIndxInCsc, nmbrOfRmfVls * sizeof ( int ) );
@@ -287,15 +287,15 @@ int main ( int argc, char *argv[] )
     cudaMallocManaged ( ( void ** ) &lwrChnnlBndrs, nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &hghrChnnlBndrs, nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &gdQltChnnls, nmbrOfChnnls * sizeof ( float ) );
-    
-    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls, 
+
+    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls,
                    srcCnts, bckgrndCnts, arfFctrs, rmfVlsInCsc, rmfIndxInCsc, rmfPntrInCsc, gdQltChnnls, lwrChnnlBndrs, hghrChnnlBndrs, enrgChnnls );
-    
+
     /* Compute absorption crosssections */
     float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
     cudaMallocManaged ( ( void ** ) &crssctns, nmbrOfElmnts * nmbrOfEnrgChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &absrptnFctrs, nmbrOfWlkrs * nmbrOfEnrgChnnls * sizeof ( float ) );
-    
+
     AssembleArrayOfPhotoelectricCrossections ( nmbrOfEnrgChnnls, nmbrOfElmnts, sgFlg, enrgChnnls, atmcNmbrs, crssctns );
 
     /* Allocate walkers, spectra etc.: */
@@ -326,21 +326,21 @@ int main ( int argc, char *argv[] )
     int blcksPerThrd_0 = ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck;
     int blcksPerThrd_1 = ( nmbrOfHlfTheWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck;
     int blcksPerThrd_2 = ( nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck;
-    
+
     dim3 dimGrid_0 ( ( nmbrOfEnrgChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
     dim3 dimGrid_1 ( ( nmbrOfEnrgChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfHlfTheWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
     dim3 dimGrid_2 ( ( nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
     dim3 dimGrid_3 ( ( nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfHlfTheWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
     dim3 dimGrid_4 ( ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfStps + thrdsPerBlck - 1 ) / thrdsPerBlck );
-    
+
     /* Transpose RMF matrix: */
-    cusparseStat = cusparseScsr2csc ( cusparseHandle, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls, rmfVlsInCsc, rmfPntrInCsc, rmfIndxInCsc, 
+    cusparseStat = cusparseScsr2csc ( cusparseHandle, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls, rmfVlsInCsc, rmfPntrInCsc, rmfIndxInCsc,
                        rmfVls, rmfIndx, rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); return 1; }
     /* Assemble array of noticed channels, ntcdChnnls[nmbrOfChnnls] */
     AssembleArrayOfNoticedChannels <<< blcksPerThrd_2, thrdsPerBlck >>> ( nmbrOfChnnls, lwrNtcdEnrg, hghrNtcdEnrg, lwrChnnlBndrs, hghrChnnlBndrs, gdQltChnnls, ntcdChnnls );
     /* Calculate number of noticed channels */
-    float smOfNtcdChnnls; 
+    float smOfNtcdChnnls;
     cublasStat = cublasSdot ( cublasHandle, nmbrOfChnnls, ntcdChnnls, incxx, ntcdChnnls, incyy, &smOfNtcdChnnls );
     if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: channel summation failed " ); return 1; }
     cudaDeviceSynchronize ( );
@@ -348,13 +348,13 @@ int main ( int argc, char *argv[] )
     printf ( " Number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
     printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
     printf ( ".................................................................\n" );
-    
+
     if ( thrdIndx > 0 )
     {
         /* Initialize walkers and statistics from last chain */
         InitializeWalkersAndStatisticsFromLastChain <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, lstWlkrsAndSttstcs, wlkrs, sttstcs );
     }
-    else if ( thrdIndx == 0 ) 
+    else if ( thrdIndx == 0 )
     {
         /* 1 ) Generate uniformly distributed floating point values between 0.0 and 1.0, rndmVls[nmbrOfWlkrs] (cuRand) */
         curandGenerateUniform ( curandGnrtr, rndmVls, nmbrOfWlkrs );
@@ -367,7 +367,7 @@ int main ( int argc, char *argv[] )
         /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfWlkrs*nmbrOfEnrgChnnls] */
         AssembleArrayOfModelFluxes <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, wlkrs, mdlFlxs );
         /* 5 ) Fold model fluxes with RMF, flddMdlFlxs[nmbrOfWlkrs*nmbrOfChnnls] (cuSparse) */
-        cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr, 
+        cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr,
                                         rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, nmbrOfChnnls );
         if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
         /* 6 ) Assemble array of channel statistics, chnnlSttstcs[nmbrOfWlkrs*nmbrOfChnnls] */
@@ -376,25 +376,25 @@ int main ( int argc, char *argv[] )
         cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, nmbrOfChnnls, nmbrOfWlkrs, &alpha, chnnlSttstcs, nmbrOfChnnls, ntcdChnnls, incxx, &beta, sttstcs, incyy );
         if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
     }
-    
+
     printf ( " Start ...                                                  \n" );
-    
+
     cudaEvent_t start, stop;
     cudaEventCreate ( &start );
     cudaEventCreate ( &stop );
     cudaEventRecord ( start, 0 );
-    
+
     /* Generate uniformly distributed floating point values between 0.0 and 1.0, rndmVls[3*nmbrOfHlfTheWlkrs*nmbrOfStps] (cuRand) */
     curandGenerateUniform ( curandGnrtr, rndmVls, 3 * nmbrOfHlfTheWlkrs * nmbrOfStps );
-    
+
     /* Start MCMC !!!!! */
     int stpIndx = 0, sbstIndx;
-    while ( stpIndx < nmbrOfStps ) 
-    { 
+    while ( stpIndx < nmbrOfStps )
+    {
         /* Initialize subset index */
         sbstIndx = 0;
         /* Iterate over two subsets */
-        while ( sbstIndx < 2 ) 
+        while ( sbstIndx < 2 )
         {
             /* 1 ) Generate Z values and proposed walkers, zRndmVls[nmbrOfHlfTheWlkrs], prpsdWlkrs[nmbrOfHlfTheWlkrs] */
             GenerateProposal <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, wlkrs, rndmVls, zRndmVls, prpsdWlkrs );
@@ -409,7 +409,7 @@ int main ( int argc, char *argv[] )
             /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfHlfTheWlkrs*nmbrOfEnrgChnnls] */
             AssembleArrayOfModelFluxes <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, prpsdWlkrs, mdlFlxs );
             /* 5 ) Fold model fluxes with RMF, flddMdlFlxs[nmbrOfHlfTheWlkrs*nmbrOfChnnls] (cuSparse) */
-            cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfHlfTheWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr, 
+            cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfHlfTheWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr,
                                             rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, nmbrOfChnnls );
             if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes" ); return stpIndx; }
             /* 6 ) Assemble array of channel statistics, chnnlSttstcs[nmbrOfHlfTheWlkrs*nmbrOfChnnls] */
@@ -427,58 +427,58 @@ int main ( int argc, char *argv[] )
         /* Shift step index */
         stpIndx += 1;
     }
-    
+
     cudaEventRecord ( stop, 0 );
     cudaEventSynchronize ( stop );
-    
+
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
     printf ( ".................................................................\n" );
-    
+
     float elapsedTime;
     cudaEventElapsedTime ( &elapsedTime, start, stop );
-    
+
     float *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn;
     cudaMallocManaged ( ( void ** ) &chnFnctn, nmbrOfStps * nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &atCrrFnctn, nmbrOfStps * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &cmSmAtCrrFnctn, nmbrOfStps * sizeof ( float ) );
-    
+
     int NN[RANK] = { nmbrOfStps };
     cufftRes = cufftPlanMany ( &cufftPlan, RANK, NN, NULL, 1, nmbrOfStps, NULL, 1, nmbrOfStps, CUFFT_C2C, nmbrOfWlkrs );
     if ( cufftRes != CUFFT_SUCCESS ) { fprintf ( stderr, "CUFFT error: Direct Plan configuration failed" ); return 1; }
-    
+
     cudaEventRecord ( start, 0 );
-    
+
     ReturnChainFunction <<< dimGrid_4, dimBlock >>> ( nmbrOfStps, nmbrOfWlkrs, 0, chnOfWlkrs, chnFnctn );
     AutocorrelationFunctionAveraged ( cufftRes, cublasStat, cublasHandle, cufftPlan, nmbrOfStps, nmbrOfWlkrs, chnFnctn, atCrrFnctn );
-    
+
     cudaEventRecord ( stop, 0 );
     cudaEventSynchronize ( stop );
-    
+
     float cufftElapsedTime;
     cudaEventElapsedTime ( &cufftElapsedTime, start, stop );
-    
+
     CumulativeSumOfAutocorrelationFunction ( nmbrOfStps, atCrrFnctn, cmSmAtCrrFnctn );
     int MM = ChooseWindow ( nmbrOfStps, 5e0f, cmSmAtCrrFnctn );
-    
+
     float atcTime;
     atcTime = 2 * cmSmAtCrrFnctn[MM] - 1e0f;
-    
+
     printf ( " Autocorrelation time window -- %i\n", MM );
     printf ( " Autocorrelation time -- %.8E\n", atcTime );
     printf ( " Autocorrelation time threshold -- %.8E\n", nmbrOfStps / 5e1f );
     printf ( " Effective number of independent samples -- %.8E\n", nmbrOfWlkrs * nmbrOfStps / atcTime );
     printf ( ".................................................................\n" );
-    
+
     /* Compute and print elapsed time: */
     printf ( " Time to generate: %3.1f ms\n", elapsedTime );
     printf ( " Time to compute Autocorrelation Function: %3.1f ms\n", cufftElapsedTime );
     printf ( "\n" );
-    
+
     /* Write results to a file: */
     SimpleWriteDataFloat ( "Autocor.dat", nmbrOfStps, atCrrFnctn );
     SimpleWriteDataFloat ( "AutocorCM.dat", nmbrOfStps, cmSmAtCrrFnctn );
     WriteChainToFile ( thrdNm, thrdIndx, nmbrOfWlkrs, nmbrOfStps, chnOfWlkrs, chnOfSttstcs );
-    
+
     /* Destroy cuda related contexts and things: */
     cusparseDestroy ( cusparseHandle );
     cublasDestroy ( cublasHandle );
@@ -487,7 +487,7 @@ int main ( int argc, char *argv[] )
     cudaEventDestroy ( start );
     cudaEventDestroy ( stop );
     cufftDestroy ( cufftPlan );
-    
+
     /* Free memory: */
     cudaFree ( chnFnctn );
     cudaFree ( atCrrFnctn );
@@ -524,14 +524,14 @@ int main ( int argc, char *argv[] )
     cudaFree ( ntcdChnnls );
     cudaFree ( mNh );
     cudaFree ( sNh );
-    cudaFree ( RedData ); 
-    cudaFree ( Dist ); 
-    cudaFree ( EBV ); 
+    cudaFree ( RedData );
+    cudaFree ( Dist );
+    cudaFree ( EBV );
     cudaFree ( errDist );
     cudaFree ( errEBV );
-    cudaFree ( nsaDt ); 
-    cudaFree ( nsaT ); 
-    cudaFree ( nsaE ); 
+    cudaFree ( nsaDt );
+    cudaFree ( nsaT );
+    cudaFree ( nsaE );
     cudaFree ( nsaFlxs );
     cudaFree ( atNmbrs );
     // Reset the device and exit
@@ -541,7 +541,7 @@ int main ( int argc, char *argv[] )
     // profiled. Calling cudaDeviceReset causes all profile data to be
     // flushed before the application exits
     err = cudaDeviceReset ( );
-    if ( err != cudaSuccess ) 
+    if ( err != cudaSuccess )
     {
         fprintf ( stderr, "Failed to deinitialize the device! error=%s\n", cudaGetErrorString ( err ) );
         exit ( EXIT_FAILURE );
