@@ -12,7 +12,7 @@ SPECNAME = "PN_J0633_15asec_grp0.pi"
 AllData(SPECNAME)
 s1 = AllData(1)
 
-AllModels += "phabs*powerlaw"
+AllModels += "phabs*bbrad"
 m1 = AllModels(1)
 pars = (0.15, 1.5, 1.)
 
