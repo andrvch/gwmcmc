@@ -1,0 +1,6 @@
+*.o
+*.pyc
+*.data
+*.dat
+AnnChainRealChandra/
+ChainChandra0
