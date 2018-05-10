@@ -3,4 +3,5 @@
 *.data
 *.dat
 AnnChainRealChandra/
-ChainChandra0
+ChainChandra0*
+runGwMcmcOnCuda
