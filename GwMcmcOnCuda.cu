@@ -255,11 +255,12 @@ int main ( int argc, char *argv[] )
     }
 
     /* Read FITS information and data: */
-    int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
+    Spectrum spec;
+    int nmbrOfEnrgChnnls, nmbrOfRmfVls;
     float srcExptm, bckgrndExptm;
     char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
 
-    ReadFitsInfo ( spcFl, &nmbrOfEnrgChnnls, &nmbrOfChnnls, &nmbrOfRmfVls, &srcExptm, &bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
+    ReadFitsInfo ( spcFl, &nmbrOfEnrgChnnls, &spec.nmbrOfChnnls, &nmbrOfRmfVls, &srcExptm, &bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
 
     printf ( " Spectrum table   -- %s\n", srcTbl );
     printf ( " ARF table        -- %s\n", arfTbl );
@@ -267,29 +268,29 @@ int main ( int argc, char *argv[] )
     printf ( " Background table -- %s\n", bckgrndTbl );
     printf ( ".................................................................\n" );
     printf ( " Number of energy channels                = %i\n", nmbrOfEnrgChnnls );
-    printf ( " Number of instrument channels            = %i\n", nmbrOfChnnls );
+    printf ( " Number of instrument channels            = %i\n", spec.nmbrOfChnnls );
     printf ( " Number of nonzero elements of RMF matrix = %i\n", nmbrOfRmfVls );
     printf ( " Exposure time                            = %.8E\n", srcExptm );
     printf ( " Exposure time (background)               = %.8E\n", bckgrndExptm );
 
-    Spectrum spec;
+
     int *rmfIndxInCsc, *rmfPntr, *rmfIndx;
     cudaMallocManaged ( ( void ** ) &spec.rmfPntrInCsc, ( nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &rmfIndxInCsc, nmbrOfRmfVls * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &rmfPntr, ( nmbrOfChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &rmfPntr, ( spec.nmbrOfChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &rmfIndx, nmbrOfRmfVls * sizeof ( int ) );
     float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
     cudaMallocManaged ( ( void ** ) &rmfVlsInCsc, nmbrOfRmfVls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &rmfVls, nmbrOfRmfVls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &enrgChnnls, ( nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &arfFctrs, nmbrOfEnrgChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &srcCnts, nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &bckgrndCnts, nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &lwrChnnlBndrs, nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &hghrChnnlBndrs, nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &gdQltChnnls, nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &srcCnts, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bckgrndCnts, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &lwrChnnlBndrs, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &hghrChnnlBndrs, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &gdQltChnnls, spec.nmbrOfChnnls * sizeof ( float ) );
 
-    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls,
+    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, nmbrOfEnrgChnnls, spec.nmbrOfChnnls, nmbrOfRmfVls,
                    srcCnts, bckgrndCnts, arfFctrs, rmfVlsInCsc, rmfIndxInCsc, spec.rmfPntrInCsc, gdQltChnnls, lwrChnnlBndrs, hghrChnnlBndrs, enrgChnnls );
 
     /* Compute absorption crosssections */
@@ -308,9 +309,9 @@ int main ( int argc, char *argv[] )
     cudaMallocManaged ( ( void ** ) &chnOfWlkrs, nmbrOfWlkrs * nmbrOfStps * sizeof ( Walker ) );
     float *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls;
     cudaMallocManaged ( ( void ** ) &mdlFlxs, nmbrOfWlkrs * nmbrOfEnrgChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &flddMdlFlxs, nmbrOfWlkrs * nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &ntcdChnnls, nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &chnnlSttstcs, nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &flddMdlFlxs, nmbrOfWlkrs * spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &ntcdChnnls, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &chnnlSttstcs, spec.nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &sttstcs, nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &prpsdSttstcs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &chnOfSttstcs, nmbrOfWlkrs * nmbrOfStps * sizeof ( float ) );
@@ -326,23 +327,23 @@ int main ( int argc, char *argv[] )
     dim3 dimBlock ( thrdsPerBlck, thrdsPerBlck );
     int blcksPerThrd_0 = ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck;
     int blcksPerThrd_1 = ( nmbrOfHlfTheWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck;
-    int blcksPerThrd_2 = ( nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck;
+    int blcksPerThrd_2 = ( spec.nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck;
 
     dim3 dimGrid_0 ( ( nmbrOfEnrgChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
     dim3 dimGrid_1 ( ( nmbrOfEnrgChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfHlfTheWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
-    dim3 dimGrid_2 ( ( nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
-    dim3 dimGrid_3 ( ( nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfHlfTheWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
+    dim3 dimGrid_2 ( ( spec.nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
+    dim3 dimGrid_3 ( ( spec.nmbrOfChnnls + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfHlfTheWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck );
     dim3 dimGrid_4 ( ( nmbrOfWlkrs + thrdsPerBlck - 1 ) / thrdsPerBlck, ( nmbrOfStps + thrdsPerBlck - 1 ) / thrdsPerBlck );
 
     /* Transpose RMF matrix: */
-    cusparseStat = cusparseScsr2csc ( cusparseHandle, nmbrOfEnrgChnnls, nmbrOfChnnls, nmbrOfRmfVls, rmfVlsInCsc, spec.rmfPntrInCsc, rmfIndxInCsc,
+    cusparseStat = cusparseScsr2csc ( cusparseHandle, nmbrOfEnrgChnnls, spec.nmbrOfChnnls, nmbrOfRmfVls, rmfVlsInCsc, spec.rmfPntrInCsc, rmfIndxInCsc,
                        rmfVls, rmfIndx, rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); return 1; }
-    /* Assemble array of noticed channels, ntcdChnnls[nmbrOfChnnls] */
-    AssembleArrayOfNoticedChannels <<< blcksPerThrd_2, thrdsPerBlck >>> ( nmbrOfChnnls, lwrNtcdEnrg, hghrNtcdEnrg, lwrChnnlBndrs, hghrChnnlBndrs, gdQltChnnls, ntcdChnnls );
+    /* Assemble array of noticed channels, ntcdChnnls[spec.nmbrOfChnnls] */
+    AssembleArrayOfNoticedChannels <<< blcksPerThrd_2, thrdsPerBlck >>> ( spec.nmbrOfChnnls, lwrNtcdEnrg, hghrNtcdEnrg, lwrChnnlBndrs, hghrChnnlBndrs, gdQltChnnls, ntcdChnnls );
     /* Calculate number of noticed channels */
     float smOfNtcdChnnls;
-    cublasStat = cublasSdot ( cublasHandle, nmbrOfChnnls, ntcdChnnls, incxx, ntcdChnnls, incyy, &smOfNtcdChnnls );
+    cublasStat = cublasSdot ( cublasHandle, spec.nmbrOfChnnls, ntcdChnnls, incxx, ntcdChnnls, incyy, &smOfNtcdChnnls );
     if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: channel summation failed " ); return 1; }
     cudaDeviceSynchronize ( );
     printf ( ".................................................................\n" );
@@ -367,14 +368,14 @@ int main ( int argc, char *argv[] )
         //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, enrgChnnls, wlkrs, mdlFlxs );
         /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfWlkrs*nmbrOfEnrgChnnls] */
         AssembleArrayOfModelFluxes <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, wlkrs, mdlFlxs );
-        /* 5 ) Fold model fluxes with RMF, flddMdlFlxs[nmbrOfWlkrs*nmbrOfChnnls] (cuSparse) */
-        cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr,
-                                        rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, nmbrOfChnnls );
+        /* 5 ) Fold model fluxes with RMF, flddMdlFlxs[nmbrOfWlkrs*spec.nmbrOfChnnls] (cuSparse) */
+        cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spec.nmbrOfChnnls, nmbrOfWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr,
+                                        rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, spec.nmbrOfChnnls );
         if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
-        /* 6 ) Assemble array of channel statistics, chnnlSttstcs[nmbrOfWlkrs*nmbrOfChnnls] */
-        AssembleArrayOfChannelStatistics <<< dimGrid_2, dimBlock >>> ( nmbrOfWlkrs, nmbrOfChnnls, srcExptm, bckgrndExptm, srcCnts, bckgrndCnts, flddMdlFlxs, chnnlSttstcs );
+        /* 6 ) Assemble array of channel statistics, chnnlSttstcs[nmbrOfWlkrs*spec.nmbrOfChnnls] */
+        AssembleArrayOfChannelStatistics <<< dimGrid_2, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, srcExptm, bckgrndExptm, srcCnts, bckgrndCnts, flddMdlFlxs, chnnlSttstcs );
         /* 7 ) Sum up channel statistics, actlSttstcs[nmbrOfWlkrs] (cuBlas) */
-        cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, nmbrOfChnnls, nmbrOfWlkrs, &alpha, chnnlSttstcs, nmbrOfChnnls, ntcdChnnls, incxx, &beta, sttstcs, incyy );
+        cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec.nmbrOfChnnls, nmbrOfWlkrs, &alpha, chnnlSttstcs, spec.nmbrOfChnnls, ntcdChnnls, incxx, &beta, sttstcs, incyy );
         if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
     }
 
@@ -409,14 +410,14 @@ int main ( int argc, char *argv[] )
             //BilinearInterpolation <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, enrgChnnls, prpsdWlkrs, mdlFlxs );
             /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfHlfTheWlkrs*nmbrOfEnrgChnnls] */
             AssembleArrayOfModelFluxes <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, prpsdWlkrs, mdlFlxs );
-            /* 5 ) Fold model fluxes with RMF, flddMdlFlxs[nmbrOfHlfTheWlkrs*nmbrOfChnnls] (cuSparse) */
-            cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfHlfTheWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr,
-                                            rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, nmbrOfChnnls );
+            /* 5 ) Fold model fluxes with RMF, flddMdlFlxs[nmbrOfHlfTheWlkrs*spec.nmbrOfChnnls] (cuSparse) */
+            cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spec.nmbrOfChnnls, nmbrOfHlfTheWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, MatDescr,
+                                            rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, spec.nmbrOfChnnls );
             if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes" ); return stpIndx; }
-            /* 6 ) Assemble array of channel statistics, chnnlSttstcs[nmbrOfHlfTheWlkrs*nmbrOfChnnls] */
-            AssembleArrayOfChannelStatistics <<< dimGrid_3, dimBlock >>> ( nmbrOfHlfTheWlkrs, nmbrOfChnnls, srcExptm, bckgrndExptm, srcCnts, bckgrndCnts, flddMdlFlxs, chnnlSttstcs );
+            /* 6 ) Assemble array of channel statistics, chnnlSttstcs[nmbrOfHlfTheWlkrs*spec.nmbrOfChnnls] */
+            AssembleArrayOfChannelStatistics <<< dimGrid_3, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec.nmbrOfChnnls, srcExptm, bckgrndExptm, srcCnts, bckgrndCnts, flddMdlFlxs, chnnlSttstcs );
             /* 7 ) Sum up channel statistics, prpsdSttstcs[nmbrOfHlfTheWlkrs] (cuBlas) */
-            cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, nmbrOfChnnls, nmbrOfHlfTheWlkrs, &alpha, chnnlSttstcs, nmbrOfChnnls, ntcdChnnls, incxx, &beta, prpsdSttstcs, incyy );
+            cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec.nmbrOfChnnls, nmbrOfHlfTheWlkrs, &alpha, chnnlSttstcs, spec.nmbrOfChnnls, ntcdChnnls, incxx, &beta, prpsdSttstcs, incyy );
             if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed yes " ); return stpIndx; }
             /* 8 ) Update walkers */
             UpdateWalkers <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, prpsdWlkrs, prpsdSttstcs, prrs, zRndmVls, rndmVls, wlkrs, sttstcs );
