@@ -165,11 +165,14 @@ int main ( int argc, char *argv[] )
     const float lwrNtcdEnrg = 0.3;
     const float hghrNtcdEnrg = 8.0;
     const char *abndncsFl = "AngrAbundancesAndRedshift.pars"; // Xset.abund = "angr" and redshift = 0
-    const int nmbrOfElmnts = 18; // number of atomic elements
-    int atmcNmbrs[nmbrOfElmnts] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
+    const char *rddnngFl = "reddening0633.data";
+    const char *nsaFl = "nsa_spec_B_1e12G.dat";
     int sgFlg = 3; // Xset.xsect = "bcmc"
     const float dlt = 1.E-4;
     const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
+    int atmcNmbrs[ATNMR];
+    cudaMallocManaged ( ( void ** ) &atmcNmbrs, ATNMR * sizeof ( int ) );
+    atmcNmbrs = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
 
 //    const char *spLst[] = { "psrj0633.pi", "psrj0633.pi" };
 //    int *spDim;
@@ -199,7 +202,7 @@ int main ( int argc, char *argv[] )
         strtngWlkr.par[3] = phbsPwrlwInt[3];
         strtngWlkr.par[4] = phbsPwrlwInt[4];
         strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
-        curandGenerateUniform ( curandGnrtrHst, rndmVls, nmbrOfElmnts - 1 );
+        curandGenerateUniform ( curandGnrtrHst, rndmVls, ATNMR - 1 );
         prmtrIndx = NHINDX + 1;
         while ( prmtrIndx < NPRS )
         {
@@ -218,41 +221,31 @@ int main ( int argc, char *argv[] )
     }
     printf ( ".................................................................\n" );
 
+    /* Read reddening data */
     const int nmbrOfDistBins = 442;
     const int numRedCol = 4;
-
     float *RedData, *Dist, *EBV, *errDist, *errEBV;
     cudaMallocManaged ( ( void ** ) &RedData, nmbrOfDistBins * numRedCol * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &Dist, nmbrOfDistBins * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &EBV, nmbrOfDistBins * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &errDist, nmbrOfDistBins * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &errEBV, nmbrOfDistBins * sizeof ( float ) );
-
-    const char *rddnngFl = "reddening0633.data";
     SimpleReadReddenningData ( rddnngFl, nmbrOfDistBins, RedData, Dist, EBV, errDist, errEBV );
 
+    /* Read NSA data */
     int numNsaE = 1000;
     int numNsaT = 14;
-
     float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
     cudaMallocManaged ( ( void ** ) &nsaDt, ( numNsaE + 1 ) * ( numNsaT + 1 ) * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &nsaE, numNsaE * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &nsaT, numNsaT * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &nsaFlxs, numNsaE * numNsaT * sizeof ( float ) );
-
-    const char *nsaFl = "nsa_spec_B_1e12G.dat";
     SimpleReadNsaTable ( nsaFl, numNsaE, numNsaT, nsaDt, nsaT, nsaE, nsaFlxs );
 
     /* Read abundances and redshift from file: */
     float *abndncs;
     cudaMallocManaged ( ( void ** ) &abndncs, ( NELMS + 1 ) * sizeof ( float ) );
     SimpleReadDataFloat ( abndncsFl, abndncs );
-    int *atNmbrs;
-    cudaMallocManaged ( ( void ** ) &atNmbrs, nmbrOfElmnts * sizeof ( int ) );
-    for ( int i = 0; i < nmbrOfElmnts; i++ )
-    {
-        atNmbrs[i] = atmcNmbrs[i];
-    }
 
     /* Read FITS information and data: */
     Spectrum spec[NSPCTR];
@@ -261,10 +254,10 @@ int main ( int argc, char *argv[] )
 
     /* Compute absorption crosssections */
     float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
-    cudaMallocManaged ( ( void ** ) &crssctns, nmbrOfElmnts * spec[0].nmbrOfEnrgChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &crssctns, ATNMR * spec[0].nmbrOfEnrgChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &absrptnFctrs, nmbrOfWlkrs * spec[0].nmbrOfEnrgChnnls * sizeof ( float ) );
 
-    AssembleArrayOfPhotoelectricCrossections ( spec[0].nmbrOfEnrgChnnls, nmbrOfElmnts, sgFlg, spec[0].enrgChnnls, atmcNmbrs, crssctns );
+    AssembleArrayOfPhotoelectricCrossections ( spec[0].nmbrOfEnrgChnnls, ATNMR, sgFlg, spec[0].enrgChnnls, atmcNmbrs, crssctns );
 
     /* Allocate walkers, spectra etc.: */
     float *prrs;
@@ -329,7 +322,7 @@ int main ( int argc, char *argv[] )
         /* 2 ) Initialize walkers, actlWlkrs[nmbrOfWlkrs] */
         InitializeWalkersAtRandom <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, dlt, strtngWlkr, rndmVls, wlkrs );
         /* 3 ) Assemble array of absorption factors, absrptnFctrs[nmbrOfWlkrs*spec[0].nmbrOfEnrgChnnls] */
-        AssembleArrayOfAbsorptionFactors <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, nmbrOfElmnts, crssctns, abndncs, atNmbrs, wlkrs, absrptnFctrs );
+        AssembleArrayOfAbsorptionFactors <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atNmbrs, wlkrs, absrptnFctrs );
         /* 4 a ) Assemble array of nsa fluxes */
         //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, spec[0].enrgChnnls, wlkrs, mdlFlxs );
         /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfWlkrs*spec[0].nmbrOfEnrgChnnls] */
@@ -371,7 +364,7 @@ int main ( int argc, char *argv[] )
             /* 2 ) Assemble array of prior conditions */
             AssembleArrayOfPriors <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, prpsdWlkrs, mNh, sNh, prrs );
             /* 3 ) Assemble array of absorption factors, absrptnFctrs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfEnrgChnnls] */
-            AssembleArrayOfAbsorptionFactors <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, nmbrOfElmnts, crssctns, abndncs, atNmbrs, prpsdWlkrs, absrptnFctrs );
+            AssembleArrayOfAbsorptionFactors <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atNmbrs, prpsdWlkrs, absrptnFctrs );
             /* 4 a ) Assemble array of nsa fluxes */
             //BilinearInterpolation <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, spec[0].enrgChnnls, prpsdWlkrs, mdlFlxs );
             /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfEnrgChnnls] */
@@ -405,11 +398,11 @@ int main ( int argc, char *argv[] )
     float elapsedTime;
     cudaEventElapsedTime ( &elapsedTime, start, stop );
 
+    /* Compute and print autocorrelation time */
     float *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn;
     cudaMallocManaged ( ( void ** ) &chnFnctn, nmbrOfStps * nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &atCrrFnctn, nmbrOfStps * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &cmSmAtCrrFnctn, nmbrOfStps * sizeof ( float ) );
-
     int NN[RANK] = { nmbrOfStps };
     cufftRes = cufftPlanMany ( &cufftPlan, RANK, NN, NULL, 1, nmbrOfStps, NULL, 1, nmbrOfStps, CUFFT_C2C, nmbrOfWlkrs );
     if ( cufftRes != CUFFT_SUCCESS ) { fprintf ( stderr, "CUFFT error: Direct Plan configuration failed" ); return 1; }
@@ -427,10 +420,8 @@ int main ( int argc, char *argv[] )
 
     CumulativeSumOfAutocorrelationFunction ( nmbrOfStps, atCrrFnctn, cmSmAtCrrFnctn );
     int MM = ChooseWindow ( nmbrOfStps, 5e0f, cmSmAtCrrFnctn );
-
     float atcTime;
     atcTime = 2 * cmSmAtCrrFnctn[MM] - 1e0f;
-
     printf ( " Autocorrelation time window -- %i\n", MM );
     printf ( " Autocorrelation time -- %.8E\n", atcTime );
     printf ( " Autocorrelation time threshold -- %.8E\n", nmbrOfStps / 5e1f );
@@ -501,7 +492,7 @@ int main ( int argc, char *argv[] )
     cudaFree ( nsaT );
     cudaFree ( nsaE );
     cudaFree ( nsaFlxs );
-    cudaFree ( atNmbrs );
+    cudaFree ( atmcNmbrs );
     // Reset the device and exit
     // cudaDeviceReset causes the driver to clean up all state. While
     // not mandatory in normal operation, it is good practice.  It is also

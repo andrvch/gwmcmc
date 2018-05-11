@@ -18,6 +18,7 @@
 #define NHINDX 5
 #define NSPCTR 2
 #define NELMS 30
+#define ATNMR 18
 
 /* Walker data type */
 typedef union wlk3u
