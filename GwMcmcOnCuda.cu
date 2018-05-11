@@ -172,7 +172,7 @@ int main ( int argc, char *argv[] )
     const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
     int atmcNmbrs[ATNMR];
     cudaMallocManaged ( ( void ** ) &atmcNmbrs, ATNMR * sizeof ( int ) );
-    atmcNmbrs = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
+    atmcNmbrs[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
 
 //    const char *spLst[] = { "psrj0633.pi", "psrj0633.pi" };
 //    int *spDim;
@@ -322,7 +322,7 @@ int main ( int argc, char *argv[] )
         /* 2 ) Initialize walkers, actlWlkrs[nmbrOfWlkrs] */
         InitializeWalkersAtRandom <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, dlt, strtngWlkr, rndmVls, wlkrs );
         /* 3 ) Assemble array of absorption factors, absrptnFctrs[nmbrOfWlkrs*spec[0].nmbrOfEnrgChnnls] */
-        AssembleArrayOfAbsorptionFactors <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atNmbrs, wlkrs, absrptnFctrs );
+        AssembleArrayOfAbsorptionFactors <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atmcNmbrs, wlkrs, absrptnFctrs );
         /* 4 a ) Assemble array of nsa fluxes */
         //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, spec[0].enrgChnnls, wlkrs, mdlFlxs );
         /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfWlkrs*spec[0].nmbrOfEnrgChnnls] */
@@ -364,7 +364,7 @@ int main ( int argc, char *argv[] )
             /* 2 ) Assemble array of prior conditions */
             AssembleArrayOfPriors <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, prpsdWlkrs, mNh, sNh, prrs );
             /* 3 ) Assemble array of absorption factors, absrptnFctrs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfEnrgChnnls] */
-            AssembleArrayOfAbsorptionFactors <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atNmbrs, prpsdWlkrs, absrptnFctrs );
+            AssembleArrayOfAbsorptionFactors <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atmcNmbrs, prpsdWlkrs, absrptnFctrs );
             /* 4 a ) Assemble array of nsa fluxes */
             //BilinearInterpolation <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, spec[0].enrgChnnls, prpsdWlkrs, mdlFlxs );
             /* 4 ) Assemble array of model fluxes, mdlFlxs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfEnrgChnnls] */
