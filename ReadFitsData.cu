@@ -4,7 +4,7 @@
 #include <fitsio.h>
 #include "ReadFitsData.cuh"
 
-void ReadAllTheFitsData ( const char *spLst[], int *spDim )
+__host__ void ReadAllTheFitsData ( const char *spLst[], int *spDim )
 {
    int nOfCh, nOfEn, nOfRm;
    float srcExp, bckgrndExp;
