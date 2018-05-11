@@ -275,7 +275,6 @@ int main ( int argc, char *argv[] )
     cudaMallocManaged ( ( void ** ) &spec.rmfIndxInCsc, spec.nmbrOfRmfVls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spec.rmfPntr, ( spec.nmbrOfChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spec.rmfIndx, spec.nmbrOfRmfVls * sizeof ( int ) );
-    float *spec.rmfVlsInCsc, *spec.rmfVls, *spec.enrgChnnls, *spec.arfFctrs, *spec.srcCnts, *spec.bckgrndCnts, *spec.lwrChnnlBndrs, *spec.hghrChnnlBndrs, *spec.gdQltChnnls;
     cudaMallocManaged ( ( void ** ) &spec.rmfVlsInCsc, spec.nmbrOfRmfVls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spec.rmfVls, spec.nmbrOfRmfVls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spec.enrgChnnls, ( spec.nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
