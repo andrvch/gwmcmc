@@ -255,7 +255,7 @@ int main ( int argc, char *argv[] )
     /* Read FITS information and data: */
     Spectrum spec[NSPCTR];
 
-    ReadAllTheFitsData ( spcFl, 1, spec );
+    ReadAllTheFitsData ( spcFl, verbose, spec );
 
     /* Compute absorption crosssections */
     float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
