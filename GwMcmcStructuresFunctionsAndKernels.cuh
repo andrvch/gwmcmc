@@ -31,10 +31,10 @@ typedef union wlk3u
 
 struct Spectrum
 {
-  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
-  int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
-  float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts,
-        *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
+    int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
+    float srcExptm, bckgrndExptm;
+    int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
+    float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
 };
 
 /* Complex data type */
