@@ -11,7 +11,7 @@ struct Spectrum
     float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
 };
 
-__host__ void ReadAllTheFitsData ( const char*, Spectrum* );
+void ReadAllTheFitsData ( const char*, Spectrum );
 void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 void ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 

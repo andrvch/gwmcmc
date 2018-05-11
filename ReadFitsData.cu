@@ -4,7 +4,7 @@
 #include <fitsio.h>
 #include "ReadFitsData.cuh"
 
-__host__ void ReadAllTheFitsData ( const char *spcFl, Spectrum *spec )
+void ReadAllTheFitsData ( const char *spcFl, Spectrum spec )
 {
     char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
 
