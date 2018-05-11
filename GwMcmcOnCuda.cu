@@ -170,9 +170,9 @@ int main ( int argc, char *argv[] )
     int sgFlg = 3; // Xset.xsect = "bcmc"
     const float dlt = 1.E-4;
     const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
-    int atmcNmbrs[ATNMR];
+    int *atmcNmbrs;
     cudaMallocManaged ( ( void ** ) &atmcNmbrs, ATNMR * sizeof ( int ) );
-    atmcNmbrs[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
+    atmcNmbrs = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
 
 //    const char *spLst[] = { "psrj0633.pi", "psrj0633.pi" };
 //    int *spDim;
