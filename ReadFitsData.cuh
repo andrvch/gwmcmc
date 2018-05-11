@@ -3,7 +3,15 @@
 
 #define NSPCTR 2
 
-__host__ void ReadAllTheFitsData ( const char *[], int * );
+struct Spectrum
+{
+    int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
+    float srcExptm, bckgrndExptm;
+    int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
+    float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
+};
+
+__host__ void ReadAllTheFitsData ( const char*, Spectrum* );
 void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 void ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 

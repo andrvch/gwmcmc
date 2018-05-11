@@ -4,16 +4,29 @@
 #include <fitsio.h>
 #include "ReadFitsData.cuh"
 
-__host__ void ReadAllTheFitsData ( const char *spLst[], int *spDim )
+__host__ void ReadAllTheFitsData ( const char *spcFl, Spectrum *spec )
 {
-   int nOfCh, nOfEn, nOfRm;
-   float srcExp, bckgrndExp;
-   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
-   for ( int i = 0; i < NSPCTR; i++ )
-   {
-       ReadFitsInfo ( spLst[i], &nOfEn, &nOfCh, &nOfRm, &srcExp, &bckgrndExp, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
-       spDim[i] = nOfEn;
-   }
+    char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
+
+    ReadFitsInfo ( spcFl, &spec.nmbrOfEnrgChnnls, &spec.nmbrOfChnnls, &spec.nmbrOfRmfVls, &spec.srcExptm, &spec.bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
+
+    cudaMallocManaged ( ( void ** ) &spec.rmfPntrInCsc, ( spec.nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec.rmfIndxInCsc, spec.nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec.rmfPntr, ( spec.nmbrOfChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec.rmfIndx, spec.nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec.rmfVlsInCsc, spec.nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.rmfVls, spec.nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.enrgChnnls, ( spec.nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.arfFctrs, spec.nmbrOfEnrgChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.srcCnts, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.bckgrndCnts, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.lwrChnnlBndrs, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.hghrChnnlBndrs, spec.nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec.gdQltChnnls, spec.nmbrOfChnnls * sizeof ( float ) );
+
+    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, spec.nmbrOfEnrgChnnls, spec.nmbrOfChnnls, spec.nmbrOfRmfVls,
+                   spec.srcCnts, spec.bckgrndCnts, spec.arfFctrs, spec.rmfVlsInCsc, spec.rmfIndxInCsc, spec.rmfPntrInCsc, spec.gdQltChnnls, spec.lwrChnnlBndrs, spec.hghrChnnlBndrs, spec.enrgChnnls );
+
 }
 
 void ReadFitsInfo ( const char *spcFl,
