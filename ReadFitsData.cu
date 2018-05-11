@@ -4,7 +4,7 @@
 #include <fitsio.h>
 #include "ReadFitsData.cuh"
 
-void ReadAllTheFitsData ( const char *spcFl, Spectrum spec )
+__host__ void ReadAllTheFitsData ( const char *spcFl, Spectrum spec )
 {
     char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
 
@@ -29,7 +29,7 @@ void ReadAllTheFitsData ( const char *spcFl, Spectrum spec )
 
 }
 
-void ReadFitsInfo ( const char *spcFl,
+__host__ void ReadFitsInfo ( const char *spcFl,
                     int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm,
                     char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] )
 {
@@ -87,7 +87,7 @@ void ReadFitsInfo ( const char *spcFl,
     free ( n_grp );
 }
 
-void ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD],
+__host__ void ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD],
                     const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls,
                     float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc,
                     float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls )
