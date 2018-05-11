@@ -53,7 +53,7 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
     return prr;
 }
 
-__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int spec.nmbrOfEnrgChnnls, const int nmbrOfElmnts,
+__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts,
                                                    const float *crssctns, const float *abndncs, const int *atmcNmbrs, const Walker *wlkrs,
                                                    float *absrptnFctrs )
 {
