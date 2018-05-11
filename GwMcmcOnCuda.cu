@@ -453,6 +453,8 @@ int main ( int argc, char *argv[] )
     cufftDestroy ( cufftPlan );
 
     /* Free memory: */
+    FreeSpec ( spec );
+
     cudaFree ( chnFnctn );
     cudaFree ( atCrrFnctn );
     cudaFree ( cmSmAtCrrFnctn );
@@ -461,19 +463,6 @@ int main ( int argc, char *argv[] )
     cudaFree ( abndncs );
     cudaFree ( crssctns );
     cudaFree ( absrptnFctrs );
-    cudaFree ( spec[0].rmfVlsInCsc );
-    cudaFree ( spec[0].rmfIndxInCsc );
-    cudaFree ( spec[0].rmfPntrInCsc );
-    cudaFree ( spec[0].rmfVls );
-    cudaFree ( spec[0].rmfIndx );
-    cudaFree ( spec[0].rmfPntr );
-    cudaFree ( spec[0].enrgChnnls );
-    cudaFree ( spec[0].arfFctrs );
-    cudaFree ( spec[0].srcCnts );
-    cudaFree ( spec[0].bckgrndCnts );
-    cudaFree ( spec[0].gdQltChnnls );
-    cudaFree ( spec[0].lwrChnnlBndrs );
-    cudaFree ( spec[0].hghrChnnlBndrs );
     cudaFree ( mdlFlxs );
     cudaFree ( flddMdlFlxs );
     cudaFree ( sttstcs );

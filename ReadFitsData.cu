@@ -4,6 +4,23 @@
 #include <fitsio.h>
 #include "ReadFitsData.cuh"
 
+__host__ void FreeSpec ( const Spectrum *spec )
+{
+    cudaFree ( spec[0].rmfVlsInCsc );
+    cudaFree ( spec[0].rmfIndxInCsc );
+    cudaFree ( spec[0].rmfPntrInCsc );
+    cudaFree ( spec[0].rmfVls );
+    cudaFree ( spec[0].rmfIndx );
+    cudaFree ( spec[0].rmfPntr );
+    cudaFree ( spec[0].enrgChnnls );
+    cudaFree ( spec[0].arfFctrs );
+    cudaFree ( spec[0].srcCnts );
+    cudaFree ( spec[0].bckgrndCnts );
+    cudaFree ( spec[0].gdQltChnnls );
+    cudaFree ( spec[0].lwrChnnlBndrs );
+    cudaFree ( spec[0].hghrChnnlBndrs );
+}
+
 __host__ void ReadAllTheFitsData ( const char *spcFl, const int verbose, Spectrum *spec )
 {
     char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
