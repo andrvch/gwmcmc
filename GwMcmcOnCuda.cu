@@ -177,6 +177,7 @@ int main ( int argc, char *argv[] )
     {
         atmcNmbrs[i] = atNm[i];
     }
+    const int verbose = 1;
 
 //    const char *spLst[] = { "psrj0633.pi", "psrj0633.pi" };
 //    int *spDim;
@@ -254,7 +255,7 @@ int main ( int argc, char *argv[] )
     /* Read FITS information and data: */
     Spectrum spec[NSPCTR];
 
-    ReadAllTheFitsData ( spcFl, spec );
+    ReadAllTheFitsData ( spcFl, 1, spec );
 
     /* Compute absorption crosssections */
     float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;

@@ -4,22 +4,25 @@
 #include <fitsio.h>
 #include "ReadFitsData.cuh"
 
-__host__ void ReadAllTheFitsData ( const char *spcFl, Spectrum *spec )
+__host__ void ReadAllTheFitsData ( const char *spcFl, const int verbose, Spectrum *spec )
 {
     char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
 
     ReadFitsInfo ( spcFl, &spec[0].nmbrOfEnrgChnnls, &spec[0].nmbrOfChnnls, &spec[0].nmbrOfRmfVls, &spec[0].srcExptm, &spec[0].bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
 
-    printf ( " Spectrum table   -- %s\n", srcTbl );
-    printf ( " ARF table        -- %s\n", arfTbl );
-    printf ( " RMF table        -- %s\n", rmfTbl );
-    printf ( " Background table -- %s\n", bckgrndTbl );
-    printf ( ".................................................................\n" );
-    printf ( " Number of energy channels                = %i\n", spec[0].nmbrOfEnrgChnnls );
-    printf ( " Number of instrument channels            = %i\n", spec[0].nmbrOfChnnls );
-    printf ( " Number of nonzero elements of RMF matrix = %i\n", spec[0].nmbrOfRmfVls );
-    printf ( " Exposure time                            = %.8E\n", spec[0].srcExptm );
-    printf ( " Exposure time (background)               = %.8E\n", spec[0].bckgrndExptm );
+    if ( verbose == 1 )
+    {
+        printf ( " Spectrum table   -- %s\n", srcTbl );
+        printf ( " ARF table        -- %s\n", arfTbl );
+        printf ( " RMF table        -- %s\n", rmfTbl );
+        printf ( " Background table -- %s\n", bckgrndTbl );
+        printf ( ".................................................................\n" );
+        printf ( " Number of energy channels                = %i\n", spec[0].nmbrOfEnrgChnnls );
+        printf ( " Number of instrument channels            = %i\n", spec[0].nmbrOfChnnls );
+        printf ( " Number of nonzero elements of RMF matrix = %i\n", spec[0].nmbrOfRmfVls );
+        printf ( " Exposure time                            = %.8E\n", spec[0].srcExptm );
+        printf ( " Exposure time (background)               = %.8E\n", spec[0].bckgrndExptm );
+    }
 
     cudaMallocManaged ( ( void ** ) &spec[0].rmfPntrInCsc, ( spec[0].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spec[0].rmfIndxInCsc, spec[0].nmbrOfRmfVls * sizeof ( int ) );
