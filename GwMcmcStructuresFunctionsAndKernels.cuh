@@ -44,9 +44,10 @@ struct Spectrum
   float *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs;
 };
 
-struct Model
+struct Chain
 {
-  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh;
+  Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs;
+  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn;
 };
 
 /* Functions */
@@ -77,8 +78,10 @@ __host__ void AutocorrelationFunctionAveraged ( cufftResult_t, cublasStatus_t, c
 __host__ void CumulativeSumOfAutocorrelationFunction ( const int, const float*, float* );
 __host__ int ChooseWindow ( const int, const float, const float* );
 __host__ void FreeSpec ( const Spectrum* );
+__host__ void FreeChain ( const Chain* );
 __host__ void ReadAllTheFitsData ( const char*[], const int, Spectrum* );
 __host__ void AllocateMemoryForModelSpecArrays ( const int, Spectrum* );
+__host__ void AllocateMemoryForChainArrays ( const int, const int, Chain* );
 __host__ void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 __host__ void ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 

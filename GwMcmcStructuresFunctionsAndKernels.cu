@@ -38,8 +38,25 @@ __host__ void FreeSpec ( const Spectrum *spec )
     cudaFree ( spec[i].flddMdlFlxs );
     cudaFree ( spec[i].chnnlSttstcs );
     cudaFree ( spec[i].ntcdChnnls );
-
   }
+}
+
+__host__ void FreeChain ( const Chain *chn )
+{
+  cudaFree ( chn[0].wlkrs );
+  cudaFree ( chn[0].prpsdWlkrs );
+  cudaFree ( chn[0].chnOfWlkrs );
+  cudaFree ( chn[0].sttstcs );
+  cudaFree ( chn[0].prpsdSttstcs );
+  cudaFree ( chn[0].zRndmVls );
+  cudaFree ( chn[0].prrs );
+  cudaFree ( chn[0].chnOfSttstcs );
+  cudaFree ( chn[0].mNh );
+  cudaFree ( chn[0].sNh );
+  cudaFree ( chn[0].rndmVls );
+  cudaFree ( chn[0].chnFnctn );
+  cudaFree ( chn[0].atCrrFnctn );
+  cudaFree ( chn[0].cmSmAtCrrFnctn );
 }
 
 __host__ void AllocateMemoryForModelSpecArrays ( const int nmbrOfWlkrs, Spectrum *spec )
@@ -53,6 +70,26 @@ __host__ void AllocateMemoryForModelSpecArrays ( const int nmbrOfWlkrs, Spectrum
     cudaMallocManaged ( ( void ** ) &spec[i].ntcdChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spec[i].chnnlSttstcs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
   }
+}
+
+__host__ void AllocateMemoryForChainArrays ( const int nmbrOfWlkrs, const int nmbrOfStps, Chain *chn )
+{
+  const int nmbrOfHlfTheWlkrs = nmbrOfWlkrs / 2;
+  const int nmbrOfRndmVls = 3 * nmbrOfHlfTheWlkrs * nmbrOfStps;
+  cudaMallocManaged ( ( void ** ) &chn[0].wlkrs, nmbrOfWlkrs * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, nmbrOfHlfTheWlkrs * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnOfWlkrs, nmbrOfWlkrs * nmbrOfStps * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sttstcs, nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdSttstcs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnOfSttstcs, nmbrOfWlkrs * nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].zRndmVls, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prrs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].mNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].rndmVls, nmbrOfRndmVls * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, nmbrOfStps * nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, nmbrOfStps * sizeof ( float ) );
 }
 
 __host__ void ReadAllTheFitsData ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spec )
