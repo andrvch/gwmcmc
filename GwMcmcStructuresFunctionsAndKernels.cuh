@@ -42,17 +42,21 @@ struct Spectrum
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
   float *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs;
+  float smOfNtcdChnnls;
 };
 
 struct Chain
 {
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr;
   float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs;
+  float atcTime;
 };
 
 /* Functions */
 extern "C" float photo_ ( float*, float*, int*, int*, int* );
 extern "C" float gphoto_ ( float*, float*, int*, int* );
+__host__ int Blocks ( const int );
+__host__ dim3 Grid ( const int, const int );
 __host__ __device__ Walker AddWalkers ( Walker, Walker );
 __host__ __device__ Walker ScaleWalker ( Walker, float );
 __host__ __device__ Complex AddComplex ( Complex, Complex );
@@ -79,7 +83,7 @@ __host__ void CumulativeSumOfAutocorrelationFunction ( const int, const float*, 
 __host__ int ChooseWindow ( const int, const float, const float* );
 __host__ void FreeSpec ( const Spectrum* );
 __host__ void FreeChain ( const Chain* );
-__host__ void InitializeSpectra ( const char*[], const int, const int, Spectrum* );
+__host__ void InitializeSpectra ( const char*[], cusparseHandle_t, cusparseStatus_t, cublasHandle_t, cublasStatus_t, const int, const int, const float, const float, int, int*, Spectrum* );
 __host__ void InitializeChain ( const char*, const int, const int, const int, const float*, const curandGenerator_t, const float, Chain* );
 __host__ void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 __host__ void ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );

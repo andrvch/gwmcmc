@@ -112,12 +112,13 @@ __host__ void InitializeChain ( const char *thrdNm, const int thrdIndx, const in
   }
 }
 
-__host__ void InitializeSpectra ( const char *spcLst[NSPCTR], const int verbose, const int nmbrOfWlkrs, Spectrum *spec )
+__host__ void InitializeSpectra ( const char *spcLst[NSPCTR], cusparseHandle_t cusparseHandle, cusparseStatus_t cusparseStat, cublasHandle_t cublasHandle, cublasStatus_t cublasStat, const int verbose, const int nmbrOfWlkrs, const float lwrNtcdEnrg, const float hghrNtcdEnrg, int sgFlg, int *atmcNmbrs, Spectrum *spec )
 {
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   for ( int i = 0; i < NSPCTR; i++ )
   {
     ReadFitsInfo ( spcLst[i], &spec[i].nmbrOfEnrgChnnls, &spec[i].nmbrOfChnnls, &spec[i].nmbrOfRmfVls, &spec[i].srcExptm, &spec[i].bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
+
     if ( verbose == 1 )
     {
       printf ( ".................................................................\n" );
@@ -132,6 +133,7 @@ __host__ void InitializeSpectra ( const char *spcLst[NSPCTR], const int verbose,
       printf ( " Exposure time                            = %.8E\n", spec[i].srcExptm );
       printf ( " Exposure time (background)               = %.8E\n", spec[i].bckgrndExptm );
     }
+
     cudaMallocManaged ( ( void ** ) &spec[i].rmfPntrInCsc, ( spec[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spec[i].rmfIndxInCsc, spec[i].nmbrOfRmfVls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spec[i].rmfPntr, ( spec[i].nmbrOfChnnls + 1 ) * sizeof ( int ) );
@@ -151,11 +153,40 @@ __host__ void InitializeSpectra ( const char *spcLst[NSPCTR], const int verbose,
     cudaMallocManaged ( ( void ** ) &spec[i].flddMdlFlxs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spec[i].ntcdChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spec[i].chnnlSttstcs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
+
     ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, spec[i].nmbrOfEnrgChnnls, spec[i].nmbrOfChnnls, spec[i].nmbrOfRmfVls, spec[i].srcCnts, spec[i].bckgrndCnts, spec[i].arfFctrs, spec[i].rmfVlsInCsc, spec[i].rmfIndxInCsc, spec[i].rmfPntrInCsc, spec[i].gdQltChnnls, spec[i].lwrChnnlBndrs, spec[i].hghrChnnlBndrs, spec[i].enrgChnnls );
+
+    cusparseStat = cusparseScsr2csc ( cusparseHandle, spec[i].nmbrOfEnrgChnnls, spec[i].nmbrOfChnnls, spec[i].nmbrOfRmfVls, spec[i].rmfVlsInCsc, spec[i].rmfPntrInCsc, spec[i].rmfIndxInCsc, spec[i].rmfVls, spec[i].rmfIndx, spec[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
+    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); }
+
+    AssembleArrayOfNoticedChannels <<< Blocks ( spec[i].nmbrOfChnnls ), THRDSPERBLCK >>> ( spec[i].nmbrOfChnnls, lwrNtcdEnrg, hghrNtcdEnrg, spec[i].lwrChnnlBndrs, spec[i].hghrChnnlBndrs, spec[i].gdQltChnnls, spec[i].ntcdChnnls );
+    cublasStat = cublasSdot ( cublasHandle, spec[i].nmbrOfChnnls, spec[i].ntcdChnnls, INCXX, spec[i].ntcdChnnls, INCYY, &spec[i].smOfNtcdChnnls );
+    if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: channel summation failed " ); return ; }
+    if ( verbose == 1 )
+    {
+      cudaDeviceSynchronize ( );
+      printf ( ".................................................................\n" );
+      printf ( " Number of used instrument channels -- %4.0f\n", spec[i].smOfNtcdChnnls );
+      printf ( " Number of degrees of freedom -- %4.0f\n", spec[i].smOfNtcdChnnls - NPRS );
+    }
+    AssembleArrayOfPhotoelectricCrossections ( spec[0].nmbrOfEnrgChnnls, ATNMR, sgFlg, spec[0].enrgChnnls, atmcNmbrs, spec[0].crssctns );
   }
 }
 
 /* Functions: */
+__host__ int Blocks ( const int n )
+{
+  int blcksPerThrd;
+  blcksPerThrd = ( n + THRDSPERBLCK - 1 ) / THRDSPERBLCK;
+  return blcksPerThrd;
+}
+
+__host__ dim3 Grid ( const int n, const int m )
+{
+  dim3 dimGrid ( ( n + THRDSPERBLCK - 1 ) / THRDSPERBLCK, ( m + THRDSPERBLCK - 1 ) / THRDSPERBLCK );
+  return dimGrid;
+}
+
 __host__ __device__ Walker AddWalkers ( Walker a, Walker b )
 {
     Walker c;
