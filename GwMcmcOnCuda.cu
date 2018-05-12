@@ -14,7 +14,6 @@
 #include <cublas_v2.h>
 #include <cufft.h>
 #include "GwMcmcStructuresFunctionsAndKernels.cuh"
-#include "ReadFitsData.cuh"
 
 /* Functions and Kernels: */
 __host__ __device__ int PriorCondition ( const Walker wlkr )
