@@ -57,23 +57,12 @@ __host__ void FreeChain ( const Chain *chn )
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atCrrFnctn );
   cudaFree ( chn[0].cmSmAtCrrFnctn );
+  cudaFree ( chn[0].lstWlkrsAndSttstcs );
 }
 
-__host__ void AllocateMemoryForModelSpecArrays ( const int nmbrOfWlkrs, Spectrum *spec )
+__host__ void InitializeChain ( const char *thrdNm, const int thrdIndx, const int nmbrOfWlkrs, const int nmbrOfStps, const float *phbsPwrlwInt, const curandGenerator_t curandGnrtrHst, const float dlt, Chain *chn )
 {
-  for ( int i = 0; i < NSPCTR; i++ )
-  {
-    cudaMallocManaged ( ( void ** ) &spec[i].crssctns, spec[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].absrptnFctrs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].mdlFlxs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].flddMdlFlxs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].ntcdChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].chnnlSttstcs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
-  }
-}
-
-__host__ void AllocateMemoryForChainArrays ( const int nmbrOfWlkrs, const int nmbrOfStps, Chain *chn )
-{
+  int prmtrIndx = 0;
   const int nmbrOfHlfTheWlkrs = nmbrOfWlkrs / 2;
   const int nmbrOfRndmVls = 3 * nmbrOfHlfTheWlkrs * nmbrOfStps;
   cudaMallocManaged ( ( void ** ) &chn[0].wlkrs, nmbrOfWlkrs * sizeof ( Walker ) );
@@ -90,9 +79,40 @@ __host__ void AllocateMemoryForChainArrays ( const int nmbrOfWlkrs, const int nm
   cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, nmbrOfStps * nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 1 ) * nmbrOfWlkrs * sizeof ( float ) );
+  if ( thrdIndx > 0 )
+  {
+    ReadLastPositionOfWalkersFromFile ( thrdNm, thrdIndx-1, nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs );
+  }
+  else if ( thrdIndx == 0 )
+  {
+      chn[0].strtngWlkr.par[0] = phbsPwrlwInt[0];
+      chn[0].strtngWlkr.par[1] = phbsPwrlwInt[1];
+      chn[0].strtngWlkr.par[2] = phbsPwrlwInt[2];
+      chn[0].strtngWlkr.par[3] = phbsPwrlwInt[3];
+      chn[0].strtngWlkr.par[4] = phbsPwrlwInt[4];
+      chn[0].strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
+      curandGenerateUniform ( curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
+      prmtrIndx = NHINDX + 1;
+      while ( prmtrIndx < NPRS )
+      {
+          chn[0].strtngWlkr.par[prmtrIndx] = dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
+          prmtrIndx += 1;
+      }
+      prmtrIndx = 0;
+      printf ( ".................................................................\n" );
+      printf ( " Initial parameters -- " );
+      while ( prmtrIndx < NPRS )
+      {
+          printf ( " %2.2f ", chn[0].strtngWlkr.par[prmtrIndx] );
+          prmtrIndx += 1;
+      }
+      printf ( "\n" );
+      if ( not PriorCondition ( chn[0].strtngWlkr ) ) { printf ( " !!!Initial walker unsatisfy prior conditions!!!\n" ); }
+  }
 }
 
-__host__ void ReadAllTheFitsData ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spec )
+__host__ void InitializeSpectra ( const char *spcLst[NSPCTR], const int verbose, const int nmbrOfWlkrs, Spectrum *spec )
 {
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   for ( int i = 0; i < NSPCTR; i++ )
@@ -125,6 +145,12 @@ __host__ void ReadAllTheFitsData ( const char *spcLst[NSPCTR], const int verbose
     cudaMallocManaged ( ( void ** ) &spec[i].lwrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spec[i].hghrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spec[i].gdQltChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].crssctns, spec[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].absrptnFctrs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].mdlFlxs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].flddMdlFlxs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].ntcdChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].chnnlSttstcs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
     ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, spec[i].nmbrOfEnrgChnnls, spec[i].nmbrOfChnnls, spec[i].nmbrOfRmfVls, spec[i].srcCnts, spec[i].bckgrndCnts, spec[i].arfFctrs, spec[i].rmfVlsInCsc, spec[i].rmfIndxInCsc, spec[i].rmfPntrInCsc, spec[i].gdQltChnnls, spec[i].lwrChnnlBndrs, spec[i].hghrChnnlBndrs, spec[i].enrgChnnls );
   }
 }

@@ -46,8 +46,8 @@ struct Spectrum
 
 struct Chain
 {
-  Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs;
-  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn;
+  Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr;
+  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs;
 };
 
 /* Functions */
@@ -79,9 +79,8 @@ __host__ void CumulativeSumOfAutocorrelationFunction ( const int, const float*, 
 __host__ int ChooseWindow ( const int, const float, const float* );
 __host__ void FreeSpec ( const Spectrum* );
 __host__ void FreeChain ( const Chain* );
-__host__ void ReadAllTheFitsData ( const char*[], const int, Spectrum* );
-__host__ void AllocateMemoryForModelSpecArrays ( const int, Spectrum* );
-__host__ void AllocateMemoryForChainArrays ( const int, const int, Chain* );
+__host__ void InitializeSpectra ( const char*[], const int, const int, Spectrum* );
+__host__ void InitializeChain ( const char*, const int, const int, const int, const float*, const curandGenerator_t, const float, Chain* );
 __host__ void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 __host__ void ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 

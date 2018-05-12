@@ -203,48 +203,11 @@ int main ( int argc, char *argv[] )
 
     /* Allocate walkers etc.: */
     Chain chn[NSPCTR];
-    AllocateMemoryForChainArrays ( nmbrOfWlkrs, nmbrOfStps, chn );
-
-    /* Set up initial walkers */
-    int prmtrIndx = 0;
-    Walker strtngWlkr;
-    float *lstWlkrsAndSttstcs;
-    cudaMallocManaged ( ( void ** ) &lstWlkrsAndSttstcs, ( NPRS + 1 ) * nmbrOfWlkrs * sizeof ( float ) );
-    if ( thrdIndx > 0 )
-    {
-        ReadLastPositionOfWalkersFromFile ( thrdNm, thrdIndx-1, nmbrOfWlkrs, lstWlkrsAndSttstcs );
-    }
-    else if ( thrdIndx == 0 )
-    {
-        strtngWlkr.par[0] = phbsPwrlwInt[0];
-        strtngWlkr.par[1] = phbsPwrlwInt[1];
-        strtngWlkr.par[2] = phbsPwrlwInt[2];
-        strtngWlkr.par[3] = phbsPwrlwInt[3];
-        strtngWlkr.par[4] = phbsPwrlwInt[4];
-        strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
-        curandGenerateUniform ( curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
-        prmtrIndx = NHINDX + 1;
-        while ( prmtrIndx < NPRS )
-        {
-            strtngWlkr.par[prmtrIndx] = dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
-            prmtrIndx += 1;
-        }
-        prmtrIndx = 0;
-        printf ( ".................................................................\n" );
-        printf ( " Initial parameters -- " );
-        while ( prmtrIndx < NPRS )
-        {
-            printf ( " %2.2f ", strtngWlkr.par[prmtrIndx] );
-            prmtrIndx += 1;
-        }
-        printf ( "\n" );
-        if ( not PriorCondition ( strtngWlkr ) ) { printf ( " !!!Initial walker unsatisfy prior conditions!!!\n" ); }
-    }
+    InitializeChain ( thrdNm, thrdIndx, nmbrOfWlkrs, nmbrOfStps, phbsPwrlwInt, curandGnrtrHst, dlt, chn );
 
     /* Read FITS data and allocated spectra and model spectra arrays */
     Spectrum spec[NSPCTR];
-    ReadAllTheFitsData ( spcLst, verbose, spec );
-    AllocateMemoryForModelSpecArrays ( nmbrOfWlkrs, spec );
+    InitializeSpectra ( spcLst, verbose, nmbrOfWlkrs, spec );
 
     /* Set auxiliary parameters, threads, blocks etc.:  */
     int incxx = INCXX, incyy = INCYY;
@@ -281,14 +244,14 @@ int main ( int argc, char *argv[] )
     if ( thrdIndx > 0 )
     {
         /* Initialize walkers and statistics from last chain */
-        InitializeWalkersAndStatisticsFromLastChain <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
+        InitializeWalkersAndStatisticsFromLastChain <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
     }
     else if ( thrdIndx == 0 )
     {
         /* 1 ) Generate uniformly distributed floating point values between 0.0 and 1.0, chn[0].rndmVls[nmbrOfWlkrs] (cuRand) */
         curandGenerateUniform ( curandGnrtr, chn[0].rndmVls, nmbrOfWlkrs );
         /* 2 ) Initialize walkers, actlWlkrs[nmbrOfWlkrs] */
-        InitializeWalkersAtRandom <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, dlt, strtngWlkr, chn[0].rndmVls, chn[0].wlkrs );
+        InitializeWalkersAtRandom <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, dlt, chn[0].strtngWlkr, chn[0].rndmVls, chn[0].wlkrs );
         /* 3 ) Assemble array of absorption factors, spec[0].absrptnFctrs[nmbrOfWlkrs*spec[0].nmbrOfEnrgChnnls] */
         AssembleArrayOfAbsorptionFactors <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, spec[0].crssctns, abndncs, atmcNmbrs, chn[0].wlkrs, spec[0].absrptnFctrs );
         /* 4 a ) Assemble array of nsa fluxes */
@@ -414,7 +377,6 @@ int main ( int argc, char *argv[] )
     FreeSpec ( spec );
     FreeChain ( chn );
 
-    cudaFree ( lstWlkrsAndSttstcs );
     cudaFree ( abndncs );
     cudaFree ( RedData );
     cudaFree ( Dist );
