@@ -9,6 +9,8 @@ struct Spectrum
     float srcExptm, bckgrndExptm;
     int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
     float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
+    float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
+    float *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs;
 };
 
 __host__ void FreeSpec ( const Spectrum* );

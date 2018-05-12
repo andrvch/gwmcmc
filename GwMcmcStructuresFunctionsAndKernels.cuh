@@ -33,6 +33,12 @@ typedef union wlk3u
 /* Complex data type */
 typedef float2 Complex;
 
+struct ModelSpectrum
+{
+    float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
+    float *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs;
+};
+
 /* Functions */
 extern "C" float photo_ ( float*, float*, int*, int*, int* );
 extern "C" float gphoto_ ( float*, float*, int*, int* );

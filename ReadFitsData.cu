@@ -21,6 +21,13 @@ __host__ void FreeSpec ( const Spectrum *spec )
     cudaFree ( spec[i].gdQltChnnls );
     cudaFree ( spec[i].lwrChnnlBndrs );
     cudaFree ( spec[i].hghrChnnlBndrs );
+    cudaFree ( spec[i].crssctns );
+    cudaFree ( spec[i].absrptnFctrs );
+    cudaFree ( spec[i].mdlFlxs );
+    cudaFree ( spec[i].flddMdlFlxs );
+    cudaFree ( spec[i].chnnlSttstcs );
+    cudaFree ( spec[i].ntcdChnnls );
+
   }
 }
 
