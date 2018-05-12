@@ -108,6 +108,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int nmbrOfWlkrs, const int nm
  */
 int main ( int argc, char *argv[] )
 {
+    const int verbose = 1;
     /* cuda succes status: */
     cudaError_t err = cudaSuccess;
     /* cuda runtime version */
@@ -126,7 +127,6 @@ int main ( int argc, char *argv[] )
     printf ( " CUDA device ID: %d\n", dev );
     cudaGetDeviceProperties ( &prop, dev );
     printf ( " CUDA device Name: %s\n", prop.name );
-    printf ( ".................................................................\n" );
     /* cuSparse related things */
     cusparseStatus_t cusparseStat;
     cusparseHandle_t cusparseHandle = 0;
@@ -156,6 +156,7 @@ int main ( int argc, char *argv[] )
 
     /* Set up initial parameters: */
     const char *spcFl = argv[2];
+    const char *spcLst[NSPCTR] = { spcFl, spcFl };
     const char *thrdNm = argv[3];
     const int nmbrOfWlkrs = atoi ( argv[4] );
     const int nmbrOfHlfTheWlkrs = nmbrOfWlkrs / 2;
@@ -173,18 +174,7 @@ int main ( int argc, char *argv[] )
     const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
     int *atmcNmbrs;
     cudaMallocManaged ( ( void ** ) &atmcNmbrs, ATNMR * sizeof ( int ) );
-    for ( int i = 0; i < ATNMR; i++ )
-    {
-        atmcNmbrs[i] = atNm[i];
-    }
-    const int verbose = 1;
-
-//    const char *spLst[] = { "psrj0633.pi", "psrj0633.pi" };
-//    int *spDim;
-//    int nmbrOfSp = 2;
-//    cudaMallocManaged ( ( void ** ) &spDim, nmbrOfSp * sizeof ( int ) );
-//    ReadAllTheFitsData ( spLst, spDim );
-//    printf ( " Attention! -- %i\n ", spDim[0] );
+    for ( int i = 0; i < ATNMR; i++ ) { atmcNmbrs[i] = atNm[i]; }
 
     /* Allocate array to hold random numbers */
     float *rndmVls;
@@ -215,6 +205,7 @@ int main ( int argc, char *argv[] )
             prmtrIndx += 1;
         }
         prmtrIndx = 0;
+        printf ( ".................................................................\n" );
         printf ( " Initial parameters -- " );
         while ( prmtrIndx < NPRS )
         {
@@ -224,7 +215,6 @@ int main ( int argc, char *argv[] )
         printf ( "\n" );
         if ( not PriorCondition ( strtngWlkr ) ) { printf ( " !!!Initial walker unsatisfy prior conditions!!!\n" ); }
     }
-    printf ( ".................................................................\n" );
 
     /* Read reddening data */
     const int nmbrOfDistBins = 442;
@@ -254,7 +244,7 @@ int main ( int argc, char *argv[] )
 
     /* Read FITS information and data: */
     Spectrum spec[NSPCTR];
-    ReadAllTheFitsData ( spcFl, verbose, spec );
+    ReadAllTheFitsData ( spcLst, verbose, spec );
 
     /* Compute absorption crosssections */
     float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
@@ -312,7 +302,6 @@ int main ( int argc, char *argv[] )
     printf ( ".................................................................\n" );
     printf ( " Number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
     printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
-    printf ( ".................................................................\n" );
 
     if ( thrdIndx > 0 )
     {
@@ -342,6 +331,7 @@ int main ( int argc, char *argv[] )
         if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
     }
 
+    printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
 
     cudaEvent_t start, stop;
@@ -397,7 +387,6 @@ int main ( int argc, char *argv[] )
     cudaEventSynchronize ( stop );
 
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
-    printf ( ".................................................................\n" );
 
     float elapsedTime;
     cudaEventElapsedTime ( &elapsedTime, start, stop );
@@ -426,13 +415,14 @@ int main ( int argc, char *argv[] )
     int MM = ChooseWindow ( nmbrOfStps, 5e0f, cmSmAtCrrFnctn );
     float atcTime;
     atcTime = 2 * cmSmAtCrrFnctn[MM] - 1e0f;
+    printf ( ".................................................................\n" );
     printf ( " Autocorrelation time window -- %i\n", MM );
     printf ( " Autocorrelation time -- %.8E\n", atcTime );
     printf ( " Autocorrelation time threshold -- %.8E\n", nmbrOfStps / 5e1f );
     printf ( " Effective number of independent samples -- %.8E\n", nmbrOfWlkrs * nmbrOfStps / atcTime );
-    printf ( ".................................................................\n" );
 
     /* Compute and print elapsed time: */
+    printf ( ".................................................................\n" );
     printf ( " Time to generate: %3.1f ms\n", elapsedTime );
     printf ( " Time to compute Autocorrelation Function: %3.1f ms\n", cufftElapsedTime );
     printf ( "\n" );
@@ -462,6 +452,7 @@ int main ( int argc, char *argv[] )
     cudaFree ( abndncs );
     cudaFree ( crssctns );
     cudaFree ( absrptnFctrs );
+
     cudaFree ( mdlFlxs );
     cudaFree ( flddMdlFlxs );
     cudaFree ( sttstcs );
