@@ -242,30 +242,26 @@ int main ( int argc, char *argv[] )
     cudaMallocManaged ( ( void ** ) &nsaFlxs, numNsaE * numNsaT * sizeof ( float ) );
     SimpleReadNsaTable ( nsaFl, numNsaE, numNsaT, nsaDt, nsaT, nsaE, nsaFlxs );
 
-    /* Read FITS information and data: */
+    /* Read FITS data and allocated spectra and model spectra arrays */
     Spectrum spec[NSPCTR];
-    ReadAllTheFitsData ( spcLst, verbose, spec );
 
-    cudaMallocManaged ( ( void ** ) &spec[0].crssctns, spec[0].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[0].absrptnFctrs, spec[0].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[0].mdlFlxs, spec[0].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[0].flddMdlFlxs, spec[0].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[0].ntcdChnnls, spec[0].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[0].chnnlSttstcs, spec[0].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    ReadAllTheFitsData ( spcLst, verbose, spec );
+    AllocateMemoryForModelSpecArrays ( nmbrOfWlkrs, spec );
 
     /* Allocate walkers etc.: */
     Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs;
     cudaMallocManaged ( ( void ** ) &wlkrs, nmbrOfWlkrs * sizeof ( Walker ) );
     cudaMallocManaged ( ( void ** ) &prpsdWlkrs, nmbrOfHlfTheWlkrs * sizeof ( Walker ) );
     cudaMallocManaged ( ( void ** ) &chnOfWlkrs, nmbrOfWlkrs * nmbrOfStps * sizeof ( Walker ) );
-    float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh;
-    cudaMallocManaged ( ( void ** ) &sttstcs, nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &prpsdSttstcs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &chnOfSttstcs, nmbrOfWlkrs * nmbrOfStps * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &zRndmVls, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &prrs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &mNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &sNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+
+    Model mdl;
+    cudaMallocManaged ( ( void ** ) &mdl.sttstcs, nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &mdl.prpsdSttstcs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &mdl.chnOfSttstcs, nmbrOfWlkrs * nmbrOfStps * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &mdl.zRndmVls, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &mdl.prrs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &mdl.mNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &mdl.sNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
 
     /* Set auxiliary parameters, threads, blocks etc.:  */
     int incxx = INCXX, incyy = INCYY;
@@ -302,7 +298,7 @@ int main ( int argc, char *argv[] )
     if ( thrdIndx > 0 )
     {
         /* Initialize walkers and statistics from last chain */
-        InitializeWalkersAndStatisticsFromLastChain <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, lstWlkrsAndSttstcs, wlkrs, sttstcs );
+        InitializeWalkersAndStatisticsFromLastChain <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, lstWlkrsAndSttstcs, wlkrs, mdl.sttstcs );
     }
     else if ( thrdIndx == 0 )
     {
@@ -323,7 +319,7 @@ int main ( int argc, char *argv[] )
         /* 6 ) Assemble array of channel statistics, spec[0].chnnlSttstcs[nmbrOfWlkrs*spec[0].nmbrOfChnnls] */
         AssembleArrayOfChannelStatistics <<< dimGrid_2, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfChnnls, spec[0].srcExptm, spec[0].bckgrndExptm, spec[0].srcCnts, spec[0].bckgrndCnts, spec[0].flddMdlFlxs, spec[0].chnnlSttstcs );
         /* 7 ) Sum up channel statistics, actlSttstcs[nmbrOfWlkrs] (cuBlas) */
-        cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec[0].nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec[0].chnnlSttstcs, spec[0].nmbrOfChnnls, spec[0].ntcdChnnls, incxx, &beta, sttstcs, incyy );
+        cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec[0].nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec[0].chnnlSttstcs, spec[0].nmbrOfChnnls, spec[0].ntcdChnnls, incxx, &beta, mdl.sttstcs, incyy );
         if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
     }
 
@@ -347,12 +343,12 @@ int main ( int argc, char *argv[] )
         /* Iterate over two subsets */
         while ( sbstIndx < 2 )
         {
-            /* 1 ) Generate Z values and proposed walkers, zRndmVls[nmbrOfHlfTheWlkrs], prpsdWlkrs[nmbrOfHlfTheWlkrs] */
-            GenerateProposal <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, wlkrs, rndmVls, zRndmVls, prpsdWlkrs );
+            /* 1 ) Generate Z values and proposed walkers, mdl.zRndmVls[nmbrOfHlfTheWlkrs], prpsdWlkrs[nmbrOfHlfTheWlkrs] */
+            GenerateProposal <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, wlkrs, rndmVls, mdl.zRndmVls, prpsdWlkrs );
             /* 2 a )  */
-            LinearInterpolation <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, nmbrOfDistBins, 4, Dist, EBV, errEBV, prpsdWlkrs, mNh, sNh );
+            LinearInterpolation <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, nmbrOfDistBins, 4, Dist, EBV, errEBV, prpsdWlkrs, mdl.mNh, mdl.sNh );
             /* 2 ) Assemble array of prior conditions */
-            AssembleArrayOfPriors <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, prpsdWlkrs, mNh, sNh, prrs );
+            AssembleArrayOfPriors <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, prpsdWlkrs, mdl.mNh, mdl.sNh, mdl.prrs );
             /* 3 ) Assemble array of absorption factors, spec[0].absrptnFctrs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfEnrgChnnls] */
             AssembleArrayOfAbsorptionFactors <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, spec[0].crssctns, abndncs, atmcNmbrs, prpsdWlkrs, spec[0].absrptnFctrs );
             /* 4 a ) Assemble array of nsa fluxes */
@@ -365,16 +361,16 @@ int main ( int argc, char *argv[] )
             if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes" ); return stpIndx; }
             /* 6 ) Assemble array of channel statistics, spec[0].chnnlSttstcs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfChnnls] */
             AssembleArrayOfChannelStatistics <<< dimGrid_3, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfChnnls, spec[0].srcExptm, spec[0].bckgrndExptm, spec[0].srcCnts, spec[0].bckgrndCnts, spec[0].flddMdlFlxs, spec[0].chnnlSttstcs );
-            /* 7 ) Sum up channel statistics, prpsdSttstcs[nmbrOfHlfTheWlkrs] (cuBlas) */
-            cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec[0].nmbrOfChnnls, nmbrOfHlfTheWlkrs, &alpha, spec[0].chnnlSttstcs, spec[0].nmbrOfChnnls, spec[0].ntcdChnnls, incxx, &beta, prpsdSttstcs, incyy );
+            /* 7 ) Sum up channel statistics, mdl.prpsdSttstcs[nmbrOfHlfTheWlkrs] (cuBlas) */
+            cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec[0].nmbrOfChnnls, nmbrOfHlfTheWlkrs, &alpha, spec[0].chnnlSttstcs, spec[0].nmbrOfChnnls, spec[0].ntcdChnnls, incxx, &beta, mdl.prpsdSttstcs, incyy );
             if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed yes " ); return stpIndx; }
             /* 8 ) Update walkers */
-            UpdateWalkers <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, prpsdWlkrs, prpsdSttstcs, prrs, zRndmVls, rndmVls, wlkrs, sttstcs );
+            UpdateWalkers <<< blcksPerThrd_1, thrdsPerBlck >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, prpsdWlkrs, mdl.prpsdSttstcs, mdl.prrs, mdl.zRndmVls, rndmVls, wlkrs, mdl.sttstcs );
             /* 9 ) Shift subset index */
             sbstIndx += 1;
         }
         /* Write walkers and statistics to chain,  chnOfWlkrsAndSttstcs[nmbrOfStps*(nmbrOfWlkrs+1)] */
-        WriteWalkersAndStatisticsToChain <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, stpIndx, wlkrs, sttstcs, chnOfWlkrs, chnOfSttstcs );
+        WriteWalkersAndStatisticsToChain <<< blcksPerThrd_0, thrdsPerBlck >>> ( nmbrOfWlkrs, stpIndx, wlkrs, mdl.sttstcs, chnOfWlkrs, mdl.chnOfSttstcs );
         /* Shift step index */
         stpIndx += 1;
     }
@@ -426,7 +422,7 @@ int main ( int argc, char *argv[] )
     /* Write results to a file: */
     SimpleWriteDataFloat ( "Autocor.dat", nmbrOfStps, atCrrFnctn );
     SimpleWriteDataFloat ( "AutocorCM.dat", nmbrOfStps, cmSmAtCrrFnctn );
-    WriteChainToFile ( thrdNm, thrdIndx, nmbrOfWlkrs, nmbrOfStps, chnOfWlkrs, chnOfSttstcs );
+    WriteChainToFile ( thrdNm, thrdIndx, nmbrOfWlkrs, nmbrOfStps, chnOfWlkrs, mdl.chnOfSttstcs );
 
     /* Destroy cuda related contexts and things: */
     cusparseDestroy ( cusparseHandle );
@@ -440,22 +436,24 @@ int main ( int argc, char *argv[] )
     /* Free memory: */
     FreeSpec ( spec );
 
+    cudaFree ( wlkrs );
+    cudaFree ( prpsdWlkrs );
+    cudaFree ( chnOfWlkrs );
+
+    cudaFree ( mdl.sttstcs );
+    cudaFree ( mdl.prpsdSttstcs );
+    cudaFree ( mdl.zRndmVls );
+    cudaFree ( mdl.prrs );
+    cudaFree ( mdl.chnOfSttstcs );
+    cudaFree ( mdl.mNh );
+    cudaFree ( mdl.sNh );
+
     cudaFree ( chnFnctn );
     cudaFree ( atCrrFnctn );
     cudaFree ( cmSmAtCrrFnctn );
     cudaFree ( rndmVls );
     cudaFree ( lstWlkrsAndSttstcs );
     cudaFree ( abndncs );
-    cudaFree ( sttstcs );
-    cudaFree ( prpsdSttstcs );
-    cudaFree ( wlkrs );
-    cudaFree ( prpsdWlkrs );
-    cudaFree ( zRndmVls );
-    cudaFree ( prrs );
-    cudaFree ( chnOfWlkrs );
-    cudaFree ( chnOfSttstcs );
-    cudaFree ( mNh );
-    cudaFree ( sNh );
     cudaFree ( RedData );
     cudaFree ( Dist );
     cudaFree ( EBV );

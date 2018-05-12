@@ -15,6 +15,83 @@
 #include <cufft.h>
 #include "GwMcmcStructuresFunctionsAndKernels.cuh"
 
+__host__ void FreeSpec ( const Spectrum *spec )
+{
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    cudaFree ( spec[i].rmfVlsInCsc );
+    cudaFree ( spec[i].rmfIndxInCsc );
+    cudaFree ( spec[i].rmfPntrInCsc );
+    cudaFree ( spec[i].rmfVls );
+    cudaFree ( spec[i].rmfIndx );
+    cudaFree ( spec[i].rmfPntr );
+    cudaFree ( spec[i].enrgChnnls );
+    cudaFree ( spec[i].arfFctrs );
+    cudaFree ( spec[i].srcCnts );
+    cudaFree ( spec[i].bckgrndCnts );
+    cudaFree ( spec[i].gdQltChnnls );
+    cudaFree ( spec[i].lwrChnnlBndrs );
+    cudaFree ( spec[i].hghrChnnlBndrs );
+    cudaFree ( spec[i].crssctns );
+    cudaFree ( spec[i].absrptnFctrs );
+    cudaFree ( spec[i].mdlFlxs );
+    cudaFree ( spec[i].flddMdlFlxs );
+    cudaFree ( spec[i].chnnlSttstcs );
+    cudaFree ( spec[i].ntcdChnnls );
+
+  }
+}
+
+__host__ void AllocateMemoryForModelSpecArrays ( const int nmbrOfWlkrs, Spectrum *spec )
+{
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    cudaMallocManaged ( ( void ** ) &spec[i].crssctns, spec[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].absrptnFctrs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].mdlFlxs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].flddMdlFlxs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].ntcdChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].chnnlSttstcs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
+  }
+}
+
+__host__ void ReadAllTheFitsData ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spec )
+{
+  char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    ReadFitsInfo ( spcLst[i], &spec[i].nmbrOfEnrgChnnls, &spec[i].nmbrOfChnnls, &spec[i].nmbrOfRmfVls, &spec[i].srcExptm, &spec[i].bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
+    if ( verbose == 1 )
+    {
+      printf ( ".................................................................\n" );
+      printf ( " Spectrum number  -- %i\n", i );
+      printf ( " Spectrum table   -- %s\n", srcTbl );
+      printf ( " ARF table        -- %s\n", arfTbl );
+      printf ( " RMF table        -- %s\n", rmfTbl );
+      printf ( " Background table -- %s\n", bckgrndTbl );
+      printf ( " Number of energy channels                = %i\n", spec[i].nmbrOfEnrgChnnls );
+      printf ( " Number of instrument channels            = %i\n", spec[i].nmbrOfChnnls );
+      printf ( " Number of nonzero elements of RMF matrix = %i\n", spec[i].nmbrOfRmfVls );
+      printf ( " Exposure time                            = %.8E\n", spec[i].srcExptm );
+      printf ( " Exposure time (background)               = %.8E\n", spec[i].bckgrndExptm );
+    }
+    cudaMallocManaged ( ( void ** ) &spec[i].rmfPntrInCsc, ( spec[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].rmfIndxInCsc, spec[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].rmfPntr, ( spec[i].nmbrOfChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].rmfIndx, spec[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].rmfVlsInCsc, spec[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].rmfVls, spec[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].enrgChnnls, ( spec[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].arfFctrs, spec[i].nmbrOfEnrgChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].srcCnts, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].bckgrndCnts, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].lwrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].hghrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spec[i].gdQltChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
+    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, spec[i].nmbrOfEnrgChnnls, spec[i].nmbrOfChnnls, spec[i].nmbrOfRmfVls, spec[i].srcCnts, spec[i].bckgrndCnts, spec[i].arfFctrs, spec[i].rmfVlsInCsc, spec[i].rmfIndxInCsc, spec[i].rmfPntrInCsc, spec[i].gdQltChnnls, spec[i].lwrChnnlBndrs, spec[i].hghrChnnlBndrs, spec[i].enrgChnnls );
+  }
+}
+
 /* Functions: */
 __host__ __device__ Walker AddWalkers ( Walker a, Walker b )
 {
@@ -661,70 +738,6 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
         mNh[wlIndx] = 0.8 * tmpMNh;
         sNh[wlIndx] = 0.8 * tmpMNh * ( tmpSNh / tmpMNh + 0.3 / 0.8 );
     }
-}
-
-__host__ void FreeSpec ( const Spectrum *spec )
-{
-  for ( int i = 0; i < NSPCTR; i++ )
-  {
-    cudaFree ( spec[i].rmfVlsInCsc );
-    cudaFree ( spec[i].rmfIndxInCsc );
-    cudaFree ( spec[i].rmfPntrInCsc );
-    cudaFree ( spec[i].rmfVls );
-    cudaFree ( spec[i].rmfIndx );
-    cudaFree ( spec[i].rmfPntr );
-    cudaFree ( spec[i].enrgChnnls );
-    cudaFree ( spec[i].arfFctrs );
-    cudaFree ( spec[i].srcCnts );
-    cudaFree ( spec[i].bckgrndCnts );
-    cudaFree ( spec[i].gdQltChnnls );
-    cudaFree ( spec[i].lwrChnnlBndrs );
-    cudaFree ( spec[i].hghrChnnlBndrs );
-    cudaFree ( spec[i].crssctns );
-    cudaFree ( spec[i].absrptnFctrs );
-    cudaFree ( spec[i].mdlFlxs );
-    cudaFree ( spec[i].flddMdlFlxs );
-    cudaFree ( spec[i].chnnlSttstcs );
-    cudaFree ( spec[i].ntcdChnnls );
-
-  }
-}
-
-__host__ void ReadAllTheFitsData ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spec )
-{
-  char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
-  for ( int i = 0; i < NSPCTR; i++ )
-  {
-    ReadFitsInfo ( spcLst[i], &spec[i].nmbrOfEnrgChnnls, &spec[i].nmbrOfChnnls, &spec[i].nmbrOfRmfVls, &spec[i].srcExptm, &spec[i].bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
-    if ( verbose == 1 )
-    {
-      printf ( ".................................................................\n" );
-      printf ( " Spectrum number  -- %i\n", i );
-      printf ( " Spectrum table   -- %s\n", srcTbl );
-      printf ( " ARF table        -- %s\n", arfTbl );
-      printf ( " RMF table        -- %s\n", rmfTbl );
-      printf ( " Background table -- %s\n", bckgrndTbl );
-      printf ( " Number of energy channels                = %i\n", spec[i].nmbrOfEnrgChnnls );
-      printf ( " Number of instrument channels            = %i\n", spec[i].nmbrOfChnnls );
-      printf ( " Number of nonzero elements of RMF matrix = %i\n", spec[i].nmbrOfRmfVls );
-      printf ( " Exposure time                            = %.8E\n", spec[i].srcExptm );
-      printf ( " Exposure time (background)               = %.8E\n", spec[i].bckgrndExptm );
-    }
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfPntrInCsc, ( spec[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfIndxInCsc, spec[i].nmbrOfRmfVls * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfPntr, ( spec[i].nmbrOfChnnls + 1 ) * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfIndx, spec[i].nmbrOfRmfVls * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfVlsInCsc, spec[i].nmbrOfRmfVls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfVls, spec[i].nmbrOfRmfVls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].enrgChnnls, ( spec[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].arfFctrs, spec[i].nmbrOfEnrgChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].srcCnts, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].bckgrndCnts, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].lwrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].hghrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].gdQltChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, spec[i].nmbrOfEnrgChnnls, spec[i].nmbrOfChnnls, spec[i].nmbrOfRmfVls, spec[i].srcCnts, spec[i].bckgrndCnts, spec[i].arfFctrs, spec[i].rmfVlsInCsc, spec[i].rmfIndxInCsc, spec[i].rmfPntrInCsc, spec[i].gdQltChnnls, spec[i].lwrChnnlBndrs, spec[i].hghrChnnlBndrs, spec[i].enrgChnnls );
-  }
 }
 
 __host__ void ReadFitsInfo ( const char *spcFl,
