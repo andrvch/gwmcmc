@@ -15,6 +15,17 @@
 #include <cufft.h>
 #include "GwMcmcStructuresFunctionsAndKernels.cuh"
 
+__host__ void DestroyAllTheCudaStaff ( const Cuparam cdp )
+{
+  cusparseDestroy ( cdp.cusparseHandle );
+  cublasDestroy ( cdp.cublasHandle );
+  curandDestroyGenerator ( cdp.curandGnrtr );
+  curandDestroyGenerator ( cdp.curandGnrtrHst );
+  cudaEventDestroy ( cdp.start );
+  cudaEventDestroy ( cdp.stop );
+  cufftDestroy ( cdp.cufftPlan );
+}
+
 __host__ void FreeSpec ( const Spectrum *spec )
 {
   for ( int i = 0; i < NSPCTR; i++ )
@@ -60,6 +71,89 @@ __host__ void FreeChain ( const Chain *chn )
   cudaFree ( chn[0].lstWlkrsAndSttstcs );
 }
 
+__host__ void FreeModel ( const Model *mdl )
+{
+  cudaFree ( mdl[0].atmcNmbrs );
+  cudaFree ( mdl[0].abndncs );
+  cudaFree ( mdl[0].RedData );
+  cudaFree ( mdl[0].Dist );
+  cudaFree ( mdl[0].EBV );
+  cudaFree ( mdl[0].errDist );
+  cudaFree ( mdl[0].errEBV );
+  cudaFree ( mdl[0].nsaDt );
+  cudaFree ( mdl[0].nsaT );
+  cudaFree ( mdl[0].nsaE );
+  cudaFree ( mdl[0].nsaFlxs );
+}
+
+__host__ int InitializeCuda ( const int devId, Cuparam *cdp )
+{
+  /* cuda runtime version */
+  cudaRuntimeGetVersion ( cdp[0].runtimeVersion );
+  cudaDriverGetVersion ( cdp[0].driverVersion );
+
+  /* Set and enquire about cuda device */
+  cudaSetDevice ( devId );
+  cudaGetDevice ( &cdp[0].dev );
+  cudaGetDeviceProperties ( &cdp[0].prop, cdp[0].dev );
+
+  /* cuSparse related things */
+  cdp[0].cusparseStat = cusparseCreate ( &cdp[0].cusparseHandle );
+  if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of cuSparse context failed " ); return 1; }
+  cdp[0].cusparseStat = cusparseCreateMatDescr ( &cdp[0].MatDescr );
+  if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of matrix descriptor failed " ); return 1; }
+  cdp[0].cusparseStat = cusparseSetMatType ( cdp[0].MatDescr, CUSPARSE_MATRIX_TYPE_GENERAL );
+  if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting matrix type to general failed " ); return 1; }
+  cdp[0].cusparseStat = cusparseSetMatIndexBase ( cdp[0].MatDescr, CUSPARSE_INDEX_BASE_ZERO );
+  if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting to base zero index failed " ); return 1; }
+
+  /* cuBlas related things */
+  cdp[0].cublasStat = cublasCreate ( &cdp[0].cublasHandle );
+  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Creation of cuBlas context failed " ); return 1; }
+
+  /* cuRand related things */
+  curandCreateGenerator ( &cdp[0].curandGnrtr, CURAND_RNG_PSEUDO_DEFAULT );
+  curandCreateGeneratorHost ( &cdp[0].curandGnrtrHst, CURAND_RNG_PSEUDO_DEFAULT );
+  curandSetPseudoRandomGeneratorSeed ( cdp[0].curandGnrtr, 1234ULL );
+  curandSetPseudoRandomGeneratorSeed ( cdp[0].curandGnrtrHst, 1234ULL );
+
+  /* cuFfft related things */
+  cudaEventCreate ( &cdp[0].start );
+  cudaEventCreate ( &cdp[0].stop );
+
+  printf ( "\n" );
+  printf ( ".................................................................\n" );
+  printf ( " CUDA device ID: %d\n", cdp[0].dev );
+  printf ( " CUDA device Name: %s\n", cdp[0].prop.name );
+  printf ( " Driver API: v%d \n", cdp[0].driverVersion[0] );
+  printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
+
+  return 0;
+}
+
+__host__ void InitializeModel ( Model *mdl )
+{
+  cudaMallocManaged ( ( void ** ) &mdl[0].atmcNmbrs, ATNMR * sizeof ( int ) );
+  for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
+  cudaMallocManaged ( ( void ** ) &mdl[0].abndncs, ( NELMS + 1 ) * sizeof ( float ) );
+
+  SimpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
+
+  cudaMallocManaged ( ( void ** ) &mdl[0].RedData, mdl[0].nmbrOfDistBins * mdl[0].numRedCol * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].Dist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].EBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].errDist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].errEBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+
+  SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
+
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaE, mdl[0].numNsaE * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaT, mdl[0].numNsaT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
+  SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
+}
+
 __host__ void InitializeChain ( const char *thrdNm, const int thrdIndx, const int nmbrOfWlkrs, const int nmbrOfStps, const float *phbsPwrlwInt, const curandGenerator_t curandGnrtrHst, const float dlt, Chain *chn )
 {
   int prmtrIndx = 0;
@@ -86,29 +180,29 @@ __host__ void InitializeChain ( const char *thrdNm, const int thrdIndx, const in
   }
   else if ( thrdIndx == 0 )
   {
-      chn[0].strtngWlkr.par[0] = phbsPwrlwInt[0];
-      chn[0].strtngWlkr.par[1] = phbsPwrlwInt[1];
-      chn[0].strtngWlkr.par[2] = phbsPwrlwInt[2];
-      chn[0].strtngWlkr.par[3] = phbsPwrlwInt[3];
-      chn[0].strtngWlkr.par[4] = phbsPwrlwInt[4];
-      chn[0].strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
-      curandGenerateUniform ( curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
-      prmtrIndx = NHINDX + 1;
-      while ( prmtrIndx < NPRS )
-      {
-          chn[0].strtngWlkr.par[prmtrIndx] = dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
-          prmtrIndx += 1;
-      }
-      prmtrIndx = 0;
-      printf ( ".................................................................\n" );
-      printf ( " Initial parameters -- " );
-      while ( prmtrIndx < NPRS )
-      {
-          printf ( " %2.2f ", chn[0].strtngWlkr.par[prmtrIndx] );
-          prmtrIndx += 1;
-      }
-      printf ( "\n" );
-      if ( not PriorCondition ( chn[0].strtngWlkr ) ) { printf ( " !!!Initial walker unsatisfy prior conditions!!!\n" ); }
+    chn[0].strtngWlkr.par[0] = phbsPwrlwInt[0];
+    chn[0].strtngWlkr.par[1] = phbsPwrlwInt[1];
+    chn[0].strtngWlkr.par[2] = phbsPwrlwInt[2];
+    chn[0].strtngWlkr.par[3] = phbsPwrlwInt[3];
+    chn[0].strtngWlkr.par[4] = phbsPwrlwInt[4];
+    chn[0].strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
+    curandGenerateUniform ( curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
+    prmtrIndx = NHINDX + 1;
+    while ( prmtrIndx < NPRS )
+    {
+      chn[0].strtngWlkr.par[prmtrIndx] = dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
+      prmtrIndx += 1;
+    }
+    prmtrIndx = 0;
+    printf ( ".................................................................\n" );
+    printf ( " Initial parameters -- " );
+    while ( prmtrIndx < NPRS )
+    {
+      printf ( " %2.2f ", chn[0].strtngWlkr.par[prmtrIndx] );
+      prmtrIndx += 1;
+    }
+    printf ( "\n" );
+    if ( not PriorCondition ( chn[0].strtngWlkr ) ) { printf ( " !!!Initial walker unsatisfy prior conditions!!!\n" ); }
   }
 }
 

@@ -24,32 +24,64 @@
 /* Walker data type */
 typedef union wlk3u
 {
-    struct wlk3s
-    {
-        float phtnIndx, nrmlztn, lgTmprtr, rds, dstnc, nh, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17;
-    } wlk3s;
-    float par[NPRS];
+  struct wlk3s
+  {
+    float phtnIndx, nrmlztn, lgTmprtr, rds, dstnc, nh, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17;
+  } wlk3s;
+  float par[NPRS];
 } Walker;
 
 /* Complex data type */
 typedef float2 Complex;
 
+struct Cuparam
+{
+  cudaError_t err = cudaSuccess;
+  int runtimeVersion[4], driverVersion[4];
+  cudaDeviceProp prop;
+  int dev = 0;
+  cusparseStatus_t cusparseStat;
+  cusparseHandle_t cusparseHandle = 0;
+  cusparseMatDescr_t MatDescr = 0;
+  cublasStatus_t cublasStat;
+  cublasHandle_t cublasHandle = 0;
+  curandGenerator_t curandGnrtr, curandGnrtrHst;
+  cufftResult_t cufftRes;
+  cufftHandle cufftPlan;
+  cudaEvent_t start, stop;
+};
+
 struct Spectrum
 {
+  float lwrNtcdEnrg = 0.3, hghrNtcdEnrg = 8.0;
   int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
   float srcExptm, bckgrndExptm;
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
-  float *crssctns, *absrptnFctrs; //, *absrptnFctrsForUntNhAndFxdAbndncs;
-  float *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs;
-  float smOfNtcdChnnls;
+  float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
 };
 
 struct Chain
 {
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr;
-  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs;
-  float atcTime;
+  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
+};
+
+struct Model
+{
+  int sgFlg = 3; // Xset.xsect = "bcmc"
+  const char *abndncsFl = "AngrAbundancesAndRedshift.pars"; // Xset.abund = "angr" and redshift = 0
+  const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
+  int *atmcNmbrs;
+  float *abndncs;
+  const char *rddnngFl = "reddening0633.data";
+  const int nmbrOfDistBins = 442;
+  const int numRedCol = 4;
+  float *RedData, *Dist, *EBV, *errDist, *errEBV;
+  const char *nsaFl = "nsa_spec_B_1e12G.dat";
+  int numNsaE = 1000;
+  int numNsaT = 14;
+  float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
 };
 
 /* Functions */
@@ -83,6 +115,10 @@ __host__ void CumulativeSumOfAutocorrelationFunction ( const int, const float*, 
 __host__ int ChooseWindow ( const int, const float, const float* );
 __host__ void FreeSpec ( const Spectrum* );
 __host__ void FreeChain ( const Chain* );
+__host__ void FreeModel ( const Model* );
+__host__ void DestroyAllTheCudaStaff ( const Cuparam );
+__host__ int InitializeCuda ( const int, Cuparam* );
+__host__ void InitializeModel ( Model *mdl );
 __host__ void InitializeSpectra ( const char*[], cusparseHandle_t, cusparseStatus_t, cublasHandle_t, cublasStatus_t, const int, const int, const float, const float, int, int*, Spectrum* );
 __host__ void InitializeChain ( const char*, const int, const int, const int, const float*, const curandGenerator_t, const float, Chain* );
 __host__ void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );

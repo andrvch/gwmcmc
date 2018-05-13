@@ -107,109 +107,75 @@ __global__ void AssembleArrayOfModelFluxes ( const int nmbrOfWlkrs, const int nm
  */
 int main ( int argc, char *argv[] )
 {
+    /* Set up initial parameters: */
+    const int devId = atoi( argv[1] );
+    const char *spcFl = argv[2];
+    const char *spcLst[NSPCTR] = { spcFl, spcFl };
+    const char *thrdNm = argv[3];
+    const int nmbrOfWlkrs = atoi ( argv[4] );
+    const int nmbrOfStps = atoi ( argv[5] );
+    const int thrdIndx = atoi ( argv[6] );
+    const float lwrNtcdEnrg = 0.3;
+    const float hghrNtcdEnrg = 8.0;
+    const float dlt = 1.E-4;
+    const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
+
     int incxx = INCXX, incyy = INCYY;
     float alpha = ALPHA, beta = BETA;
     dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
     const int verbose = 1;
 
-    /* cuda succes status: */
-    cudaError_t err = cudaSuccess;
+    /* Initialize Cuda */
+    Cuparam cdp;
+    //InitializeCuda ( devId, cdp );
     /* cuda runtime version */
-    int runtimeVersion[4], driverVersion[4];
-    cudaRuntimeGetVersion ( runtimeVersion );
-    cudaDriverGetVersion ( driverVersion );
+    cudaRuntimeGetVersion ( cdp.runtimeVersion );
+    cudaDriverGetVersion ( cdp.driverVersion );
+
+    /* Set and enquire about cuda device */
+    cudaSetDevice ( devId );
+    cudaGetDevice ( &cdp.dev );
+    cudaGetDeviceProperties ( &cdp.prop, cdp.dev );
+
+    /* cuSparse related things */
+    cdp.cusparseStat = cusparseCreate ( &cdp.cusparseHandle );
+    if ( cdp.cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of cuSparse context failed " ); return 1; }
+    cdp.cusparseStat = cusparseCreateMatDescr ( &cdp.MatDescr );
+    if ( cdp.cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of matrix descriptor failed " ); return 1; }
+    cdp.cusparseStat = cusparseSetMatType ( cdp.MatDescr, CUSPARSE_MATRIX_TYPE_GENERAL );
+    if ( cdp.cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting matrix type to general failed " ); return 1; }
+    cdp.cusparseStat = cusparseSetMatIndexBase ( cdp.MatDescr, CUSPARSE_INDEX_BASE_ZERO );
+    if ( cdp.cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting to base zero index failed " ); return 1; }
+
+    /* cuBlas related things */
+    cdp.cublasStat = cublasCreate ( &cdp.cublasHandle );
+    if ( cdp.cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Creation of cuBlas context failed " ); return 1; }
+
+    /* cuRand related things */
+    curandCreateGenerator ( &cdp.curandGnrtr, CURAND_RNG_PSEUDO_DEFAULT );
+    curandCreateGeneratorHost ( &cdp.curandGnrtrHst, CURAND_RNG_PSEUDO_DEFAULT );
+    curandSetPseudoRandomGeneratorSeed ( cdp.curandGnrtr, 1234ULL );
+    curandSetPseudoRandomGeneratorSeed ( cdp.curandGnrtrHst, 1234ULL );
+
+    /* cuFfft related things */
+    cudaEventCreate ( &cdp.start );
+    cudaEventCreate ( &cdp.stop );
+
     printf ( "\n" );
     printf ( ".................................................................\n" );
-    printf ( " Driver API: v%d \n", driverVersion[0] );
-    printf ( " Runtime API: v%d \n", runtimeVersion[0] );
-    /* Set and enquire about cuda device */
-    cudaDeviceProp prop;
-    int dev;
-    cudaSetDevice ( atoi( argv[1] ) );
-    cudaGetDevice ( &dev );
-    printf ( " CUDA device ID: %d\n", dev );
-    cudaGetDeviceProperties ( &prop, dev );
-    printf ( " CUDA device Name: %s\n", prop.name );
-    /* cuSparse related things */
-    cusparseStatus_t cusparseStat;
-    cusparseHandle_t cusparseHandle = 0;
-    cusparseMatDescr_t MatDescr = 0;
-    cusparseStat = cusparseCreate ( &cusparseHandle );
-    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of cuSparse context failed " ); return 1; }
-    cusparseStat = cusparseCreateMatDescr ( &MatDescr );
-    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of matrix descriptor failed " ); return 1; }
-    cusparseStat = cusparseSetMatType ( MatDescr, CUSPARSE_MATRIX_TYPE_GENERAL );
-    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting matrix type to general failed " ); return 1; }
-    cusparseStat = cusparseSetMatIndexBase ( MatDescr, CUSPARSE_INDEX_BASE_ZERO );
-    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting to base zero index failed " ); return 1; }
-    /* cuBlas related things */
-    cublasStatus_t cublasStat;
-    cublasHandle_t cublasHandle = 0;
-    cublasStat = cublasCreate ( &cublasHandle );
-    if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Creation of cuBlas context failed " ); return 1; }
-    /* cuRand related things */
-    curandGenerator_t curandGnrtr, curandGnrtrHst;
-    curandCreateGenerator ( &curandGnrtr, CURAND_RNG_PSEUDO_DEFAULT );
-    curandCreateGeneratorHost ( &curandGnrtrHst, CURAND_RNG_PSEUDO_DEFAULT );
-    curandSetPseudoRandomGeneratorSeed ( curandGnrtr, 1234ULL );
-    curandSetPseudoRandomGeneratorSeed ( curandGnrtrHst, 1234ULL );
-    /* cuFfft related things */
-    cufftResult_t cufftRes;
-    cufftHandle cufftPlan;
+    printf ( " CUDA device ID: %d\n", cdp.dev );
+    printf ( " CUDA device Name: %s\n", cdp.prop.name );
+    printf ( " Driver API: v%d \n", cdp.driverVersion[0] );
+    printf ( " Runtime API: v%d \n", cdp.runtimeVersion[0] );
 
-    /* Set up initial parameters: */
-    const char *spcFl = argv[2];
-    const char *spcLst[NSPCTR] = { spcFl, spcFl };
-    const char *thrdNm = argv[3];
-    const int nmbrOfWlkrs = atoi ( argv[4] );
-    const int nmbrOfHlfTheWlkrs = nmbrOfWlkrs / 2;
-    const int nmbrOfStps = atoi ( argv[5] );
-    const int thrdIndx = atoi ( argv[6] );
-    const float lwrNtcdEnrg = 0.3;
-    const float hghrNtcdEnrg = 8.0;
-    const char *abndncsFl = "AngrAbundancesAndRedshift.pars"; // Xset.abund = "angr" and redshift = 0
-    const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
-    const char *rddnngFl = "reddening0633.data";
-    const int nmbrOfDistBins = 442;
-    const int numRedCol = 4;
-    const char *nsaFl = "nsa_spec_B_1e12G.dat";
-    int numNsaE = 1000;
-    int numNsaT = 14;
-    int sgFlg = 3; // Xset.xsect = "bcmc"
-    const float dlt = 1.E-4;
-    const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
 
-    int *atmcNmbrs;
-    cudaMallocManaged ( ( void ** ) &atmcNmbrs, ATNMR * sizeof ( int ) );
-    for ( int i = 0; i < ATNMR; i++ ) { atmcNmbrs[i] = atNm[i]; }
-
-    /* allocate and read model specific data */
-    float *abndncs;
-    cudaMallocManaged ( ( void ** ) &abndncs, ( NELMS + 1 ) * sizeof ( float ) );
-    SimpleReadDataFloat ( abndncsFl, abndncs );
-
-    float *RedData, *Dist, *EBV, *errDist, *errEBV;
-    cudaMallocManaged ( ( void ** ) &RedData, nmbrOfDistBins * numRedCol * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &Dist, nmbrOfDistBins * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &EBV, nmbrOfDistBins * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &errDist, nmbrOfDistBins * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &errEBV, nmbrOfDistBins * sizeof ( float ) );
-    SimpleReadReddenningData ( rddnngFl, nmbrOfDistBins, RedData, Dist, EBV, errDist, errEBV );
-
-    float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-    cudaMallocManaged ( ( void ** ) &nsaDt, ( numNsaE + 1 ) * ( numNsaT + 1 ) * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &nsaE, numNsaE * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &nsaT, numNsaT * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &nsaFlxs, numNsaE * numNsaT * sizeof ( float ) );
-    SimpleReadNsaTable ( nsaFl, numNsaE, numNsaT, nsaDt, nsaT, nsaE, nsaFlxs );
-
-    /* Allocate walkers etc.: */
+    /* Initialize model, chain and spectrum */
+    Model mdl[NSPCTR];
     Chain chn[NSPCTR];
-    InitializeChain ( thrdNm, thrdIndx, nmbrOfWlkrs, nmbrOfStps, phbsPwrlwInt, curandGnrtrHst, dlt, chn );
-
-    /* Read FITS data and allocated spectra and model spectra arrays */
-    Spectrum spec[NSPCTR];
-    InitializeSpectra ( spcLst, cusparseHandle, cusparseStat, cublasHandle, cublasStat, verbose, nmbrOfWlkrs, lwrNtcdEnrg, hghrNtcdEnrg, sgFlg, atmcNmbrs, spec );
+    Spectrum spc[NSPCTR];
+    InitializeModel ( mdl );
+    InitializeChain ( thrdNm, thrdIndx, nmbrOfWlkrs, nmbrOfStps, phbsPwrlwInt, cdp.curandGnrtrHst, dlt, chn );
+    InitializeSpectra ( spcLst, cdp.cusparseHandle, cdp.cusparseStat, cdp.cublasHandle, cdp.cublasStat, verbose, nmbrOfWlkrs, lwrNtcdEnrg, hghrNtcdEnrg, mdl[0].sgFlg, mdl[0].atmcNmbrs, spc );
 
     if ( thrdIndx > 0 )
     {
@@ -219,35 +185,32 @@ int main ( int argc, char *argv[] )
     else if ( thrdIndx == 0 )
     {
         /* 1 ) Generate uniformly distributed floating point values between 0.0 and 1.0, chn[0].rndmVls[nmbrOfWlkrs] (cuRand) */
-        curandGenerateUniform ( curandGnrtr, chn[0].rndmVls, nmbrOfWlkrs );
+        curandGenerateUniform ( cdp.curandGnrtr, chn[0].rndmVls, nmbrOfWlkrs );
         /* 2 ) Initialize walkers, actlWlkrs[nmbrOfWlkrs] */
         InitializeWalkersAtRandom <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, dlt, chn[0].strtngWlkr, chn[0].rndmVls, chn[0].wlkrs );
-        /* 3 ) Assemble array of absorption factors, spec[0].absrptnFctrs[nmbrOfWlkrs*spec[0].nmbrOfEnrgChnnls] */
-        AssembleArrayOfAbsorptionFactors <<< Grid ( spec[0].nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, spec[0].crssctns, abndncs, atmcNmbrs, chn[0].wlkrs, spec[0].absrptnFctrs );
+        /* 3 ) Assemble array of absorption factors, spc[0].absrptnFctrs[nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
+        AssembleArrayOfAbsorptionFactors <<< Grid ( spc[0].nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, ATNMR, spc[0].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].wlkrs, spc[0].absrptnFctrs );
         /* 4 a ) Assemble array of nsa fluxes */
-        //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, spec[0].enrgChnnls, chn[0].wlkrs, spec[0].mdlFlxs );
-        /* 4 ) Assemble array of model fluxes, spec[0].mdlFlxs[nmbrOfWlkrs*spec[0].nmbrOfEnrgChnnls] */
-        AssembleArrayOfModelFluxes <<< Grid ( spec[0].nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, spec[0].enrgChnnls, spec[0].arfFctrs, spec[0].absrptnFctrs, chn[0].wlkrs, spec[0].mdlFlxs );
-        /* 5 ) Fold model fluxes with RMF, spec[0].flddMdlFlxs[nmbrOfWlkrs*spec[0].nmbrOfChnnls] (cuSparse) */
-        cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spec[0].nmbrOfChnnls, nmbrOfWlkrs, spec[0].nmbrOfEnrgChnnls, spec[0].nmbrOfRmfVls, &alpha, MatDescr, spec[0].rmfVls, spec[0].rmfPntr, spec[0].rmfIndx, spec[0].mdlFlxs, spec[0].nmbrOfEnrgChnnls, &beta, spec[0].flddMdlFlxs, spec[0].nmbrOfChnnls );
-        if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
-        /* 6 ) Assemble array of channel statistics, spec[0].chnnlSttstcs[nmbrOfWlkrs*spec[0].nmbrOfChnnls] */
-        AssembleArrayOfChannelStatistics <<< Grid ( spec[0].nmbrOfChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec[0].nmbrOfChnnls, spec[0].srcExptm, spec[0].bckgrndExptm, spec[0].srcCnts, spec[0].bckgrndCnts, spec[0].flddMdlFlxs, spec[0].chnnlSttstcs );
+        //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].wlkrs, spc[0].mdlFlxs );
+        /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
+        AssembleArrayOfModelFluxes <<< Grid ( spc[0].nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, chn[0].wlkrs, spc[0].mdlFlxs );
+        /* 5 ) Fold model fluxes with RMF, spc[0].flddMdlFlxs[nmbrOfWlkrs*spc[0].nmbrOfChnnls] (cuSparse) */
+        cdp.cusparseStat = cusparseScsrmm ( cdp.cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[0].nmbrOfChnnls, nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, &alpha, cdp.MatDescr, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].nmbrOfEnrgChnnls, &beta, spc[0].flddMdlFlxs, spc[0].nmbrOfChnnls );
+        if ( cdp.cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
+        /* 6 ) Assemble array of channel statistics, spc[0].chnnlSttstcs[nmbrOfWlkrs*spc[0].nmbrOfChnnls] */
+        AssembleArrayOfChannelStatistics <<< Grid ( spc[0].nmbrOfChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
         /* 7 ) Sum up channel statistics, actlSttstcs[nmbrOfWlkrs] (cuBlas) */
-        cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec[0].nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec[0].chnnlSttstcs, spec[0].nmbrOfChnnls, spec[0].ntcdChnnls, incxx, &beta, chn[0].sttstcs, incyy );
-        if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+        cdp.cublasStat = cublasSgemv ( cdp.cublasHandle, CUBLAS_OP_T, spc[0].nmbrOfChnnls, nmbrOfWlkrs, &alpha, spc[0].chnnlSttstcs, spc[0].nmbrOfChnnls, spc[0].ntcdChnnls, incxx, &beta, chn[0].sttstcs, incyy );
+        if ( cdp.cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
     }
 
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
 
-    cudaEvent_t start, stop;
-    cudaEventCreate ( &start );
-    cudaEventCreate ( &stop );
-    cudaEventRecord ( start, 0 );
+    cudaEventRecord ( cdp.start, 0 );
 
-    /* Generate uniformly distributed floating point values between 0.0 and 1.0, chn[0].rndmVls[3*nmbrOfHlfTheWlkrs*nmbrOfStps] (cuRand) */
-    curandGenerateUniform ( curandGnrtr, chn[0].rndmVls, 3 * nmbrOfHlfTheWlkrs * nmbrOfStps );
+    /* Generate uniformly distributed floating point values between 0.0 and 1.0, chn[0].rndmVls[3*nmbrOfWlkrs / 2*nmbrOfStps] (cuRand) */
+    curandGenerateUniform ( cdp.curandGnrtr, chn[0].rndmVls, 3 * nmbrOfWlkrs / 2 * nmbrOfStps );
 
     /* Start MCMC !!!!! */
     int stpIndx = 0, sbstIndx;
@@ -258,28 +221,28 @@ int main ( int argc, char *argv[] )
         /* Iterate over two subsets */
         while ( sbstIndx < 2 )
         {
-            /* 1 ) Generate Z values and proposed walkers, chn[0].zRndmVls[nmbrOfHlfTheWlkrs], chn[0].prpsdWlkrs[nmbrOfHlfTheWlkrs] */
-            GenerateProposal <<< Blocks ( nmbrOfHlfTheWlkrs ), THRDSPERBLCK >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, chn[0].wlkrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].prpsdWlkrs );
+            /* 1 ) Generate Z values and proposed walkers, chn[0].zRndmVls[nmbrOfWlkrs / 2], chn[0].prpsdWlkrs[nmbrOfWlkrs / 2] */
+            GenerateProposal <<< Blocks ( nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( nmbrOfWlkrs / 2, stpIndx, sbstIndx, chn[0].wlkrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].prpsdWlkrs );
             /* 2 a )  */
-            LinearInterpolation <<< Blocks ( nmbrOfHlfTheWlkrs ), THRDSPERBLCK >>> ( nmbrOfHlfTheWlkrs, nmbrOfDistBins, 4, Dist, EBV, errEBV, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh );
+            LinearInterpolation <<< Blocks ( nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, 4, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh );
             /* 2 ) Assemble array of prior conditions */
-            AssembleArrayOfPriors <<< Blocks ( nmbrOfHlfTheWlkrs ), THRDSPERBLCK >>> ( nmbrOfHlfTheWlkrs, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
-            /* 3 ) Assemble array of absorption factors, spec[0].absrptnFctrs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfEnrgChnnls] */
-            AssembleArrayOfAbsorptionFactors <<< Grid ( spec[0].nmbrOfEnrgChnnls, nmbrOfHlfTheWlkrs ), dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, ATNMR, spec[0].crssctns, abndncs, atmcNmbrs, chn[0].prpsdWlkrs, spec[0].absrptnFctrs );
+            AssembleArrayOfPriors <<< Blocks ( nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
+            /* 3 ) Assemble array of absorption factors, spc[0].absrptnFctrs[nmbrOfWlkrs / 2*spc[0].nmbrOfEnrgChnnls] */
+            AssembleArrayOfAbsorptionFactors <<< Grid ( spc[0].nmbrOfEnrgChnnls, nmbrOfWlkrs / 2 ), dimBlock >>> ( nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, ATNMR, spc[0].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].prpsdWlkrs, spc[0].absrptnFctrs );
             /* 4 a ) Assemble array of nsa fluxes */
-            //BilinearInterpolation <<< dimGrid_1, dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, 2, nsaFlxs, nsaE, nsaT, numNsaE, numNsaT, spec[0].enrgChnnls, chn[0].prpsdWlkrs, spec[0].mdlFlxs );
-            /* 4 ) Assemble array of model fluxes, spec[0].mdlFlxs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfEnrgChnnls] */
-            AssembleArrayOfModelFluxes <<< Grid ( spec[0].nmbrOfEnrgChnnls, nmbrOfHlfTheWlkrs ), dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, spec[0].enrgChnnls, spec[0].arfFctrs, spec[0].absrptnFctrs, chn[0].prpsdWlkrs, spec[0].mdlFlxs );
-            /* 5 ) Fold model fluxes with RMF, spec[0].flddMdlFlxs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfChnnls] (cuSparse) */
-            cusparseStat = cusparseScsrmm ( cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spec[0].nmbrOfChnnls, nmbrOfHlfTheWlkrs, spec[0].nmbrOfEnrgChnnls, spec[0].nmbrOfRmfVls, &alpha, MatDescr,spec[0].rmfVls, spec[0].rmfPntr, spec[0].rmfIndx, spec[0].mdlFlxs, spec[0].nmbrOfEnrgChnnls, &beta, spec[0].flddMdlFlxs, spec[0].nmbrOfChnnls );
-            if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes" ); return stpIndx; }
-            /* 6 ) Assemble array of channel statistics, spec[0].chnnlSttstcs[nmbrOfHlfTheWlkrs*spec[0].nmbrOfChnnls] */
-            AssembleArrayOfChannelStatistics <<< Grid ( spec[0].nmbrOfChnnls, nmbrOfHlfTheWlkrs ), dimBlock >>> ( nmbrOfHlfTheWlkrs, spec[0].nmbrOfChnnls, spec[0].srcExptm, spec[0].bckgrndExptm, spec[0].srcCnts, spec[0].bckgrndCnts, spec[0].flddMdlFlxs, spec[0].chnnlSttstcs );
-            /* 7 ) Sum up channel statistics, chn[0].prpsdSttstcs[nmbrOfHlfTheWlkrs] (cuBlas) */
-            cublasStat = cublasSgemv ( cublasHandle, CUBLAS_OP_T, spec[0].nmbrOfChnnls, nmbrOfHlfTheWlkrs, &alpha, spec[0].chnnlSttstcs, spec[0].nmbrOfChnnls, spec[0].ntcdChnnls, incxx, &beta, chn[0].prpsdSttstcs, incyy );
-            if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed yes " ); return stpIndx; }
+            //BilinearInterpolation <<< dimGrid_1, dimBlock >>> ( nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].prpsdWlkrs, spc[0].mdlFlxs );
+            /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[nmbrOfWlkrs / 2*spc[0].nmbrOfEnrgChnnls] */
+            AssembleArrayOfModelFluxes <<< Grid ( spc[0].nmbrOfEnrgChnnls, nmbrOfWlkrs / 2 ), dimBlock >>> ( nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, chn[0].prpsdWlkrs, spc[0].mdlFlxs );
+            /* 5 ) Fold model fluxes with RMF, spc[0].flddMdlFlxs[nmbrOfWlkrs / 2*spc[0].nmbrOfChnnls] (cuSparse) */
+            cdp.cusparseStat = cusparseScsrmm ( cdp.cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[0].nmbrOfChnnls, nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, &alpha, cdp.MatDescr, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].nmbrOfEnrgChnnls, &beta, spc[0].flddMdlFlxs, spc[0].nmbrOfChnnls );
+            if ( cdp.cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes" ); return stpIndx; }
+            /* 6 ) Assemble array of channel statistics, spc[0].chnnlSttstcs[nmbrOfWlkrs / 2*spc[0].nmbrOfChnnls] */
+            AssembleArrayOfChannelStatistics <<< Grid ( spc[0].nmbrOfChnnls, nmbrOfWlkrs / 2 ), dimBlock >>> ( nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
+            /* 7 ) Sum up channel statistics, chn[0].prpsdSttstcs[nmbrOfWlkrs / 2] (cuBlas) */
+            cdp.cublasStat = cublasSgemv ( cdp.cublasHandle, CUBLAS_OP_T, spc[0].nmbrOfChnnls, nmbrOfWlkrs / 2, &alpha, spc[0].chnnlSttstcs, spc[0].nmbrOfChnnls, spc[0].ntcdChnnls, incxx, &beta, chn[0].prpsdSttstcs, incyy );
+            if ( cdp.cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed yes " ); return stpIndx; }
             /* 8 ) Update walkers */
-            UpdateWalkers <<< Blocks ( nmbrOfHlfTheWlkrs ), THRDSPERBLCK >>> ( nmbrOfHlfTheWlkrs, stpIndx, sbstIndx, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].zRndmVls, chn[0].rndmVls, chn[0].wlkrs, chn[0].sttstcs );
+            UpdateWalkers <<< Blocks ( nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( nmbrOfWlkrs / 2, stpIndx, sbstIndx, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].zRndmVls, chn[0].rndmVls, chn[0].wlkrs, chn[0].sttstcs );
             /* 9 ) Shift subset index */
             sbstIndx += 1;
         }
@@ -289,27 +252,27 @@ int main ( int argc, char *argv[] )
         stpIndx += 1;
     }
 
-    cudaEventRecord ( stop, 0 );
-    cudaEventSynchronize ( stop );
+    cudaEventRecord ( cdp.stop, 0 );
+    cudaEventSynchronize ( cdp.stop );
 
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
 
     float elapsedTime;
-    cudaEventElapsedTime ( &elapsedTime, start, stop );
+    cudaEventElapsedTime ( &elapsedTime, cdp.start, cdp.stop );
 
-    cudaEventRecord ( start, 0 );
+    cudaEventRecord ( cdp.start, 0 );
 
     int NN[RANK] = { nmbrOfStps };
-    cufftRes = cufftPlanMany ( &cufftPlan, RANK, NN, NULL, 1, nmbrOfStps, NULL, 1, nmbrOfStps, CUFFT_C2C, nmbrOfWlkrs );
-    if ( cufftRes != CUFFT_SUCCESS ) { fprintf ( stderr, "CUFFT error: Direct Plan configuration failed" ); return 1; }
+    cdp.cufftRes = cufftPlanMany ( &cdp.cufftPlan, RANK, NN, NULL, 1, nmbrOfStps, NULL, 1, nmbrOfStps, CUFFT_C2C, nmbrOfWlkrs );
+    if ( cdp.cufftRes != CUFFT_SUCCESS ) { fprintf ( stderr, "CUFFT error: Direct Plan configuration failed" ); return 1; }
     ReturnChainFunction <<< Grid ( nmbrOfWlkrs, nmbrOfStps ), dimBlock >>> ( nmbrOfStps, nmbrOfWlkrs, 0, chn[0].chnOfWlkrs, chn[0].chnFnctn );
-    AutocorrelationFunctionAveraged ( cufftRes, cublasStat, cublasHandle, cufftPlan, nmbrOfStps, nmbrOfWlkrs, chn[0].chnFnctn, chn[0].atCrrFnctn );
+    AutocorrelationFunctionAveraged ( cdp.cufftRes, cdp.cublasStat, cdp.cublasHandle, cdp.cufftPlan, nmbrOfStps, nmbrOfWlkrs, chn[0].chnFnctn, chn[0].atCrrFnctn );
 
-    cudaEventRecord ( stop, 0 );
-    cudaEventSynchronize ( stop );
+    cudaEventRecord ( cdp.stop, 0 );
+    cudaEventSynchronize ( cdp.stop );
 
     float cufftElapsedTime;
-    cudaEventElapsedTime ( &cufftElapsedTime, start, stop );
+    cudaEventElapsedTime ( &cufftElapsedTime, cdp.start, cdp.stop );
 
     CumulativeSumOfAutocorrelationFunction ( nmbrOfStps, chn[0].atCrrFnctn, chn[0].cmSmAtCrrFnctn );
     int MM = ChooseWindow ( nmbrOfStps, 5e0f, chn[0].cmSmAtCrrFnctn );
@@ -332,39 +295,23 @@ int main ( int argc, char *argv[] )
     WriteChainToFile ( thrdNm, thrdIndx, nmbrOfWlkrs, nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
 
     /* Destroy cuda related contexts and things: */
-    cusparseDestroy ( cusparseHandle );
-    cublasDestroy ( cublasHandle );
-    curandDestroyGenerator ( curandGnrtr );
-    curandDestroyGenerator ( curandGnrtrHst );
-    cudaEventDestroy ( start );
-    cudaEventDestroy ( stop );
-    cufftDestroy ( cufftPlan );
+    DestroyAllTheCudaStaff ( cdp );
 
     /* Free memory: */
-    FreeSpec ( spec );
+    FreeSpec ( spc );
     FreeChain ( chn );
+    FreeModel ( mdl );
 
-    cudaFree ( abndncs );
-    cudaFree ( RedData );
-    cudaFree ( Dist );
-    cudaFree ( EBV );
-    cudaFree ( errDist );
-    cudaFree ( errEBV );
-    cudaFree ( nsaDt );
-    cudaFree ( nsaT );
-    cudaFree ( nsaE );
-    cudaFree ( nsaFlxs );
-    cudaFree ( atmcNmbrs );
     // Reset the device and exit
     // cudaDeviceReset causes the driver to clean up all state. While
     // not mandatory in normal operation, it is good practice.  It is also
     // needed to ensure correct operation when the application is being
     // profiled. Calling cudaDeviceReset causes all profile data to be
     // flushed before the application exits
-    err = cudaDeviceReset ( );
-    if ( err != cudaSuccess )
+    cdp.err = cudaDeviceReset ( );
+    if ( cdp.err != cudaSuccess )
     {
-        fprintf ( stderr, "Failed to deinitialize the device! error=%s\n", cudaGetErrorString ( err ) );
+        fprintf ( stderr, "Failed to deinitialize the device! error=%s\n", cudaGetErrorString ( cdp.err ) );
         exit ( EXIT_FAILURE );
     }
 
