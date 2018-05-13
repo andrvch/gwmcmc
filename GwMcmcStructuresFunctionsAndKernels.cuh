@@ -36,10 +36,10 @@ typedef float2 Complex;
 
 struct Cuparam
 {
+  int dev;
   cudaError_t err = cudaSuccess;
   int runtimeVersion[4], driverVersion[4];
   cudaDeviceProp prop;
-  int dev = 0;
   cusparseStatus_t cusparseStat;
   cusparseHandle_t cusparseHandle = 0;
   cusparseMatDescr_t MatDescr = 0;
@@ -53,7 +53,9 @@ struct Cuparam
 
 struct Spectrum
 {
-  float lwrNtcdEnrg = 0.3, hghrNtcdEnrg = 8.0;
+  char *spcLst[NSPCTR];
+  char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
+  float lwrNtcdEnrg, hghrNtcdEnrg;
   int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
   float srcExptm, bckgrndExptm;
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
@@ -63,8 +65,12 @@ struct Spectrum
 
 struct Chain
 {
+  float dlt;
+  char *thrdNm;
+  int nmbrOfWlkrs, nmbrOfStps, thrdIndx, nmbrOfRndmVls;
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr;
   float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
+  float elapsedTime, cufftElapsedTime;
 };
 
 struct Model
@@ -116,13 +122,14 @@ __host__ int ChooseWindow ( const int, const float, const float* );
 __host__ void FreeSpec ( const Spectrum* );
 __host__ void FreeChain ( const Chain* );
 __host__ void FreeModel ( const Model* );
-__host__ void DestroyAllTheCudaStaff ( const Cuparam );
-__host__ int InitializeCuda ( const int, Cuparam* );
-__host__ void InitializeModel ( Model *mdl );
-__host__ void InitializeSpectra ( const char*[], cusparseHandle_t, cusparseStatus_t, cublasHandle_t, cublasStatus_t, const int, const int, const float, const float, int, int*, Spectrum* );
-__host__ void InitializeChain ( const char*, const int, const int, const int, const float*, const curandGenerator_t, const float, Chain* );
+__host__ void DestroyAllTheCudaStaff ( const Cuparam* );
+__host__ int InitializeCuda ( Cuparam* );
+__host__ int InitializeModel ( Model *mdl );
+__host__ int InitializeSpectra ( const char*[], Cuparam*, const int, Chain*, Model*, Spectrum* );
+__host__ int InitializeChain ( Cuparam*, const float*, Chain* );
 __host__ void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 __host__ void ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
+__host__ int SumUpAlongChannels ( Cuparam*, Spectrum*, Chain* );
 
 /* Kernels */
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, const float*, Walker* );

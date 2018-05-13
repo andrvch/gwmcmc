@@ -15,40 +15,48 @@
 #include <cufft.h>
 #include "GwMcmcStructuresFunctionsAndKernels.cuh"
 
-__host__ void DestroyAllTheCudaStaff ( const Cuparam cdp )
+__host__ int SumUpAlongChannels ( Cuparam *cdp, Spectrum *spc, Chain *chn )
 {
-  cusparseDestroy ( cdp.cusparseHandle );
-  cublasDestroy ( cdp.cublasHandle );
-  curandDestroyGenerator ( cdp.curandGnrtr );
-  curandDestroyGenerator ( cdp.curandGnrtrHst );
-  cudaEventDestroy ( cdp.start );
-  cudaEventDestroy ( cdp.stop );
-  cufftDestroy ( cdp.cufftPlan );
+  float alpha = ALPHA, beta = BETA;
+  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[0].nmbrOfChnnls, chn[0].nmbrOfWlkrs, &alpha, spc[0].chnnlSttstcs, spc[0].nmbrOfChnnls, spc[0].ntcdChnnls, INCXX, &beta, chn[0].sttstcs, INCYY );
+  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+  return 0;
 }
 
-__host__ void FreeSpec ( const Spectrum *spec )
+__host__ void DestroyAllTheCudaStaff ( const Cuparam *cdp )
+{
+  cusparseDestroy ( cdp[0].cusparseHandle );
+  cublasDestroy ( cdp[0].cublasHandle );
+  curandDestroyGenerator ( cdp[0].curandGnrtr );
+  curandDestroyGenerator ( cdp[0].curandGnrtrHst );
+  cudaEventDestroy ( cdp[0].start );
+  cudaEventDestroy ( cdp[0].stop );
+  cufftDestroy ( cdp[0].cufftPlan );
+}
+
+__host__ void FreeSpec ( const Spectrum *spc )
 {
   for ( int i = 0; i < NSPCTR; i++ )
   {
-    cudaFree ( spec[i].rmfVlsInCsc );
-    cudaFree ( spec[i].rmfIndxInCsc );
-    cudaFree ( spec[i].rmfPntrInCsc );
-    cudaFree ( spec[i].rmfVls );
-    cudaFree ( spec[i].rmfIndx );
-    cudaFree ( spec[i].rmfPntr );
-    cudaFree ( spec[i].enrgChnnls );
-    cudaFree ( spec[i].arfFctrs );
-    cudaFree ( spec[i].srcCnts );
-    cudaFree ( spec[i].bckgrndCnts );
-    cudaFree ( spec[i].gdQltChnnls );
-    cudaFree ( spec[i].lwrChnnlBndrs );
-    cudaFree ( spec[i].hghrChnnlBndrs );
-    cudaFree ( spec[i].crssctns );
-    cudaFree ( spec[i].absrptnFctrs );
-    cudaFree ( spec[i].mdlFlxs );
-    cudaFree ( spec[i].flddMdlFlxs );
-    cudaFree ( spec[i].chnnlSttstcs );
-    cudaFree ( spec[i].ntcdChnnls );
+    cudaFree ( spc[i].rmfVlsInCsc );
+    cudaFree ( spc[i].rmfIndxInCsc );
+    cudaFree ( spc[i].rmfPntrInCsc );
+    cudaFree ( spc[i].rmfVls );
+    cudaFree ( spc[i].rmfIndx );
+    cudaFree ( spc[i].rmfPntr );
+    cudaFree ( spc[i].enrgChnnls );
+    cudaFree ( spc[i].arfFctrs );
+    cudaFree ( spc[i].srcCnts );
+    cudaFree ( spc[i].bckgrndCnts );
+    cudaFree ( spc[i].gdQltChnnls );
+    cudaFree ( spc[i].lwrChnnlBndrs );
+    cudaFree ( spc[i].hghrChnnlBndrs );
+    cudaFree ( spc[i].crssctns );
+    cudaFree ( spc[i].absrptnFctrs );
+    cudaFree ( spc[i].mdlFlxs );
+    cudaFree ( spc[i].flddMdlFlxs );
+    cudaFree ( spc[i].chnnlSttstcs );
+    cudaFree ( spc[i].ntcdChnnls );
   }
 }
 
@@ -86,14 +94,14 @@ __host__ void FreeModel ( const Model *mdl )
   cudaFree ( mdl[0].nsaFlxs );
 }
 
-__host__ int InitializeCuda ( const int devId, Cuparam *cdp )
+__host__ int InitializeCuda ( Cuparam *cdp )
 {
   /* cuda runtime version */
   cudaRuntimeGetVersion ( cdp[0].runtimeVersion );
   cudaDriverGetVersion ( cdp[0].driverVersion );
 
   /* Set and enquire about cuda device */
-  cudaSetDevice ( devId );
+  cudaSetDevice ( cdp[0].dev );
   cudaGetDevice ( &cdp[0].dev );
   cudaGetDeviceProperties ( &cdp[0].prop, cdp[0].dev );
 
@@ -131,7 +139,7 @@ __host__ int InitializeCuda ( const int devId, Cuparam *cdp )
   return 0;
 }
 
-__host__ void InitializeModel ( Model *mdl )
+__host__ int InitializeModel ( Model *mdl )
 {
   cudaMallocManaged ( ( void ** ) &mdl[0].atmcNmbrs, ATNMR * sizeof ( int ) );
   for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
@@ -152,33 +160,34 @@ __host__ void InitializeModel ( Model *mdl )
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaT, mdl[0].numNsaT * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
+
+  return 0;
 }
 
-__host__ void InitializeChain ( const char *thrdNm, const int thrdIndx, const int nmbrOfWlkrs, const int nmbrOfStps, const float *phbsPwrlwInt, const curandGenerator_t curandGnrtrHst, const float dlt, Chain *chn )
+__host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *chn )
 {
   int prmtrIndx = 0;
-  const int nmbrOfHlfTheWlkrs = nmbrOfWlkrs / 2;
-  const int nmbrOfRndmVls = 3 * nmbrOfHlfTheWlkrs * nmbrOfStps;
-  cudaMallocManaged ( ( void ** ) &chn[0].wlkrs, nmbrOfWlkrs * sizeof ( Walker ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, nmbrOfHlfTheWlkrs * sizeof ( Walker ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].chnOfWlkrs, nmbrOfWlkrs * nmbrOfStps * sizeof ( Walker ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sttstcs, nmbrOfWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prpsdSttstcs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].chnOfSttstcs, nmbrOfWlkrs * nmbrOfStps * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].zRndmVls, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prrs, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].mNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sNh, nmbrOfHlfTheWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].rndmVls, nmbrOfRndmVls * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, nmbrOfStps * nmbrOfWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, nmbrOfStps * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, nmbrOfStps * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 1 ) * nmbrOfWlkrs * sizeof ( float ) );
-  if ( thrdIndx > 0 )
+  chn[0].nmbrOfRndmVls = 3 * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfStps;
+  cudaMallocManaged ( ( void ** ) &chn[0].wlkrs, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnOfWlkrs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sttstcs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdSttstcs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnOfSttstcs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].zRndmVls, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].mNh, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sNh, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].rndmVls, chn[0].nmbrOfRndmVls * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 1 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  if ( chn[0].thrdIndx > 0 )
   {
-    ReadLastPositionOfWalkersFromFile ( thrdNm, thrdIndx-1, nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs );
+    ReadLastPositionOfWalkersFromFile ( chn[0].thrdNm, chn[0].thrdIndx-1, chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs );
   }
-  else if ( thrdIndx == 0 )
+  else if ( chn[0].thrdIndx == 0 )
   {
     chn[0].strtngWlkr.par[0] = phbsPwrlwInt[0];
     chn[0].strtngWlkr.par[1] = phbsPwrlwInt[1];
@@ -186,11 +195,11 @@ __host__ void InitializeChain ( const char *thrdNm, const int thrdIndx, const in
     chn[0].strtngWlkr.par[3] = phbsPwrlwInt[3];
     chn[0].strtngWlkr.par[4] = phbsPwrlwInt[4];
     chn[0].strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
-    curandGenerateUniform ( curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
+    curandGenerateUniform ( cdp[0].curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
     prmtrIndx = NHINDX + 1;
     while ( prmtrIndx < NPRS )
     {
-      chn[0].strtngWlkr.par[prmtrIndx] = dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
+      chn[0].strtngWlkr.par[prmtrIndx] = chn[0].dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
       prmtrIndx += 1;
     }
     prmtrIndx = 0;
@@ -204,67 +213,67 @@ __host__ void InitializeChain ( const char *thrdNm, const int thrdIndx, const in
     printf ( "\n" );
     if ( not PriorCondition ( chn[0].strtngWlkr ) ) { printf ( " !!!Initial walker unsatisfy prior conditions!!!\n" ); }
   }
+  return 0;
 }
 
-__host__ void InitializeSpectra ( const char *spcLst[NSPCTR], cusparseHandle_t cusparseHandle, cusparseStatus_t cusparseStat, cublasHandle_t cublasHandle, cublasStatus_t cublasStat, const int verbose, const int nmbrOfWlkrs, const float lwrNtcdEnrg, const float hghrNtcdEnrg, int sgFlg, int *atmcNmbrs, Spectrum *spec )
+__host__ int InitializeSpectra ( const char *spcLst[NSPCTR], Cuparam *cdp, const int verbose, Chain *chn, Model *mdl, Spectrum *spc )
 {
-  char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   for ( int i = 0; i < NSPCTR; i++ )
   {
-    ReadFitsInfo ( spcLst[i], &spec[i].nmbrOfEnrgChnnls, &spec[i].nmbrOfChnnls, &spec[i].nmbrOfRmfVls, &spec[i].srcExptm, &spec[i].bckgrndExptm, srcTbl, arfTbl, rmfTbl, bckgrndTbl );
+    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
 
-    if ( verbose == 1 )
-    {
-      printf ( ".................................................................\n" );
-      printf ( " Spectrum number  -- %i\n", i );
-      printf ( " Spectrum table   -- %s\n", srcTbl );
-      printf ( " ARF table        -- %s\n", arfTbl );
-      printf ( " RMF table        -- %s\n", rmfTbl );
-      printf ( " Background table -- %s\n", bckgrndTbl );
-      printf ( " Number of energy channels                = %i\n", spec[i].nmbrOfEnrgChnnls );
-      printf ( " Number of instrument channels            = %i\n", spec[i].nmbrOfChnnls );
-      printf ( " Number of nonzero elements of RMF matrix = %i\n", spec[i].nmbrOfRmfVls );
-      printf ( " Exposure time                            = %.8E\n", spec[i].srcExptm );
-      printf ( " Exposure time (background)               = %.8E\n", spec[i].bckgrndExptm );
-    }
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfPntrInCsc, ( spc[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfIndxInCsc, spc[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfPntr, ( spc[i].nmbrOfChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfIndx, spc[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfVlsInCsc, spc[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfVls, spc[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].enrgChnnls, ( spc[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].arfFctrs, spc[i].nmbrOfEnrgChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].srcCnts, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].bckgrndCnts, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].lwrChnnlBndrs, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].hghrChnnlBndrs, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].gdQltChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].crssctns, spc[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].absrptnFctrs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
 
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfPntrInCsc, ( spec[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfIndxInCsc, spec[i].nmbrOfRmfVls * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfPntr, ( spec[i].nmbrOfChnnls + 1 ) * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfIndx, spec[i].nmbrOfRmfVls * sizeof ( int ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfVlsInCsc, spec[i].nmbrOfRmfVls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].rmfVls, spec[i].nmbrOfRmfVls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].enrgChnnls, ( spec[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].arfFctrs, spec[i].nmbrOfEnrgChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].srcCnts, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].bckgrndCnts, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].lwrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].hghrChnnlBndrs, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].gdQltChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].crssctns, spec[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].absrptnFctrs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].mdlFlxs, spec[i].nmbrOfEnrgChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].flddMdlFlxs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].ntcdChnnls, spec[i].nmbrOfChnnls * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spec[i].chnnlSttstcs, spec[i].nmbrOfChnnls * nmbrOfWlkrs * sizeof ( float ) );
+    ReadFitsData ( spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls );
 
-    ReadFitsData ( srcTbl, arfTbl, rmfTbl, bckgrndTbl, spec[i].nmbrOfEnrgChnnls, spec[i].nmbrOfChnnls, spec[i].nmbrOfRmfVls, spec[i].srcCnts, spec[i].bckgrndCnts, spec[i].arfFctrs, spec[i].rmfVlsInCsc, spec[i].rmfIndxInCsc, spec[i].rmfPntrInCsc, spec[i].gdQltChnnls, spec[i].lwrChnnlBndrs, spec[i].hghrChnnlBndrs, spec[i].enrgChnnls );
+    cdp[0].cusparseStat = cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
+    if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); return 1; }
 
-    cusparseStat = cusparseScsr2csc ( cusparseHandle, spec[i].nmbrOfEnrgChnnls, spec[i].nmbrOfChnnls, spec[i].nmbrOfRmfVls, spec[i].rmfVlsInCsc, spec[i].rmfPntrInCsc, spec[i].rmfIndxInCsc, spec[i].rmfVls, spec[i].rmfIndx, spec[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
-    if ( cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); }
-
-    AssembleArrayOfNoticedChannels <<< Blocks ( spec[i].nmbrOfChnnls ), THRDSPERBLCK >>> ( spec[i].nmbrOfChnnls, lwrNtcdEnrg, hghrNtcdEnrg, spec[i].lwrChnnlBndrs, spec[i].hghrChnnlBndrs, spec[i].gdQltChnnls, spec[i].ntcdChnnls );
-    cublasStat = cublasSdot ( cublasHandle, spec[i].nmbrOfChnnls, spec[i].ntcdChnnls, INCXX, spec[i].ntcdChnnls, INCYY, &spec[i].smOfNtcdChnnls );
-    if ( cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: channel summation failed " ); return ; }
+    AssembleArrayOfNoticedChannels <<< Blocks ( spc[i].nmbrOfChnnls ), THRDSPERBLCK >>> ( spc[i].nmbrOfChnnls, spc[i].lwrNtcdEnrg, spc[i].hghrNtcdEnrg, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].gdQltChnnls, spc[i].ntcdChnnls );
+    cdp[0].cublasStat = cublasSdot ( cdp[0].cublasHandle, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, spc[i].ntcdChnnls, INCYY, &spc[i].smOfNtcdChnnls );
+    if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: channel summation failed " ); return 1; }
     if ( verbose == 1 )
     {
       cudaDeviceSynchronize ( );
       printf ( ".................................................................\n" );
-      printf ( " Number of used instrument channels -- %4.0f\n", spec[i].smOfNtcdChnnls );
-      printf ( " Number of degrees of freedom -- %4.0f\n", spec[i].smOfNtcdChnnls - NPRS );
+      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
+      printf ( " Number of degrees of freedom -- %4.0f\n", spc[i].smOfNtcdChnnls - NPRS );
     }
-    AssembleArrayOfPhotoelectricCrossections ( spec[0].nmbrOfEnrgChnnls, ATNMR, sgFlg, spec[0].enrgChnnls, atmcNmbrs, spec[0].crssctns );
+    AssembleArrayOfPhotoelectricCrossections ( spc[0].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[0].enrgChnnls, mdl[0].atmcNmbrs, spc[0].crssctns );
+    if ( verbose == 1 )
+    {
+      printf ( ".................................................................\n" );
+      printf ( " Spectrum number  -- %i\n", i );
+      printf ( " Spectrum table   -- %s\n", spc[i].srcTbl );
+      printf ( " ARF table        -- %s\n", spc[i].arfTbl );
+      printf ( " RMF table        -- %s\n", spc[i].rmfTbl );
+      printf ( " Background table -- %s\n", spc[i].bckgrndTbl );
+      printf ( " Number of energy channels                = %i\n", spc[i].nmbrOfEnrgChnnls );
+      printf ( " Number of instrument channels            = %i\n", spc[i].nmbrOfChnnls );
+      printf ( " Number of nonzero elements of RMF matrix = %i\n", spc[i].nmbrOfRmfVls );
+      printf ( " Exposure time                            = %.8E\n", spc[i].srcExptm );
+      printf ( " Exposure time (background)               = %.8E\n", spc[i].bckgrndExptm );
+    }
   }
+  return 0;
 }
 
 /* Functions: */
