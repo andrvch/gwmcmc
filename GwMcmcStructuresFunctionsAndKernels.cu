@@ -29,14 +29,14 @@ __host__ int Propose ( const int stpIndx, const int sbstIndx, const int nmbrOfWl
   return 0;
 }
 
-__host__ int InitializeWalkersAndStatistics ( const int nmbrOfWlkrs, const float *lstWlkrsAndSttstcs, Walker *wlkrs, float *sttstcs )
+__host__ int InitFromLast ( const int nmbrOfWlkrs, const float *lstWlkrsAndSttstcs, Walker *wlkrs, float *sttstcs )
 {
   int blcks = Blocks ( nmbrOfWlkrs );
   InitializeWalkersAndStatisticsFromLastChain <<< blcks, THRDSPERBLCK >>> ( nmbrOfWlkrs, lstWlkrsAndSttstcs, wlkrs, sttstcs );
   return 0;
 }
 
-__host__ int InitializeWalkers ( Cuparam *cdp, const int nmbrOfWlkrs, float *rndmVls, const float dlt, const Walker strtngWlkr, Walker *wlkrs, float *sttstcs )
+__host__ int InitAtRandom ( Cuparam *cdp, const int nmbrOfWlkrs, float *rndmVls, const float dlt, const Walker strtngWlkr, Walker *wlkrs, float *sttstcs )
 {
   int blcks = Blocks ( nmbrOfWlkrs );
   curandGenerateUniform ( cdp[0].curandGnrtr, rndmVls, nmbrOfWlkrs );
@@ -44,7 +44,7 @@ __host__ int InitializeWalkers ( Cuparam *cdp, const int nmbrOfWlkrs, float *rnd
   return 0;
 }
 
-__host__ int Statistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
+__host__ int Stat ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( nmbrOfChnnls, nmbrOfWlkrs );
@@ -52,7 +52,7 @@ __host__ int Statistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const f
   return 0;
 }
 
-__host__ int SumUpStatistics ( Cuparam *cdp, const int nmbrOfWlkrs, const int nmbrOfChnnls, const float *chnnlSttstcs, const float *ntcdChnnls, float *sttstcs )
+__host__ int SumUpStat ( Cuparam *cdp, const int nmbrOfWlkrs, float *sttstcs, const int nmbrOfChnnls, const float *chnnlSttstcs, const float *ntcdChnnls )
 {
   float alpha = ALPHA, beta = 1;
   cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, nmbrOfChnnls, nmbrOfWlkrs, &alpha, chnnlSttstcs, nmbrOfChnnls, ntcdChnnls, INCXX, &beta, sttstcs, INCYY );
@@ -60,7 +60,7 @@ __host__ int SumUpStatistics ( Cuparam *cdp, const int nmbrOfWlkrs, const int nm
   return 0;
 }
 
-__host__ int FoldModelFluxes ( Cuparam *cdp, const int nmbrOfWlkrs, const int nmbrOfChnnls, const int nmbrOfEnrgChnnls, const int nmbrOfRmfVls, const float *rmfVls, const int *rmfPntr, const int *rmfIndx, const float *mdlFlxs, float *flddMdlFlxs )
+__host__ int FoldModel ( Cuparam *cdp, const int nmbrOfWlkrs, const int nmbrOfChnnls, const int nmbrOfEnrgChnnls, const int nmbrOfRmfVls, const float *rmfVls, const int *rmfPntr, const int *rmfIndx, const float *mdlFlxs, float *flddMdlFlxs )
 {
   float alpha = ALPHA, beta = BETA;
   cdp[0].cusparseStat = cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, cdp[0].MatDescr, rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, nmbrOfChnnls );
@@ -144,12 +144,10 @@ __host__ int InitializeCuda ( Cuparam *cdp )
   /* cuda runtime version */
   cudaRuntimeGetVersion ( cdp[0].runtimeVersion );
   cudaDriverGetVersion ( cdp[0].driverVersion );
-
   /* Set and enquire about cuda device */
   cudaSetDevice ( cdp[0].dev );
   cudaGetDevice ( &cdp[0].dev );
   cudaGetDeviceProperties ( &cdp[0].prop, cdp[0].dev );
-
   /* cuSparse related things */
   cdp[0].cusparseStat = cusparseCreate ( &cdp[0].cusparseHandle );
   if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Creation of cuSparse context failed " ); return 1; }
@@ -159,53 +157,43 @@ __host__ int InitializeCuda ( Cuparam *cdp )
   if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting matrix type to general failed " ); return 1; }
   cdp[0].cusparseStat = cusparseSetMatIndexBase ( cdp[0].MatDescr, CUSPARSE_INDEX_BASE_ZERO );
   if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Setting to base zero index failed " ); return 1; }
-
   /* cuBlas related things */
   cdp[0].cublasStat = cublasCreate ( &cdp[0].cublasHandle );
   if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Creation of cuBlas context failed " ); return 1; }
-
   /* cuRand related things */
   curandCreateGenerator ( &cdp[0].curandGnrtr, CURAND_RNG_PSEUDO_DEFAULT );
   curandCreateGeneratorHost ( &cdp[0].curandGnrtrHst, CURAND_RNG_PSEUDO_DEFAULT );
   curandSetPseudoRandomGeneratorSeed ( cdp[0].curandGnrtr, 1234ULL );
   curandSetPseudoRandomGeneratorSeed ( cdp[0].curandGnrtrHst, 1234ULL );
-
   /* cuFfft related things */
   cudaEventCreate ( &cdp[0].start );
   cudaEventCreate ( &cdp[0].stop );
-
   printf ( "\n" );
   printf ( ".................................................................\n" );
   printf ( " CUDA device ID: %d\n", cdp[0].dev );
   printf ( " CUDA device Name: %s\n", cdp[0].prop.name );
   printf ( " Driver API: v%d \n", cdp[0].driverVersion[0] );
   printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
-
   return 0;
 }
 
 __host__ int InitializeModel ( Model *mdl )
 {
   cudaMallocManaged ( ( void ** ) &mdl[0].atmcNmbrs, ATNMR * sizeof ( int ) );
-  for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
   cudaMallocManaged ( ( void ** ) &mdl[0].abndncs, ( NELMS + 1 ) * sizeof ( float ) );
-
-  SimpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
-
   cudaMallocManaged ( ( void ** ) &mdl[0].RedData, mdl[0].nmbrOfDistBins * mdl[0].numRedCol * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].Dist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].EBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].errDist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].errEBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
-
-  SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
-
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaE, mdl[0].numNsaE * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaT, mdl[0].numNsaT * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
+  for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
+  SimpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
+  SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
-
   return 0;
 }
 
@@ -263,6 +251,7 @@ __host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *c
 
 __host__ int InitializeSpectra ( const char *spcLst[NSPCTR], Cuparam *cdp, const int verbose, Chain *chn, Model *mdl, Spectrum *spc )
 {
+  float smOfNtcdChnnls = 0;
   for ( int i = 0; i < NSPCTR; i++ )
   {
     ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
@@ -295,13 +284,8 @@ __host__ int InitializeSpectra ( const char *spcLst[NSPCTR], Cuparam *cdp, const
     AssembleArrayOfNoticedChannels <<< Blocks ( spc[i].nmbrOfChnnls ), THRDSPERBLCK >>> ( spc[i].nmbrOfChnnls, spc[i].lwrNtcdEnrg, spc[i].hghrNtcdEnrg, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].gdQltChnnls, spc[i].ntcdChnnls );
     cdp[0].cublasStat = cublasSdot ( cdp[0].cublasHandle, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, spc[i].ntcdChnnls, INCYY, &spc[i].smOfNtcdChnnls );
     if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: channel summation failed " ); return 1; }
-    if ( verbose == 1 )
-    {
-      cudaDeviceSynchronize ( );
-      printf ( ".................................................................\n" );
-      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
-      printf ( " Number of degrees of freedom -- %4.0f\n", spc[i].smOfNtcdChnnls - NPRS );
-    }
+    cudaDeviceSynchronize ( );
+    smOfNtcdChnnls = smOfNtcdChnnls + spc[i].smOfNtcdChnnls;
     AssembleArrayOfPhotoelectricCrossections ( spc[0].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[0].enrgChnnls, mdl[0].atmcNmbrs, spc[0].crssctns );
     if ( verbose == 1 )
     {
@@ -316,7 +300,14 @@ __host__ int InitializeSpectra ( const char *spcLst[NSPCTR], Cuparam *cdp, const
       printf ( " Number of nonzero elements of RMF matrix = %i\n", spc[i].nmbrOfRmfVls );
       printf ( " Exposure time                            = %.8E\n", spc[i].srcExptm );
       printf ( " Exposure time (background)               = %.8E\n", spc[i].bckgrndExptm );
+      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
     }
+  }
+  if ( verbose == 1 )
+  {
+    printf ( ".................................................................\n" );
+    printf ( " Total number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
+    printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
   }
   return 0;
 }

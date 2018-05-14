@@ -104,7 +104,7 @@ __host__ int ModelFluxes ( const float *abndncs, const int *atmcNmbrs, const int
   dim3 dimGrid = Grid ( nmbrOfEnrgChnnls, nmbrOfWlkrs );
   AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atmcNmbrs, wlkrs, absrptnFctrs );
   /* 4 a ) Assemble array of nsa fluxes */
-  //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].wlkrs, spc[0].mdlFlxs );
+  //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[i].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].wlkrs, spc[0].mdlFlxs );
   /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
   AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, wlkrs, mdlFlxs );
   return 0;
@@ -157,16 +157,18 @@ int main ( int argc, char *argv[] )
   /* Initialize walkers */
   if ( chn[0].thrdIndx == 0 )
   {
-    InitializeWalkers ( cdp, chn[0].nmbrOfWlkrs, chn[0].rndmVls, chn[0].dlt, chn[0].strtngWlkr, chn[0].wlkrs, chn[0].sttstcs );
-
-    ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].crssctns, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, spc[0].mdlFlxs );
-    FoldModelFluxes ( cdp, chn[0].nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].flddMdlFlxs );
-    Statistics ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
-    SumUpStatistics ( cdp, chn[0].nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].chnnlSttstcs, spc[0].ntcdChnnls, chn[0].sttstcs );
+    InitAtRandom ( cdp, chn[0].nmbrOfWlkrs, chn[0].rndmVls, chn[0].dlt, chn[0].strtngWlkr, chn[0].wlkrs, chn[0].sttstcs );
+    for ( int i = 0; i < NSPCTR; i++ )
+    {
+      ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
+      FoldModel ( cdp, chn[0].nmbrOfWlkrs, spc[i].nmbrOfChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].flddMdlFlxs );
+      Stat ( chn[0].nmbrOfWlkrs, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+      SumUpStat ( cdp, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i].nmbrOfChnnls, spc[i].chnnlSttstcs, spc[i].ntcdChnnls );
+    }
   }
   else if ( chn[0].thrdIndx > 0 )
   {
-    InitializeWalkersAndStatistics ( chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
+    InitFromLast ( chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
   }
 
   cudaEventRecord ( cdp[0].start, 0 );
@@ -182,14 +184,14 @@ int main ( int argc, char *argv[] )
     while ( sbstIndx < 2 )
     {
       Propose ( stpIndx, sbstIndx, chn[0].nmbrOfWlkrs / 2, chn[0].wlkrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
-
       Priors ( mdl[0].nmbrOfDistBins, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
-
-      ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].crssctns, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, spc[0].mdlFlxs );
-      FoldModelFluxes ( cdp, chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].flddMdlFlxs );
-      Statistics ( chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
-      SumUpStatistics ( cdp, chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].chnnlSttstcs, spc[0].ntcdChnnls, chn[0].prpsdSttstcs );
-
+      for ( int i = 0; i < NSPCTR; i++ )
+      {
+        ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
+        FoldModel ( cdp, chn[0].nmbrOfWlkrs / 2, spc[i].nmbrOfChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].flddMdlFlxs );
+        Stat ( chn[0].nmbrOfWlkrs / 2, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+        SumUpStat ( cdp, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i].nmbrOfChnnls, spc[i].chnnlSttstcs, spc[i].ntcdChnnls );
+      }
       Update ( stpIndx, sbstIndx, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].wlkrs, chn[0].sttstcs );
       sbstIndx += 1;
     }

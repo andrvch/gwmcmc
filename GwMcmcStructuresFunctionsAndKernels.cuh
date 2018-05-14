@@ -129,12 +129,12 @@ __host__ int InitializeSpectra ( const char*[], Cuparam*, const int, Chain*, Mod
 __host__ int InitializeChain ( Cuparam*, const float*, Chain* );
 __host__ void ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 __host__ void ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
-__host__ int Statistics ( const int, const int, const float, const float, const float*, const float*, const float*, float* );
-__host__ int SumUpStatistics ( Cuparam*, const int, const int, const float*, const float*, float* );
-__host__ int FoldModelFluxes ( Cuparam*, const int, const int, const int, const int, const float*, const int*, const int*, const float*, float* );
+__host__ int Stat ( const int, const int, const float, const float, const float*, const float*, const float*, float* );
+__host__ int SumUpStat ( Cuparam*, const int, float*, const int, const float*, const float* );
+__host__ int FoldModel ( Cuparam*, const int, const int, const int, const int, const float*, const int*, const int*, const float*, float* );
 __host__ int ModelFluxes ( const float*, const int*, const int, const Walker*, const int, const float*, const float*, const float*, float*, float* );
-__host__ int InitializeWalkers ( Cuparam*, const int, float*, const float, const Walker, Walker*, float* );
-__host__ int InitializeWalkersAndStatistics ( const int, const float*, Walker*, float* );
+__host__ int InitAtRandom ( Cuparam*, const int, float*, const float, const Walker, Walker*, float* );
+__host__ int InitFromLast ( const int, const float*, Walker*, float* );
 __host__ int Priors ( const int, const float*, const float*, const float*, const int, Walker*, float*, float*, float* );
 __host__ int Propose ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
 __host__ int Update ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float* );
