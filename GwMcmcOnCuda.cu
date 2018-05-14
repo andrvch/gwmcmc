@@ -98,21 +98,39 @@ __global__ void AssembleArrayOfModelFluxes ( const int nmbrOfWlkrs, const int nm
   }
 }
 
+__host__ int ModelFluxes ( const float *abndncs, const int *atmcNmbrs, const int nmbrOfWlkrs, const Walker *wlkrs, const int nmbrOfEnrgChnnls, const float *crssctns, const float *enrgChnnls, const float *arfFctrs, float *absrptnFctrs, float *mdlFlxs )
+{
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 dimGrid = Grid ( nmbrOfEnrgChnnls, nmbrOfWlkrs );
+  AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atmcNmbrs, wlkrs, absrptnFctrs );
+  /* 4 a ) Assemble array of nsa fluxes */
+  //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].wlkrs, spc[0].mdlFlxs );
+  /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
+  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, wlkrs, mdlFlxs );
+  return 0;
+}
+
+__host__ int Priors ( const int nmbrOfDistBins, const float *Dist, const float *EBV, const float *errEBV, const int nmbrOfWlkrs, Walker *prpsdWlkrs, float *mNh, float *sNh, float *prrs )
+{
+  int blocksPerThread = Blocks ( nmbrOfWlkrs );
+  LinearInterpolation <<< blocksPerThread, THRDSPERBLCK >>> ( nmbrOfWlkrs, nmbrOfDistBins, 4, Dist, EBV, errEBV, prpsdWlkrs, mNh, sNh );
+  AssembleArrayOfPriors <<< blocksPerThread, THRDSPERBLCK >>> ( nmbrOfWlkrs, prpsdWlkrs, mNh, sNh, prrs );
+  return 0;
+}
+
 /**
  * Host main routine
  */
 int main ( int argc, char *argv[] )
 {
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  const int verbose = 1;
   const float lwrNtcdEnrg = 0.3;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
   const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  const int verbose = 1;
 
-  /* 1 ) Initialize */
+  /* Initialize */
   Cuparam cdp[NSPCTR];
   Model mdl[NSPCTR];
   Chain chn[NSPCTR];
@@ -136,77 +154,46 @@ int main ( int argc, char *argv[] )
   InitializeChain ( cdp, phbsPwrlwInt, chn );
   InitializeSpectra ( spcLst, cdp, verbose, chn, mdl, spc );
 
-  if ( chn[0].thrdIndx > 0 )
+  /* Initialize walkers */
+  if ( chn[0].thrdIndx == 0 )
   {
-    /* Initialize walkers and statistics from last chain */
-    InitializeWalkersAndStatisticsFromLastChain <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
-  }
-  else if ( chn[0].thrdIndx == 0 )
-  {
-    /* 1 ) Generate uniformly distributed floating point values between 0.0 and 1.0, chn[0].rndmVls[chn[0].nmbrOfWlkrs] (cuRand) */
-    curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfWlkrs );
-    /* 2 ) Initialize walkers, actlWlkrs[chn[0].nmbrOfWlkrs] */
-    InitializeWalkersAtRandom <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, chn[0].dlt, chn[0].strtngWlkr, chn[0].rndmVls, chn[0].wlkrs );
-    /* 3 ) Assemble array of absorption factors, spc[0].absrptnFctrs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
-    AssembleArrayOfAbsorptionFactors <<< Grid ( spc[0].nmbrOfEnrgChnnls, chn[0].nmbrOfWlkrs ), dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, ATNMR, spc[0].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].wlkrs, spc[0].absrptnFctrs );
-    /* 4 a ) Assemble array of nsa fluxes */
-    //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].wlkrs, spc[0].mdlFlxs );
-    /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
-    AssembleArrayOfModelFluxes <<< Grid ( spc[0].nmbrOfEnrgChnnls, chn[0].nmbrOfWlkrs ), dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, chn[0].wlkrs, spc[0].mdlFlxs );
-    /* 5 ) Fold model fluxes with RMF, spc[0].flddMdlFlxs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfChnnls] (cuSparse) */
-    cdp[0].cusparseStat = cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[0].nmbrOfChnnls, chn[0].nmbrOfWlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, &alpha, cdp[0].MatDescr, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].nmbrOfEnrgChnnls, &beta, spc[0].flddMdlFlxs, spc[0].nmbrOfChnnls );
-    if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
-    /* 6 ) Assemble array of channel statistics, spc[0].chnnlSttstcs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfChnnls] */
-    AssembleArrayOfChannelStatistics <<< Grid ( spc[0].nmbrOfChnnls, chn[0].nmbrOfWlkrs ), dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
-    /* 7 ) Sum up channel statistics, actlSttstcs[chn[0].nmbrOfWlkrs] (cuBlas) */
-    SumUpAlongChannels ( cdp, spc, chn );
-  }
+    InitializeWalkers ( cdp, chn[0].nmbrOfWlkrs, chn[0].rndmVls, chn[0].dlt, chn[0].strtngWlkr, chn[0].wlkrs, chn[0].sttstcs );
 
-  printf ( ".................................................................\n" );
-  printf ( " Start ...                                                  \n" );
+    ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].crssctns, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, spc[0].mdlFlxs );
+    FoldModelFluxes ( cdp, chn[0].nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].flddMdlFlxs );
+    Statistics ( chn[0].nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
+    SumUpStatistics ( cdp, chn[0].nmbrOfWlkrs, spc[0].nmbrOfChnnls, spc[0].chnnlSttstcs, spc[0].ntcdChnnls, chn[0].sttstcs );
+  }
+  else if ( chn[0].thrdIndx > 0 )
+  {
+    InitializeWalkersAndStatistics ( chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
+  }
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  /* Generate uniformly distributed floating point values between 0.0 and 1.0, chn[0].rndmVls[3*chn[0].nmbrOfWlkrs / 2*chn[0].nmbrOfStps] (cuRand) */
+  /* Run chain */
+  printf ( ".................................................................\n" );
+  printf ( " Start ...                                                  \n" );
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
-
-  /* Start MCMC !!!!! */
   int stpIndx = 0, sbstIndx;
   while ( stpIndx < chn[0].nmbrOfStps )
   {
-    /* Initialize subset index */
     sbstIndx = 0;
-    /* Iterate over two subsets */
     while ( sbstIndx < 2 )
     {
-      /* 1 ) Generate Z values and proposed walkers, chn[0].zRndmVls[chn[0].nmbrOfWlkrs / 2], chn[0].prpsdWlkrs[chn[0].nmbrOfWlkrs / 2] */
-      GenerateProposal <<< Blocks ( chn[0].nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, stpIndx, sbstIndx, chn[0].wlkrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].prpsdWlkrs );
-      /* 2 a )  */
-      LinearInterpolation <<< Blocks ( chn[0].nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, 4, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh );
-      /* 2 ) Assemble array of prior conditions */
-      AssembleArrayOfPriors <<< Blocks ( chn[0].nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
-      /* 3 ) Assemble array of absorption factors, spc[0].absrptnFctrs[chn[0].nmbrOfWlkrs / 2*spc[0].nmbrOfEnrgChnnls] */
-      AssembleArrayOfAbsorptionFactors <<< Grid ( spc[0].nmbrOfEnrgChnnls, chn[0].nmbrOfWlkrs / 2 ), dimBlock >>> ( chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, ATNMR, spc[0].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].prpsdWlkrs, spc[0].absrptnFctrs );
-      /* 4 a ) Assemble array of nsa fluxes */
-      //BilinearInterpolation <<< dimGrid_1, dimBlock >>> ( chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].prpsdWlkrs, spc[0].mdlFlxs );
-      /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[chn[0].nmbrOfWlkrs / 2*spc[0].nmbrOfEnrgChnnls] */
-      AssembleArrayOfModelFluxes <<< Grid ( spc[0].nmbrOfEnrgChnnls, chn[0].nmbrOfWlkrs / 2 ), dimBlock >>> ( chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, chn[0].prpsdWlkrs, spc[0].mdlFlxs );
-      /* 5 ) Fold model fluxes with RMF, spc[0].flddMdlFlxs[chn[0].nmbrOfWlkrs / 2*spc[0].nmbrOfChnnls] (cuSparse) */
-      cdp[0].cusparseStat = cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[0].nmbrOfChnnls, chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, &alpha, cdp[0].MatDescr, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].nmbrOfEnrgChnnls, &beta, spc[0].flddMdlFlxs, spc[0].nmbrOfChnnls );
-      if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes" ); return stpIndx; }
-      /* 6 ) Assemble array of channel statistics, spc[0].chnnlSttstcs[chn[0].nmbrOfWlkrs / 2*spc[0].nmbrOfChnnls] */
-      AssembleArrayOfChannelStatistics <<< Grid ( spc[0].nmbrOfChnnls, chn[0].nmbrOfWlkrs / 2 ), dimBlock >>> ( chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
-      /* 7 ) Sum up channel statistics, chn[0].prpsdSttstcs[chn[0].nmbrOfWlkrs / 2] (cuBlas) */
-      cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[0].nmbrOfChnnls, chn[0].nmbrOfWlkrs / 2, &alpha, spc[0].chnnlSttstcs, spc[0].nmbrOfChnnls, spc[0].ntcdChnnls, incxx, &beta, chn[0].prpsdSttstcs, incyy );
-      if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed yes " ); return stpIndx; }
-      /* 8 ) Update walkers */
-      UpdateWalkers <<< Blocks ( chn[0].nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, stpIndx, sbstIndx, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].zRndmVls, chn[0].rndmVls, chn[0].wlkrs, chn[0].sttstcs );
-      /* 9 ) Shift subset index */
+      Propose ( stpIndx, sbstIndx, chn[0].nmbrOfWlkrs / 2, chn[0].wlkrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
+
+      Priors ( mdl[0].nmbrOfDistBins, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
+
+      ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[0].nmbrOfEnrgChnnls, spc[0].crssctns, spc[0].enrgChnnls, spc[0].arfFctrs, spc[0].absrptnFctrs, spc[0].mdlFlxs );
+      FoldModelFluxes ( cdp, chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].nmbrOfEnrgChnnls, spc[0].nmbrOfRmfVls, spc[0].rmfVls, spc[0].rmfPntr, spc[0].rmfIndx, spc[0].mdlFlxs, spc[0].flddMdlFlxs );
+      Statistics ( chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].srcExptm, spc[0].bckgrndExptm, spc[0].srcCnts, spc[0].bckgrndCnts, spc[0].flddMdlFlxs, spc[0].chnnlSttstcs );
+      SumUpStatistics ( cdp, chn[0].nmbrOfWlkrs / 2, spc[0].nmbrOfChnnls, spc[0].chnnlSttstcs, spc[0].ntcdChnnls, chn[0].prpsdSttstcs );
+
+      Update ( stpIndx, sbstIndx, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].wlkrs, chn[0].sttstcs );
       sbstIndx += 1;
     }
-    /* Write walkers and statistics to chain,  chnOfWlkrsAndSttstcs[chn[0].nmbrOfStps*(chn[0].nmbrOfWlkrs+1)] */
     WriteWalkersAndStatisticsToChain <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, stpIndx, chn[0].wlkrs, chn[0].sttstcs, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
-    /* Shift step index */
     stpIndx += 1;
   }
   printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
@@ -217,6 +204,7 @@ int main ( int argc, char *argv[] )
 
   cudaEventRecord ( cdp[0].start, 0 );
 
+  /* Autocorrelation function */
   int NN[RANK] = { chn[0].nmbrOfStps };
   cdp[0].cufftRes = cufftPlanMany ( &cdp[0].cufftPlan, RANK, NN, NULL, 1, chn[0].nmbrOfStps, NULL, 1, chn[0].nmbrOfStps, CUFFT_C2C, chn[0].nmbrOfWlkrs );
   if ( cdp[0].cufftRes != CUFFT_SUCCESS ) { fprintf ( stderr, "CUFFT error: Direct Plan configuration failed" ); return 1; }
@@ -227,6 +215,7 @@ int main ( int argc, char *argv[] )
   cudaEventSynchronize ( cdp[0].stop );
   cudaEventElapsedTime ( &chn[0].cufftElapsedTime, cdp[0].start, cdp[0].stop );
 
+  /* Autocorreation time */
   CumulativeSumOfAutocorrelationFunction ( chn[0].nmbrOfStps, chn[0].atCrrFnctn, chn[0].cmSmAtCrrFnctn );
   int MM = ChooseWindow ( chn[0].nmbrOfStps, 5e0f, chn[0].cmSmAtCrrFnctn );
   chn[0].atcTime = 2 * chn[0].cmSmAtCrrFnctn[MM] - 1e0f;
@@ -236,13 +225,13 @@ int main ( int argc, char *argv[] )
   printf ( " Autocorrelation time threshold -- %.8E\n", chn[0].nmbrOfStps / 5e1f );
   printf ( " Effective number of independent samples -- %.8E\n", chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps / chn[0].atcTime );
 
-  /* Compute and print elapsed time: */
+  /* Elapsed time */
   printf ( ".................................................................\n" );
   printf ( " Time to generate: %3.1f ms\n", chn[0].elapsedTime );
   printf ( " Time to compute Autocorrelation Function: %3.1f ms\n", chn[0].cufftElapsedTime );
   printf ( "\n" );
 
-  /* Write results to a file: */
+  /* Write results to a file */
   SimpleWriteDataFloat ( "Autocor.dat", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
   SimpleWriteDataFloat ( "AutocorCM.dat", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
   WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );

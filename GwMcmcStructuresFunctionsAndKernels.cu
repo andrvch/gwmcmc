@@ -15,11 +15,56 @@
 #include <cufft.h>
 #include "GwMcmcStructuresFunctionsAndKernels.cuh"
 
-__host__ int SumUpAlongChannels ( Cuparam *cdp, Spectrum *spc, Chain *chn )
+__host__ int Update ( const int stpIndx, const int sbstIndx, const int nmbrOfWlkrs, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prrs, const float *rndmVls, const float *zRndmVls, Walker *wlkrs, float *sttstcs )
+{
+  int blcks = Blocks ( nmbrOfWlkrs );
+  UpdateWalkers <<< blcks, THRDSPERBLCK >>> ( nmbrOfWlkrs, stpIndx, sbstIndx, prpsdWlkrs, prpsdSttstcs, prrs, zRndmVls, rndmVls, wlkrs, sttstcs );
+  return 0;
+}
+
+__host__ int Propose ( const int stpIndx, const int sbstIndx, const int nmbrOfWlkrs, const Walker *wlkrs, const float *rndmVls, float *zRndmVls, Walker *prpsdWlkrs, float *prpsdSttstcs )
+{
+  int blcks = Blocks ( nmbrOfWlkrs );
+  GenerateProposal <<< blcks, THRDSPERBLCK >>> ( nmbrOfWlkrs, stpIndx, sbstIndx, wlkrs, rndmVls, zRndmVls, prpsdWlkrs, prpsdSttstcs );
+  return 0;
+}
+
+__host__ int InitializeWalkersAndStatistics ( const int nmbrOfWlkrs, const float *lstWlkrsAndSttstcs, Walker *wlkrs, float *sttstcs )
+{
+  int blcks = Blocks ( nmbrOfWlkrs );
+  InitializeWalkersAndStatisticsFromLastChain <<< blcks, THRDSPERBLCK >>> ( nmbrOfWlkrs, lstWlkrsAndSttstcs, wlkrs, sttstcs );
+  return 0;
+}
+
+__host__ int InitializeWalkers ( Cuparam *cdp, const int nmbrOfWlkrs, float *rndmVls, const float dlt, const Walker strtngWlkr, Walker *wlkrs, float *sttstcs )
+{
+  int blcks = Blocks ( nmbrOfWlkrs );
+  curandGenerateUniform ( cdp[0].curandGnrtr, rndmVls, nmbrOfWlkrs );
+  InitializeWalkersAtRandom <<< blcks, THRDSPERBLCK >>> ( nmbrOfWlkrs, dlt, strtngWlkr, rndmVls, wlkrs, sttstcs );
+  return 0;
+}
+
+__host__ int Statistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
+{
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 dimGrid = Grid ( nmbrOfChnnls, nmbrOfWlkrs );
+  AssembleArrayOfChannelStatistics <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, nmbrOfChnnls, srcExptm, bckgrndExptm, srcCnts, bckgrndCnts, flddMdlFlxs, chnnlSttstcs );
+  return 0;
+}
+
+__host__ int SumUpStatistics ( Cuparam *cdp, const int nmbrOfWlkrs, const int nmbrOfChnnls, const float *chnnlSttstcs, const float *ntcdChnnls, float *sttstcs )
+{
+  float alpha = ALPHA, beta = 1;
+  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, nmbrOfChnnls, nmbrOfWlkrs, &alpha, chnnlSttstcs, nmbrOfChnnls, ntcdChnnls, INCXX, &beta, sttstcs, INCYY );
+  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+  return 0;
+}
+
+__host__ int FoldModelFluxes ( Cuparam *cdp, const int nmbrOfWlkrs, const int nmbrOfChnnls, const int nmbrOfEnrgChnnls, const int nmbrOfRmfVls, const float *rmfVls, const int *rmfPntr, const int *rmfIndx, const float *mdlFlxs, float *flddMdlFlxs )
 {
   float alpha = ALPHA, beta = BETA;
-  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[0].nmbrOfChnnls, chn[0].nmbrOfWlkrs, &alpha, spc[0].chnnlSttstcs, spc[0].nmbrOfChnnls, spc[0].ntcdChnnls, INCXX, &beta, chn[0].sttstcs, INCYY );
-  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+  cdp[0].cusparseStat = cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, nmbrOfChnnls, nmbrOfWlkrs, nmbrOfEnrgChnnls, nmbrOfRmfVls, &alpha, cdp[0].MatDescr, rmfVls, rmfPntr, rmfIndx, mdlFlxs, nmbrOfEnrgChnnls, &beta, flddMdlFlxs, nmbrOfChnnls );
+  if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
   return 0;
 }
 
@@ -686,12 +731,13 @@ __host__ int ChooseWindow ( const int nmbrOfStps, const float c, const float *cm
 
 /* Kernels: */
 __global__ void InitializeWalkersAtRandom ( const int nmbrOfWlkrs, const float dlt, Walker strtngWlkr, const float *rndmVls,
-                                            Walker *wlkrs )
+                                            Walker *wlkrs, float *sttstcs )
 {
     int wlIndx = threadIdx.x + blockDim.x * blockIdx.x;
     if ( wlIndx < nmbrOfWlkrs )
     {
         wlkrs[wlIndx] = AddWalkers ( strtngWlkr, ScaleWalker ( strtngWlkr, dlt * rndmVls[wlIndx] ) );
+        sttstcs[wlIndx] = 0;
     }
 }
 
@@ -763,7 +809,7 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
 
 __global__ void GenerateProposal ( const int nmbrOfHlfTheWlkrs, const int stpIndx, const int sbstIndx,
                                    const Walker *wlkrs, const float *rndmVls,
-                                   float *zRndmVls, Walker *prpsdWlkrs )
+                                   float *zRndmVls, Walker *prpsdWlkrs, float *prpsdSttstcs )
 {
     int wlIndx = threadIdx.x + blockDim.x * blockIdx.x;
     int ttSbIndx = wlIndx + sbstIndx * nmbrOfHlfTheWlkrs;
@@ -782,6 +828,7 @@ __global__ void GenerateProposal ( const int nmbrOfHlfTheWlkrs, const int stpInd
         ttCmSbIndx = k + ( 1 - sbstIndx ) * nmbrOfHlfTheWlkrs;
         B = AddWalkers ( wlkrs[ttSbIndx], ScaleWalker ( wlkrs[ttCmSbIndx], -1. ) );
         prpsdWlkrs[wlIndx] = AddWalkers ( wlkrs[ttCmSbIndx], ScaleWalker ( B, zz ) );
+        prpsdSttstcs[wlIndx] = 0;
     }
 }
 
