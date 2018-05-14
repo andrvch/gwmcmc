@@ -15,6 +15,13 @@
 #include <cufft.h>
 #include "GwMcmcStructuresFunctionsAndKernels.cuh"
 
+__host__ int ToChain ( const int stpIndx, const int nmbrOfWlkrs, const Walker *wlkrs, const float *sttstcs, Walker *chnOfWlkrs, float *chnOfSttstcs )
+{
+  int blcks = Blocks ( nmbrOfWlkrs );
+  WriteWalkersAndStatisticsToChain <<< blcks, THRDSPERBLCK >>> ( nmbrOfWlkrs, stpIndx, wlkrs, sttstcs, chnOfWlkrs, chnOfSttstcs );
+  return 0;
+}
+
 __host__ int Update ( const int stpIndx, const int sbstIndx, const int nmbrOfWlkrs, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prrs, const float *rndmVls, const float *zRndmVls, Walker *wlkrs, float *sttstcs )
 {
   int blcks = Blocks ( nmbrOfWlkrs );

@@ -138,6 +138,7 @@ __host__ int InitFromLast ( const int, const float*, Walker*, float* );
 __host__ int Priors ( const int, const float*, const float*, const float*, const int, Walker*, float*, float*, float* );
 __host__ int Propose ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
 __host__ int Update ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float* );
+__host__ int ToChain ( const int, const int, const Walker*, const float*, Walker*, float* );
 
 /* Kernels */
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, const float*, Walker*, float* );

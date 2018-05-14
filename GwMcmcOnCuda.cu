@@ -22,17 +22,17 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   indx = 0;
   cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
   indx = 1; // pl normalization
-  cndtn = cndtn * ( -15. < wlkr.par[indx] );
+  cndtn = cndtn * (  -9. < wlkr.par[indx] );
   indx = 2; // Temperature
   cndtn = cndtn * ( 0.03 < wlkr.par[indx] ) * ( wlkr.par[indx] < 1. );
   indx = 3; // Norm
-  cndtn = cndtn * ( -15. < wlkr.par[indx] );
+  cndtn = cndtn * (  -9. < wlkr.par[indx] );
   indx = 4; // Distance
-  cndtn = cndtn * (   1. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3.3 );
+  cndtn = cndtn * (  -1. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3.3 );
   indx = 5;
   cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
   indx = 6; // plnorm
-  cndtn = cndtn * ( -15. < wlkr.par[indx] );
+  cndtn = cndtn * (  -9. < wlkr.par[indx] );
   indx = NHINDX; // Hydrogen column density
   cndtn = cndtn * (   0. < wlkr.par[indx] );
   return cndtn;
@@ -41,10 +41,10 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh, const float sNh )
 {
   float prr = 0, sum = 0, mean = 0, sigma = 0.06;
-  //float theta = powf ( sNh, 2 ) / mNh;
-  //float kk = mNh / theta;
-  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[indx] ) - wlkr.par[indx] / theta;
-  sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
+  float theta = powf ( sNh, 2 ) / mNh;
+  float kk = mNh / theta;
+  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
   int indx = NHINDX + 1;
   while ( indx < NPRS )
   {
@@ -133,10 +133,10 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.3;
+  const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 1.5, log10f ( 2.E-5 ), 0.15 };
+  const float phbsPwrlwInt[NPRS] = { 1.6, log10f ( 7.E-6 ), 0.1, -3., log10f ( 8E2 ), 1.3, log10f ( 7.E-5 ), 0.15 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -203,7 +203,7 @@ int main ( int argc, char *argv[] )
       Update ( stpIndx, sbstIndx, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].wlkrs, chn[0].sttstcs );
       sbstIndx += 1;
     }
-    WriteWalkersAndStatisticsToChain <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, stpIndx, chn[0].wlkrs, chn[0].sttstcs, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
+    ToChain ( stpIndx, chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].sttstcs, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
     stpIndx += 1;
   }
   printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
