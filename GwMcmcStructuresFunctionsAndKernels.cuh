@@ -14,8 +14,8 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 6
-#define NHINDX 5
+#define NPRS 8
+#define NHINDX 7
 #define NSPCTR 2
 #define NELMS 30
 #define ATNMR 18
@@ -132,7 +132,7 @@ __host__ void ReadFitsData ( const char*, const char*, const char*, const char*,
 __host__ int Stat ( const int, const int, const float, const float, const float*, const float*, const float*, float* );
 __host__ int SumUpStat ( Cuparam*, const int, float*, const int, const float*, const float* );
 __host__ int FoldModel ( Cuparam*, const int, const int, const int, const int, const float*, const int*, const int*, const float*, float* );
-__host__ int ModelFluxes ( const float*, const int*, const int, const Walker*, const int, const float*, const float*, const float*, float*, float* );
+__host__ int ModelFluxes ( const float*, const int*, const int, const Walker*, const int, const int, const float*, const float*, const float*, float*, float* );
 __host__ int InitAtRandom ( Cuparam*, const int, float*, const float, const Walker, Walker*, float* );
 __host__ int InitFromLast ( const int, const float*, Walker*, float* );
 __host__ int Priors ( const int, const float*, const float*, const float*, const int, Walker*, float*, float*, float* );
@@ -145,7 +145,7 @@ __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const f
 __global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, Walker*, float* );
 __global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, float* );
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const Walker*, float* );
-__global__ void AssembleArrayOfModelFluxes ( const int, const int, const float*, const float*, const float*, const Walker*, float* );
+__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float*, const float*, const float*, float * );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );

@@ -222,22 +222,20 @@ __host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *c
   }
   else if ( chn[0].thrdIndx == 0 )
   {
-    chn[0].strtngWlkr.par[0] = phbsPwrlwInt[0];
-    chn[0].strtngWlkr.par[1] = phbsPwrlwInt[1];
-    chn[0].strtngWlkr.par[2] = phbsPwrlwInt[2];
-    chn[0].strtngWlkr.par[3] = phbsPwrlwInt[3];
-    chn[0].strtngWlkr.par[4] = phbsPwrlwInt[4];
-    chn[0].strtngWlkr.par[NHINDX] = phbsPwrlwInt[NHINDX];
-    curandGenerateUniform ( cdp[0].curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
-    prmtrIndx = NHINDX + 1;
-    while ( prmtrIndx < NPRS )
+    for ( int i = 0; i < NPRS; i++ )
     {
-      chn[0].strtngWlkr.par[prmtrIndx] = chn[0].dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
-      prmtrIndx += 1;
+      chn[0].strtngWlkr.par[i] = phbsPwrlwInt[i];
     }
-    prmtrIndx = 0;
+    //curandGenerateUniform ( cdp[0].curandGnrtrHst, chn[0].rndmVls, ATNMR - 1 );
+    //prmtrIndx = NHINDX + 1;
+    //while ( prmtrIndx < NPRS )
+    //{
+    //  chn[0].strtngWlkr.par[prmtrIndx] = chn[0].dlt * ( 1 - 2 * chn[0].rndmVls[prmtrIndx-3] );
+    //  prmtrIndx += 1;
+    //}
     printf ( ".................................................................\n" );
     printf ( " Initial parameters -- " );
+    prmtrIndx = 0;
     while ( prmtrIndx < NPRS )
     {
       printf ( " %2.2f ", chn[0].strtngWlkr.par[prmtrIndx] );

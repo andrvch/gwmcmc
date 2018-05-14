@@ -20,29 +20,32 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int indx, cndtn = 1;
   indx = 0;
-  cndtn = cndtn * ( wlkr.par[indx] > 0 ) * ( wlkr.par[indx] < 5.5 );
+  cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
   indx = 1; // pl normalization
-  cndtn = cndtn * ( wlkr.par[indx] > -15. );
+  cndtn = cndtn * ( -15. < wlkr.par[indx] );
   indx = 2; // Temperature
-  cndtn = cndtn * ( wlkr.par[indx] > 0.03 ) * ( wlkr.par[indx] < 1. );
-  indx = 3; // Radi
-  //cndtn = cndtn * ( wlkr.par[indx] > 0.0 );
+  cndtn = cndtn * ( 0.03 < wlkr.par[indx] ) * ( wlkr.par[indx] < 1. );
+  indx = 3; // Norm
+  cndtn = cndtn * ( -15. < wlkr.par[indx] );
   indx = 4; // Distance
-  cndtn = cndtn * ( wlkr.par[indx] < 3.3 ) * ( wlkr.par[indx] > 1. );
+  cndtn = cndtn * (   1. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3.3 );
+  indx = 5;
+  cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
+  indx = 6; // plnorm
+  cndtn = cndtn * ( -15. < wlkr.par[indx] );
   indx = NHINDX; // Hydrogen column density
-  cndtn = cndtn * ( wlkr.par[indx] > 0 );
+  cndtn = cndtn * (   0. < wlkr.par[indx] );
   return cndtn;
 }
 
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh, const float sNh )
 {
-  int indx = NHINDX; // Hydrogen column density
   float prr = 0, sum = 0, mean = 0, sigma = 0.06;
-  float theta = powf ( sNh, 2 ) / mNh;
-  float kk = mNh / theta;
-  sum = sum + ( kk - 1 ) * logf ( wlkr.par[indx] ) - wlkr.par[indx] / theta;
-  //sum = sum + powf ( ( wlkr.par[indx] - mNh ) / sNh, 2 );
-  indx = NHINDX + 1;
+  //float theta = powf ( sNh, 2 ) / mNh;
+  //float kk = mNh / theta;
+  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[indx] ) - wlkr.par[indx] / theta;
+  sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
+  int indx = NHINDX + 1;
   while ( indx < NPRS )
   {
     sum = sum + powf ( ( wlkr.par[indx] - mean ) / sigma, 2 );
@@ -52,8 +55,7 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   return prr;
 }
 
-__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts,
-                                                   const float *crssctns, const float *abndncs, const int *atmcNmbrs, const Walker *wlkrs, float *absrptnFctrs )
+__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const Walker *wlkrs, float *absrptnFctrs )
 {
   int enIndx = threadIdx.x + blockDim.x * blockIdx.x;
   int wlIndx = threadIdx.y + blockDim.y * blockIdx.y;
@@ -83,22 +85,28 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
   }
 }
 
-__global__ void AssembleArrayOfModelFluxes ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls,
-                                             const float *enrgChnnls, const float *arfFctrs, const float *absrptnFctrs, const Walker *wlkrs,
-                                             float *mdlFlxs )
+__global__ void AssembleArrayOfModelFluxes ( const int spIn, const int NW, const int NE, const float *en, const float *arf, const float *absrptn, const Walker *wlk, float *flx )
 {
-  int enIndx = threadIdx.x + blockDim.x * blockIdx.x;
-  int wlIndx = threadIdx.y + blockDim.y * blockIdx.y;
-  int ttIndx = enIndx + wlIndx * nmbrOfEnrgChnnls;
-  if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) )
+  int e = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = e + w * NE;
+  float f;
+  if ( ( e < NE ) && ( w < NW ) )
   {
-    //mdlFlxs[ttIndx] =  arfFctrs[enIndx] * absrptnFctrs[ttIndx] * BlackBody ( wlkrs[wlIndx].par[0], wlkrs[wlIndx].par[1], enrgChnnls[enIndx], enrgChnnls[enIndx+1] );
-    //mdlFlxs[ttIndx] =  arfFctrs[enIndx] * absrptnFctrs[ttIndx] * PowerLaw ( wlkrs[wlIndx].par[0], wlkrs[wlIndx].par[1], enrgChnnls[enIndx], enrgChnnls[enIndx+1] );
-    mdlFlxs[ttIndx] =  arfFctrs[enIndx] * absrptnFctrs[ttIndx] * ( PowerLaw ( wlkrs[wlIndx].par[0], wlkrs[wlIndx].par[1], enrgChnnls[enIndx], enrgChnnls[enIndx+1] ) + BlackBody ( wlkrs[wlIndx].par[2], wlkrs[wlIndx].par[3], enrgChnnls[enIndx], enrgChnnls[enIndx+1] ) );
+    if ( spIn == 0 )
+    {
+      f = PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      f = f + BlackBody ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+    }
+    else if ( spIn == 1 )
+    {
+      f = PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+    }
+    flx[t] = f * arf[e] * absrptn[t];
   }
 }
 
-__host__ int ModelFluxes ( const float *abndncs, const int *atmcNmbrs, const int nmbrOfWlkrs, const Walker *wlkrs, const int nmbrOfEnrgChnnls, const float *crssctns, const float *enrgChnnls, const float *arfFctrs, float *absrptnFctrs, float *mdlFlxs )
+__host__ int ModelFluxes ( const float *abndncs, const int *atmcNmbrs, const int nmbrOfWlkrs, const Walker *wlkrs, const int spIn, const int nmbrOfEnrgChnnls, const float *crssctns, const float *enrgChnnls, const float *arfFctrs, float *absrptnFctrs, float *mdlFlxs )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( nmbrOfEnrgChnnls, nmbrOfWlkrs );
@@ -106,7 +114,7 @@ __host__ int ModelFluxes ( const float *abndncs, const int *atmcNmbrs, const int
   /* 4 a ) Assemble array of nsa fluxes */
   //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[i].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].wlkrs, spc[0].mdlFlxs );
   /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
-  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, wlkrs, mdlFlxs );
+  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( spIn, nmbrOfWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, wlkrs, mdlFlxs );
   return 0;
 }
 
@@ -128,7 +136,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.3;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 0.15 };
+  const float phbsPwrlwInt[NPRS] = { 1.1, log10f ( 9.E-6 ), 0.1, -3., log10f ( 8E2 ), 1.5, log10f ( 2.E-5 ), 0.15 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -138,7 +146,7 @@ int main ( int argc, char *argv[] )
 
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl = argv[2];
-  const char *spcLst[NSPCTR] = { spcFl, spcFl };
+  const char *spcLst[NSPCTR] = { spcFl, "pwnj0633.pi" };
   chn[0].thrdNm = argv[3];
   chn[0].nmbrOfWlkrs = atoi ( argv[4] );
   chn[0].nmbrOfStps = atoi ( argv[5] );
@@ -160,7 +168,7 @@ int main ( int argc, char *argv[] )
     InitAtRandom ( cdp, chn[0].nmbrOfWlkrs, chn[0].rndmVls, chn[0].dlt, chn[0].strtngWlkr, chn[0].wlkrs, chn[0].sttstcs );
     for ( int i = 0; i < NSPCTR; i++ )
     {
-      ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
+      ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs, chn[0].wlkrs, i, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
       FoldModel ( cdp, chn[0].nmbrOfWlkrs, spc[i].nmbrOfChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].flddMdlFlxs );
       Stat ( chn[0].nmbrOfWlkrs, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
       SumUpStat ( cdp, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i].nmbrOfChnnls, spc[i].chnnlSttstcs, spc[i].ntcdChnnls );
@@ -187,7 +195,7 @@ int main ( int argc, char *argv[] )
       Priors ( mdl[0].nmbrOfDistBins, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
       for ( int i = 0; i < NSPCTR; i++ )
       {
-        ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
+        ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, i, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
         FoldModel ( cdp, chn[0].nmbrOfWlkrs / 2, spc[i].nmbrOfChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].flddMdlFlxs );
         Stat ( chn[0].nmbrOfWlkrs / 2, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
         SumUpStat ( cdp, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i].nmbrOfChnnls, spc[i].chnnlSttstcs, spc[i].ntcdChnnls );
