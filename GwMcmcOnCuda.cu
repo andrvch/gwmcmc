@@ -55,36 +55,6 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   return prr;
 }
 
-__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const Walker *wlkrs, float *absrptnFctrs )
-{
-  int enIndx = threadIdx.x + blockDim.x * blockIdx.x;
-  int wlIndx = threadIdx.y + blockDim.y * blockIdx.y;
-  int ttIndx = enIndx + wlIndx * nmbrOfEnrgChnnls;
-  int elIndx, effElIndx, crIndx, prIndx;
-  float xsctn, clmn, nh;
-  if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) )
-  {
-    elIndx = 0;
-    prIndx = elIndx + NHINDX;
-    crIndx = elIndx + enIndx * nmbrOfElmnts;
-    effElIndx = atmcNmbrs[elIndx] - 1;
-    nh = wlkrs[wlIndx].par[prIndx] * 1.E22;
-    clmn = abndncs[effElIndx];
-    xsctn = clmn * crssctns[crIndx];
-    elIndx = 1;
-    while ( elIndx < nmbrOfElmnts )
-    {
-      prIndx = elIndx + NHINDX;
-      crIndx = elIndx + enIndx * nmbrOfElmnts;
-      effElIndx = atmcNmbrs[elIndx] - 1;
-      clmn = abndncs[effElIndx]; // * powf ( 10, wlkrs[wlIndx].par[prIndx] );
-      xsctn = xsctn + clmn * crssctns[crIndx];
-      elIndx += 1;
-    }
-    absrptnFctrs[ttIndx] = expf ( - nh * xsctn );
-  }
-}
-
 __global__ void AssembleArrayOfModelFluxes ( const int spIn, const int NW, const int NE, const float *en, const float *arf, const float *absrptn, const Walker *wlk, float *flx )
 {
   int e = threadIdx.x + blockDim.x * blockIdx.x;
@@ -106,23 +76,21 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIn, const int NW, const
   }
 }
 
-__host__ int ModelFluxes ( const float *abndncs, const int *atmcNmbrs, const int nmbrOfWlkrs, const Walker *wlkrs, const int spIn, const int nmbrOfEnrgChnnls, const float *crssctns, const float *enrgChnnls, const float *arfFctrs, float *absrptnFctrs, float *mdlFlxs )
+__host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, const int indx, Spectrum spec )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  dim3 dimGrid = Grid ( nmbrOfEnrgChnnls, nmbrOfWlkrs );
-  AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, nmbrOfEnrgChnnls, ATNMR, crssctns, abndncs, atmcNmbrs, wlkrs, absrptnFctrs );
-  /* 4 a ) Assemble array of nsa fluxes */
-  //BilinearInterpolation <<< dimGrid_0, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[i].nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].enrgChnnls, chn[0].wlkrs, spc[0].mdlFlxs );
-  /* 4 ) Assemble array of model fluxes, spc[0].mdlFlxs[chn[0].nmbrOfWlkrs*spc[0].nmbrOfEnrgChnnls] */
-  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( spIn, nmbrOfWlkrs, nmbrOfEnrgChnnls, enrgChnnls, arfFctrs, absrptnFctrs, wlkrs, mdlFlxs );
+  dim3 dimGrid = Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs );
+  AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
+  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[i].spec.nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].spec.enrgChnnls, chn[0].wlkrs, spc[0].spec.mdlFlxs );
+  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.mdlFlxs );
   return 0;
 }
 
-__host__ int Priors ( const int nmbrOfDistBins, const float *Dist, const float *EBV, const float *errEBV, const int nmbrOfWlkrs, Walker *prpsdWlkrs, float *mNh, float *sNh, float *prrs )
+__host__ int Priors ( const Model *mdl, Chain *chn )
 {
-  int blocksPerThread = Blocks ( nmbrOfWlkrs );
-  LinearInterpolation <<< blocksPerThread, THRDSPERBLCK >>> ( nmbrOfWlkrs, nmbrOfDistBins, 4, Dist, EBV, errEBV, prpsdWlkrs, mNh, sNh );
-  AssembleArrayOfPriors <<< blocksPerThread, THRDSPERBLCK >>> ( nmbrOfWlkrs, prpsdWlkrs, mNh, sNh, prrs );
+  int blcks = Blocks ( chn[0].nmbrOfWlkrs / 2 );
+  LinearInterpolation <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, 4, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh );
+  AssembleArrayOfPriors <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
   return 0;
 }
 
@@ -145,12 +113,13 @@ int main ( int argc, char *argv[] )
   Spectrum spc[NSPCTR];
 
   cdp[0].dev = atoi( argv[1] );
-  const char *spcFl = argv[2];
-  const char *spcLst[NSPCTR] = { spcFl, "pwnj0633.pi" };
-  chn[0].thrdNm = argv[3];
-  chn[0].nmbrOfWlkrs = atoi ( argv[4] );
-  chn[0].nmbrOfStps = atoi ( argv[5] );
-  chn[0].thrdIndx = atoi ( argv[6] );
+  const char *spcFl1 = argv[2];
+  const char *spcFl2 = argv[3];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 }; //PNpwnExGrp1Real0.pi
+  chn[0].thrdNm = argv[4];
+  chn[0].nmbrOfWlkrs = atoi ( argv[5] );
+  chn[0].nmbrOfStps = atoi ( argv[6] );
+  chn[0].thrdIndx = atoi ( argv[7] );
   chn[0].dlt = dlt;
   spc[0].lwrNtcdEnrg = lwrNtcdEnrg;
   spc[0].hghrNtcdEnrg = hghrNtcdEnrg;
@@ -160,23 +129,26 @@ int main ( int argc, char *argv[] )
   InitializeCuda ( cdp );
   InitializeModel ( mdl );
   InitializeChain ( cdp, phbsPwrlwInt, chn );
-  InitializeSpectra ( spcLst, cdp, verbose, chn, mdl, spc );
+
+  SpecInfo ( spcLst, spc );
+  SpecAlloc ( chn, spc );
+  SpecData ( cdp, verbose, mdl, spc );
 
   /* Initialize walkers */
   if ( chn[0].thrdIndx == 0 )
   {
-    InitAtRandom ( cdp, chn[0].nmbrOfWlkrs, chn[0].rndmVls, chn[0].dlt, chn[0].strtngWlkr, chn[0].wlkrs, chn[0].sttstcs );
+    InitAtRandom ( cdp, chn );
     for ( int i = 0; i < NSPCTR; i++ )
     {
-      ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs, chn[0].wlkrs, i, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
-      FoldModel ( cdp, chn[0].nmbrOfWlkrs, spc[i].nmbrOfChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].flddMdlFlxs );
-      Stat ( chn[0].nmbrOfWlkrs, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-      SumUpStat ( cdp, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i].nmbrOfChnnls, spc[i].chnnlSttstcs, spc[i].ntcdChnnls );
+      ModelFluxes ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, i, spc[i] );
+      FoldModel ( cdp, chn[0].nmbrOfWlkrs, spc[i] );
+      Stat ( chn[0].nmbrOfWlkrs, spc[i] );
+      SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
     }
   }
   else if ( chn[0].thrdIndx > 0 )
   {
-    InitFromLast ( chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
+    InitFromLast ( chn );
   }
 
   cudaEventRecord ( cdp[0].start, 0 );
@@ -184,26 +156,28 @@ int main ( int argc, char *argv[] )
   /* Run chain */
   printf ( ".................................................................\n" );
   printf ( " Start ...                                                  \n" );
+
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
+
   int stpIndx = 0, sbstIndx;
   while ( stpIndx < chn[0].nmbrOfStps )
   {
     sbstIndx = 0;
     while ( sbstIndx < 2 )
     {
-      Propose ( stpIndx, sbstIndx, chn[0].nmbrOfWlkrs / 2, chn[0].wlkrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
-      Priors ( mdl[0].nmbrOfDistBins, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
+      Propose ( stpIndx, sbstIndx, chn );
+      Priors ( mdl, chn );
       for ( int i = 0; i < NSPCTR; i++ )
       {
-        ModelFluxes ( mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, i, spc[i].nmbrOfEnrgChnnls, spc[i].crssctns, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, spc[i].mdlFlxs );
-        FoldModel ( cdp, chn[0].nmbrOfWlkrs / 2, spc[i].nmbrOfChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].flddMdlFlxs );
-        Stat ( chn[0].nmbrOfWlkrs / 2, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-        SumUpStat ( cdp, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i].nmbrOfChnnls, spc[i].chnnlSttstcs, spc[i].ntcdChnnls );
+        ModelFluxes ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, i, spc[i] );
+        FoldModel ( cdp, chn[0].nmbrOfWlkrs / 2, spc[i] );
+        Stat ( chn[0].nmbrOfWlkrs / 2, spc[i] );
+        SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i] );
       }
-      Update ( stpIndx, sbstIndx, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].wlkrs, chn[0].sttstcs );
+      Update ( stpIndx, sbstIndx, chn );
       sbstIndx += 1;
     }
-    ToChain ( stpIndx, chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].sttstcs, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
+    ToChain ( stpIndx, chn );
     stpIndx += 1;
   }
   printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
