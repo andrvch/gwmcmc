@@ -13,7 +13,7 @@
 #include <cusparse_v2.h>
 #include <cublas_v2.h>
 #include <cufft.h>
-#include "GwMcmcStructuresFunctionsAndKernels.cuh"
+#include "StrctrsAndFnctns.cuh"
 
 /* Functions and Kernels: */
 __host__ __device__ int PriorCondition ( const Walker wlkr )
@@ -221,10 +221,10 @@ int main ( int argc, char *argv[] )
   printf ( "\n" );
 
   /* Write results to a file */
-  SimpleWriteDataFloat ( "Autocor.dat", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
-  SimpleWriteDataFloat ( "AutocorCM.dat", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
-  SimpleWriteDataFloat ( "spec1Counts.dat", spc[0].nmbrOfChnnls, spc[0].srcCnts );
-  SimpleWriteDataFloat ( "spec2Counts.dat", spc[1].nmbrOfChnnls, spc[1].srcCnts );
+  SimpleWriteDataFloat ( "Autocor.out", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
+  SimpleWriteDataFloat ( "AutocorCM.out", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
+  SimpleWriteDataFloat ( "spec1Counts.out", spc[0].nmbrOfChnnls, spc[0].srcCnts );
+  SimpleWriteDataFloat ( "spec2Counts.out", spc[1].nmbrOfChnnls, spc[1].srcCnts );
   WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
 
   /* Destroy cuda related contexts and things: */

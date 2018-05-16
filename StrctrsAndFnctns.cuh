@@ -1,5 +1,5 @@
-#ifndef _GWMCMCSTRUCTURESFUNCTIONSANDKERNELS_CUH_
-#define _GWMCMCSTRUCTURESFUNCTIONSANDKERNELS_CUH_
+#ifndef _STRCTRSANDFNCTNS_CUH_
+#define _STRCTRSANDFNCTNS_CUH_
 
 #define MNS 1.4e0f
 #define RNS 1.3e1f
@@ -163,4 +163,4 @@ __global__ void MakeMatrix ( const int, const float*, float* );
 __global__ void BilinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float*, float* );
 
-#endif // _GWMCMCFUNCTIONSANDKERNELS_CUH_
+#endif // _STRCTRSANDFNCTNS_CUH_

@@ -1,10 +1,10 @@
 *.o
 *.pyc
-*.data
-*.dat
 AnnChainRealChandra/
 ChainChandra0*
 runGwMcmcOnCuda
 save-commands.json
 .latex/
 *.json
+*.out
+*.fak

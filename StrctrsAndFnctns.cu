@@ -1,5 +1,5 @@
-#ifndef _GWMCMCSTRUCTURESFUNCTIONSANDKERNELS_CU_
-#define _GWMCMCSTRUCTURESFUNCTIONSANDKERNELS_CU_
+#ifndef _STRCTRSANDFNCTNS_CU_
+#define _STRCTRSANDFNCTNS_CU_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,7 +13,7 @@
 #include <cusparse_v2.h>
 #include <cublas_v2.h>
 #include <cufft.h>
-#include "GwMcmcStructuresFunctionsAndKernels.cuh"
+#include "StrctrsAndFnctns.cuh"
 
 __host__ int SpecData ( Cuparam *cdp, const int verbose, Model *mdl, Spectrum *spc )
 {
@@ -1162,4 +1162,4 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
   return 0;
 }
 
-#endif // _GWMCMCFUNCTIONSANDKERNELS_CU_
+#endif // _STRCTRSANDFNCTNS_CU_
