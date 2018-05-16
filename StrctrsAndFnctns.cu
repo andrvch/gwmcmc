@@ -441,22 +441,23 @@ __host__ __device__ float BlackBody ( const float kT, const float lgRtD, const f
   return flx;
 }
 
-__host__ __device__ float Poisson ( const float srcCnts, const float flddMdlFlx, const float srcExptm )
+__host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts )
 {
-  float sttstc, mdlCnts;
-  mdlCnts = srcExptm * flddMdlFlx;
-  if ( ( srcCnts != 0 ) && ( fabsf ( mdlCnts ) > TLR ) )
+  float sttstc, mcnts;
+  mcnts = ts * mdl;
+  if ( scnts != 0 && fabsf ( mcnts ) > TLR )
   {
-    sttstc = 2. * ( mdlCnts - srcCnts + srcCnts * ( logf ( srcCnts ) - logf ( mdlCnts ) ) );
+    sttstc = mcnts - scnts + scnts * ( logf ( scnts ) - logf ( mcnts ) );
   }
-  else if ( ( srcCnts == 0 ) && ( fabsf ( mdlCnts ) > TLR ) )
+  else if ( scnts == 0 && fabsf ( mcnts ) > TLR )
   {
-    sttstc = 2. * mdlCnts;
+    sttstc = mcnts;
   }
   else
   {
     sttstc = 0;
   }
+  sttstc = 2 * sttstc;
   return sttstc;
 }
 
@@ -469,15 +470,15 @@ __host__ __device__ float PoissonWithBackground ( const float scnts, const float
   {
     sttstc = ts * mdl + ( ts + tb ) * f - scnts * logf ( ts * mdl + ts * f ) - bcnts * logf ( tb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
   }
-  else if ( scnts == 0 && bcnts != 0 && fabsf ( mdl * ts ) > TLR )
+  else if ( scnts == 0 && bcnts != 0 )
   {
     sttstc = ts * mdl - bcnts * logf ( tb / ( ts + tb ) );
   }
-  else if ( scnts != 0 && bcnts == 0 && fabsf ( mdl * ts ) > TLR && mdl < scnts / ( ts + tb )  )
+  else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts + tb ) )
   {
     sttstc = - tb * mdl - scnts * logf ( ts / ( ts + tb ) );
   }
-  else if ( scnts != 0 && bcnts == 0 && fabsf ( mdl * ts ) > TLR && mdl >= scnts / ( ts + tb ) )
+  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts + tb ) )
   {
     sttstc = ts * mdl + scnts * ( logf ( scnts ) - logf ( ts * mdl ) - 1 );
   }
