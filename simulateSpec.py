@@ -6,8 +6,7 @@ import math
 import numpy as np
 from xspec import *
 
-os.system('rm *.fak')
-
+#os.system('rm *.fak')
 SPECNAME1 = "pwnj0633" #.pi"
 AllData(SPECNAME1+".pi")
 s1 = AllData(1)
