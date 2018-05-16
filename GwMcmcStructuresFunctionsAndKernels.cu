@@ -974,7 +974,7 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
   }
 }
 
-__host__ void ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] )
+__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] )
 {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, intnull = 0, anynull = 0, colnum;
@@ -989,15 +989,17 @@ __host__ void ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbr
   snprintf ( arfTbl, sizeof ( card ), "%s%s", card, "[SPECRESP]" );
   fits_read_key ( ftsPntr, TSTRING, "RESPFILE", card, NULL, &status );
   snprintf ( rmfTbl, sizeof ( card ), "%s%s", card, "[MATRIX]" );
-  fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
-  snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
-  fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
+  //fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
+  //snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
+  //fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   /* Open Background file */
-  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+  //fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
+  //fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
   /* Open RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );
+  if ( status != 0 ) { printf ( " Opening rmf table fails\n" ); return 1; }
   fits_read_key ( ftsPntr, TINT, "NAXIS2", nmbrOfEnrgChnnls, NULL, &status );
+  if ( status != 0 ) { printf ( " Reading NAXIS2 key from rmf table fails\n" ); return 1; }
   int *n_grp;
   n_grp = ( int * ) malloc ( *nmbrOfEnrgChnnls * sizeof ( int ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colNgr, &colnum, &status );
@@ -1017,20 +1019,21 @@ __host__ void ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbr
   *nmbrOfRmfVls = sum;
   free ( n_chan_vec );
   free ( n_grp );
+  return 0;
 }
 
-__host__ void ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls )
+__host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls )
 {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
   char colNgr[]="N_GRP", colNch[]="N_CHAN",  colFch[]="F_CHAN", colCounts[]="COUNTS", colSpecResp[]="SPECRESP", colEnLo[]="ENERG_LO", colEnHi[]="ENERG_HI", colMat[]="MATRIX", colEmin[]="E_MIN", colEmax[]="E_MAX";
-  float floatnull, backscal_src, backscal_bkg;
+  float floatnull; //, backscal_src, backscal_bkg;
   /* Read Spectrum: */
   fits_open_file ( &ftsPntr, srcTbl, READONLY, &status );
   fits_read_key ( ftsPntr, TSTRING, "RESPFILE", card, NULL, &status );
   snprintf ( EboundsTable, sizeof ( EboundsTable ), "%s%s", card, "[EBOUNDS]" );
-  fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_src, NULL, &status );
+  //fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_src, NULL, &status );
   fits_read_key ( ftsPntr, TSTRING, "TELESCOP", Telescop, NULL, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, srcCnts, &anynull, &status );
@@ -1039,14 +1042,14 @@ __host__ void ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLE
   fits_get_colnum ( ftsPntr, CASEINSEN, colSpecResp, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, arfFctrs, &anynull, &status );
   /* Read Background: */
-  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
-  fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
-  fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
-  for ( int i = 0; i < nmbrOfChnnls; i++ )
-  {
-    bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;;
-  }
+  //fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
+  //fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
+  //fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
+  //fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
+  //for ( int i = 0; i < nmbrOfChnnls; i++ )
+  //{
+  //  bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;;
+  //}
   /* Read RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );
   float *enelo_vec, *enehi_vec;
@@ -1156,6 +1159,7 @@ __host__ void ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLE
   free ( n_chan );
   free ( f_chan );
   free ( n_grp );
+  return 0;
 }
 
 #endif // _GWMCMCFUNCTIONSANDKERNELS_CU_
