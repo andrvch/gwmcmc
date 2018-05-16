@@ -6,6 +6,10 @@ import math
 import numpy as np
 from xspec import *
 
+Xset.chatter = 0
+Xset.abund = "angr"
+Xset.xsect = "bcmc"
+
 name = sys.argv[1]
 time = float(sys.argv[2])
 num = int(sys.argv[3])
