@@ -443,8 +443,8 @@ __host__ __device__ float BlackBody ( const float kT, const float lgRtD, const f
 
 __host__ __device__ float Poisson ( const float srcCnts, const float flddMdlFlx, const float srcExptm )
 {
-  float sttstc;
-  float mdlCnts = srcExptm * flddMdlFlx;
+  float sttstc, mdlCnts;
+  mdlCnts = srcExptm * flddMdlFlx;
   if ( ( srcCnts != 0 ) && ( fabsf ( mdlCnts ) > TLR ) )
   {
     sttstc = 2. * ( mdlCnts - srcCnts + srcCnts * ( logf ( srcCnts ) - logf ( mdlCnts ) ) );
@@ -459,6 +459,35 @@ __host__ __device__ float Poisson ( const float srcCnts, const float flddMdlFlx,
   }
   return sttstc;
 }
+
+__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb )
+{
+  float sttstc, d, f;
+  d = sqrtf ( powf ( ( ts + tb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts + tb ) * bcnts * mdl );
+  f = ( scnts + bcnts - ( ts + tb ) * mdl + d ) / 2 / ( ts + tb );
+  if ( scnts != 0 && bcnts != 0 && fabsf ( mdl * ts ) > TLR )
+  {
+    sttstc = ts * mdl + ( ts + tb ) * f - scnts * logf ( ts * mdl + ts * f ) - bcnts * logf ( tb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
+  }
+  else if ( scnts == 0 && bcnts != 0 && fabsf ( mdl * ts ) > TLR )
+  {
+    sttstc = ts * mdl - bcnts * logf ( tb / ( ts + tb ) );
+  }
+  else if ( scnts != 0 && bcnts == 0 && fabsf ( mdl * ts ) > TLR && mdl < scnts / ( ts + tb )  )
+  {
+    sttstc = - tb * mdl - scnts * logf ( ts / ( ts + tb ) );
+  }
+  else if ( scnts != 0 && bcnts == 0 && fabsf ( mdl * ts ) > TLR && mdl >= scnts / ( ts + tb ) )
+  {
+    sttstc = ts * mdl + scnts * ( logf ( scnts ) - logf ( ts * mdl ) - 1 );
+  }
+  else
+  {
+    sttstc = 0;
+  }
+  return sttstc;
+}
+
 
 __host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x )
 {
@@ -989,12 +1018,12 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   snprintf ( arfTbl, sizeof ( card ), "%s%s", card, "[SPECRESP]" );
   fits_read_key ( ftsPntr, TSTRING, "RESPFILE", card, NULL, &status );
   snprintf ( rmfTbl, sizeof ( card ), "%s%s", card, "[MATRIX]" );
-  //fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
-  //snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
-  //fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
+  fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
+  snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
+  fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   /* Open Background file */
-  //fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  //fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
+  fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
   /* Open RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );
   if ( status != 0 ) { printf ( " Opening rmf table fails\n" ); return 1; }
@@ -1028,12 +1057,12 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
   int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
   char colNgr[]="N_GRP", colNch[]="N_CHAN",  colFch[]="F_CHAN", colCounts[]="COUNTS", colSpecResp[]="SPECRESP", colEnLo[]="ENERG_LO", colEnHi[]="ENERG_HI", colMat[]="MATRIX", colEmin[]="E_MIN", colEmax[]="E_MAX";
-  float floatnull; //, backscal_src, backscal_bkg;
+  float floatnull, backscal_src, backscal_bkg;
   /* Read Spectrum: */
   fits_open_file ( &ftsPntr, srcTbl, READONLY, &status );
   fits_read_key ( ftsPntr, TSTRING, "RESPFILE", card, NULL, &status );
   snprintf ( EboundsTable, sizeof ( EboundsTable ), "%s%s", card, "[EBOUNDS]" );
-  //fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_src, NULL, &status );
+  fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_src, NULL, &status );
   fits_read_key ( ftsPntr, TSTRING, "TELESCOP", Telescop, NULL, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, srcCnts, &anynull, &status );
@@ -1042,14 +1071,14 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
   fits_get_colnum ( ftsPntr, CASEINSEN, colSpecResp, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, arfFctrs, &anynull, &status );
   /* Read Background: */
-  //fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  //fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
-  //fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
-  //fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
-  //for ( int i = 0; i < nmbrOfChnnls; i++ )
-  //{
-  //  bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;;
-  //}
+  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
+  fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
+  fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
+  fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
+  for ( int i = 0; i < nmbrOfChnnls; i++ )
+  {
+    bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;;
+  }
   /* Read RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );
   float *enelo_vec, *enehi_vec;

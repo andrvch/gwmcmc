@@ -106,6 +106,7 @@ __host__ __device__ float PriorStatistic ( const Walker, const int, const float,
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
+__host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float );
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
 __host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, int, float*, int*, float* );
 __host__ void ReadLastPositionOfWalkersFromFile ( const char*, const int, const int, float* );
