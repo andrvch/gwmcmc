@@ -485,9 +485,9 @@ __host__ __device__ float PoissonWithBackground ( const float scnts, const float
   {
     sttstc = 0;
   }
+  sttstc = 2 * sttstc;
   return sttstc;
 }
-
 
 __host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x )
 {
@@ -838,7 +838,8 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
   int t = c + w * nmbrOfChnnls;
   if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
+    //chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
+    chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
   }
 }
 
@@ -1014,21 +1015,23 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   fits_open_file ( &ftsPntr, srcTbl, READONLY, &status );
   fits_read_key ( ftsPntr, TINT, "NAXIS2", nmbrOfChnnls, NULL, &status );
   fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", srcExptm, NULL, &status );
+  /* Read names of arf rmf and background */
   fits_read_key ( ftsPntr, TSTRING, "ANCRFILE", card, NULL, &status );
   snprintf ( arfTbl, sizeof ( card ), "%s%s", card, "[SPECRESP]" );
   fits_read_key ( ftsPntr, TSTRING, "RESPFILE", card, NULL, &status );
   snprintf ( rmfTbl, sizeof ( card ), "%s%s", card, "[MATRIX]" );
   fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
-  fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   /* Open Background file */
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
+  if ( status != 0 ) { printf ( " Error: Opening background table fails\n " ); return 1; }
   fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+  if ( status != 0 ) { printf ( " Error: Reading EXPOSURE keyword from background table fails\n " ); return 1; }
   /* Open RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );
-  if ( status != 0 ) { printf ( " Opening rmf table fails\n" ); return 1; }
+  if ( status != 0 ) { printf ( " Error: Opening rmf table fails\n" ); return 1; }
   fits_read_key ( ftsPntr, TINT, "NAXIS2", nmbrOfEnrgChnnls, NULL, &status );
-  if ( status != 0 ) { printf ( " Reading NAXIS2 key from rmf table fails\n" ); return 1; }
+  if ( status != 0 ) { printf ( " Error: Reading NAXIS2 key from rmf table fails\n" ); return 1; }
   int *n_grp;
   n_grp = ( int * ) malloc ( *nmbrOfEnrgChnnls * sizeof ( int ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colNgr, &colnum, &status );
@@ -1077,7 +1080,7 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
   for ( int i = 0; i < nmbrOfChnnls; i++ )
   {
-    bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;;
+    bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;
   }
   /* Read RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );
