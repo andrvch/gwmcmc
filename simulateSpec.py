@@ -8,7 +8,7 @@ from xspec import *
 
 os.system('rm *.fak')
 
-SPECNAME = "psrj0633.pi"
+SPECNAME = "pwnj0633.pi"
 AllData(SPECNAME)
 s1 = AllData(1)
 AllModels += "phabs*(powerlaw)" #+bbodyrad)"
@@ -19,7 +19,7 @@ m1.setPars(pars)
 fs1 = FakeitSettings()
 AllData.fakeit(1, fs1)
 
-SPECNAME = "PNJ063315asecGrp15Real0.pi"
+SPECNAME = "PNpwnExGrp15Real0.pi"
 AllData(SPECNAME)
 s1 = AllData(1)
 AllModels += "phabs*powerlaw"
