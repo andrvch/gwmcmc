@@ -103,10 +103,10 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.3;
+  const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 1.5, -4, 0.1}; //, -3.4, log10f ( 8E2 ), 1.4, -4.4, 0.1 };
+  const float phbsPwrlwInt[NPRS] = { 1.5, -5., 0.5}; //, -3.4, log10f ( 8E2 ), 1.4, -4.4, 0.1 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
