@@ -76,11 +76,11 @@ struct Chain
 struct Model
 {
   int sgFlg = 3; // Xset.xsect = "bcmc"
-  const char *abndncsFl = "AngrAbundancesAndRedshift.pars"; // Xset.abund = "angr" and redshift = 0
+  const char *abndncsFl = "AngrAbundances.pars"; // Xset.abund = "angr" and redshift = 0
   const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
   int *atmcNmbrs;
   float *abndncs;
-  const char *rddnngFl = "reddening0633.data";
+  const char *rddnngFl = "reddeningJ0633.dat";
   const int nmbrOfDistBins = 442;
   const int numRedCol = 4;
   float *RedData, *Dist, *EBV, *errDist, *errEBV;
