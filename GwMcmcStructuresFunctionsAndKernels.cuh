@@ -14,8 +14,8 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 8
-#define NHINDX 7
+#define NPRS 3
+#define NHINDX 2
 #define NSPCTR 2
 #define NELMS 30
 #define ATNMR 18

@@ -23,6 +23,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
   indx = 1; // pl normalization
   cndtn = cndtn * (  -9. < wlkr.par[indx] );
+  /*
   indx = 2; // Temperature
   cndtn = cndtn * ( 0.03 < wlkr.par[indx] ) * ( wlkr.par[indx] < 1. );
   indx = 3; // Norm
@@ -33,6 +34,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
   indx = 6; // plnorm
   cndtn = cndtn * (  -9. < wlkr.par[indx] );
+  */
   indx = NHINDX; // Hydrogen column density
   cndtn = cndtn * (   0. < wlkr.par[indx] );
   return cndtn;
@@ -41,9 +43,9 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh, const float sNh )
 {
   float prr = 0, sum = 0, mean = 0, sigma = 0.06;
-  float theta = powf ( sNh, 2 ) / mNh;
-  float kk = mNh / theta;
-  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  //float theta = powf ( sNh, 2 ) / mNh;
+  //float kk = mNh / theta;
+  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
   int indx = NHINDX + 1;
   while ( indx < NPRS )
@@ -55,22 +57,22 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   return prr;
 }
 
-__global__ void AssembleArrayOfModelFluxes ( const int spIn, const int NW, const int NE, const float *en, const float *arf, const float *absrptn, const Walker *wlk, float *flx )
+__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float *en, const float *arf, const float *absrptn, const Walker *wlk, float *flx )
 {
   int e = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = e + w * NE;
+  int t = e + w * nmbrOfEnrgChnnls;
   float f;
-  if ( ( e < NE ) && ( w < NW ) )
+  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    if ( spIn == 0 )
+    if ( ( spIndx == 0 ) || ( spIndx == 2 ) )
     {
       f = PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-      f = f + BlackBody ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      //f = f + BlackBody ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
-    else if ( spIn == 1 )
+    else if ( ( spIndx == 1 ) || ( spIndx == 3 ) )
     {
-      f = PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
     }
     flx[t] = f * arf[e] * absrptn[t];
   }
@@ -104,7 +106,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 1.6, log10f ( 7.E-6 ), 0.1, -3., log10f ( 8E2 ), 1.3, log10f ( 7.E-5 ), 0.15 };
+  const float phbsPwrlwInt[NPRS] = { 1.5, -4, 0.1}; //, -3.4, log10f ( 8E2 ), 1.4, -4.4, 0.1 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -115,16 +117,19 @@ int main ( int argc, char *argv[] )
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 }; //PNpwnExGrp1Real0.pi
+  //const char *spcFl3 = argv[4];
+  //const char *spcFl4 = argv[5];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 }; //, spcFl3, spcFl4 }; //PNpwnExGrp1Real0.pi
   chn[0].thrdNm = argv[4];
   chn[0].nmbrOfWlkrs = atoi ( argv[5] );
   chn[0].nmbrOfStps = atoi ( argv[6] );
   chn[0].thrdIndx = atoi ( argv[7] );
   chn[0].dlt = dlt;
-  spc[0].lwrNtcdEnrg = lwrNtcdEnrg;
-  spc[0].hghrNtcdEnrg = hghrNtcdEnrg;
-  spc[1].lwrNtcdEnrg = lwrNtcdEnrg;
-  spc[1].hghrNtcdEnrg = hghrNtcdEnrg;
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    spc[i].lwrNtcdEnrg = lwrNtcdEnrg;
+    spc[i].hghrNtcdEnrg = hghrNtcdEnrg;
+  }
 
   InitializeCuda ( cdp );
   InitializeModel ( mdl );
@@ -218,6 +223,8 @@ int main ( int argc, char *argv[] )
   /* Write results to a file */
   SimpleWriteDataFloat ( "Autocor.dat", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
   SimpleWriteDataFloat ( "AutocorCM.dat", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
+  SimpleWriteDataFloat ( "spec1Counts.dat", spc[0].nmbrOfChnnls, spc[0].srcCnts );
+  SimpleWriteDataFloat ( "spec2Counts.dat", spc[1].nmbrOfChnnls, spc[1].srcCnts );
   WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
 
   /* Destroy cuda related contexts and things: */
