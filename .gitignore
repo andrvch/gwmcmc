@@ -8,3 +8,7 @@ save-commands.json
 *.json
 *.out
 *.fak
+*.pi
+*.fits
+*.rmf
+*.arf

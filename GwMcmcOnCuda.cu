@@ -225,8 +225,8 @@ int main ( int argc, char *argv[] )
   /* Write results to a file */
   SimpleWriteDataFloat ( "Autocor.out", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
   SimpleWriteDataFloat ( "AutocorCM.out", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
-  SimpleWriteDataFloat ( "spec1Counts.out", spc[0].nmbrOfChnnls, spc[0].srcCnts );
-  SimpleWriteDataFloat ( "spec2Counts.out", spc[1].nmbrOfChnnls, spc[1].srcCnts );
+  //SimpleWriteDataFloat ( "spec1Counts.out", spc[0].nmbrOfChnnls, spc[0].srcCnts );
+  //SimpleWriteDataFloat ( "spec2Counts.out", spc[1].nmbrOfChnnls, spc[1].srcCnts );
   WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
 
   /* Destroy cuda related contexts and things: */
