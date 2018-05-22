@@ -7,7 +7,7 @@
 #define KMCM 1.0e5f
 #define KMCMPCCM -13.48935060694014384023e0f
 #define INF 2e30f
-#define TLR 1e-10f
+#define TLR 1e-20f
 #define ALPHA 1e0f
 #define BETA  0e0f
 #define INCXX 1
