@@ -34,6 +34,25 @@ __host__ int SpecData ( Cuparam *cdp, const int verbose, Model *mdl, Spectrum *s
     if ( verbose == 1 )
     {
       printf ( ".................................................................\n" );
+      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
+    }
+  }
+  if ( verbose == 1 )
+  {
+    printf ( " Total number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
+    printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
+  }
+  return 0;
+}
+
+__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc )
+{
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
+    if ( verbose == 1 )
+    {
+      printf ( ".................................................................\n" );
       printf ( " Spectrum number  -- %i\n", i );
       printf ( " Spectrum table   -- %s\n", spc[i].srcTbl );
       printf ( " ARF table        -- %s\n", spc[i].arfTbl );
@@ -44,23 +63,7 @@ __host__ int SpecData ( Cuparam *cdp, const int verbose, Model *mdl, Spectrum *s
       printf ( " Number of nonzero elements of RMF matrix = %i\n", spc[i].nmbrOfRmfVls );
       printf ( " Exposure time                            = %.8E\n", spc[i].srcExptm );
       printf ( " Exposure time (background)               = %.8E\n", spc[i].bckgrndExptm );
-      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
     }
-  }
-  if ( verbose == 1 )
-  {
-    printf ( ".................................................................\n" );
-    printf ( " Total number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
-    printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
-  }
-  return 0;
-}
-
-__host__ int SpecInfo ( const char *spcLst[NSPCTR], Spectrum *spc )
-{
-  for ( int i = 0; i < NSPCTR; i++ )
-  {
-    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
   }
   return 0;
 }
@@ -443,19 +446,14 @@ __host__ __device__ float BlackBody ( const float kT, const float lgRtD, const f
 
 __host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts )
 {
-  float sttstc, mcnts;
-  mcnts = ts * mdl;
-  if ( scnts != 0 && fabsf ( mcnts ) > TLR )
+  float sttstc;
+  if ( scnts != 0 )
   {
-    sttstc = mcnts - scnts + scnts * ( logf ( scnts ) - logf ( mcnts ) );
-  }
-  else if ( scnts == 0 && fabsf ( mcnts ) > TLR )
-  {
-    sttstc = mcnts;
+    sttstc = ts * mdl - scnts + scnts * ( logf ( scnts ) - logf ( ts * mdl ) );
   }
   else
   {
-    sttstc = 0;
+    sttstc = ts * mdl;
   }
   sttstc = 2 * sttstc;
   return sttstc;
@@ -466,7 +464,7 @@ __host__ __device__ float PoissonWithBackground ( const float scnts, const float
   float sttstc, d, f;
   d = sqrtf ( powf ( ( ts + tb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts + tb ) * bcnts * mdl );
   f = ( scnts + bcnts - ( ts + tb ) * mdl + d ) / 2 / ( ts + tb );
-  if ( scnts != 0 && bcnts != 0 && fabsf ( mdl * ts ) > TLR )
+  if ( scnts != 0 && bcnts != 0 )
   {
     sttstc = ts * mdl + ( ts + tb ) * f - scnts * logf ( ts * mdl + ts * f ) - bcnts * logf ( tb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
   }
@@ -480,11 +478,11 @@ __host__ __device__ float PoissonWithBackground ( const float scnts, const float
   }
   else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts + tb ) )
   {
-    sttstc = ts * mdl + scnts * ( logf ( scnts ) - logf ( ts * mdl ) - 1 );
+    sttstc = ts * mdl - scnts + scnts * ( logf ( scnts ) - logf ( ts * mdl ) );
   }
-  else
+  else if ( scnts == 0 && bcnts == 0 )
   {
-    sttstc = 0;
+    sttstc = ts * mdl;
   }
   sttstc = 2 * sttstc;
   return sttstc;
@@ -839,8 +837,14 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
   int t = c + w * nmbrOfChnnls;
   if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    //chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
-    chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
+    if ( bckgrndExptm == 0 )
+    {
+      chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
+    }
+    else
+    {
+      chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
+    }
   }
 }
 
@@ -1021,13 +1025,21 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   snprintf ( arfTbl, sizeof ( card ), "%s%s", card, "[SPECRESP]" );
   fits_read_key ( ftsPntr, TSTRING, "RESPFILE", card, NULL, &status );
   snprintf ( rmfTbl, sizeof ( card ), "%s%s", card, "[MATRIX]" );
+  /* Open Background file */
   fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
-  /* Open Background file */
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  if ( status != 0 ) { printf ( " Error: Opening background table fails\n " ); return 1; }
-  fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
-  if ( status != 0 ) { printf ( " Error: Reading EXPOSURE keyword from background table fails\n " ); return 1; }
+  if ( status == 0 )
+  {
+    fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to 0.\n " ); *bckgrndExptm = 0; status = 0; }
+  }
+  else
+  {
+    printf ( " Warning: Cannot open background table, background exposure is set to 0.\n " );
+    *bckgrndExptm = 0;
+    status = 0;
+  }
   /* Open RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );
   if ( status != 0 ) { printf ( " Error: Opening rmf table fails\n" ); return 1; }
@@ -1076,12 +1088,24 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, arfFctrs, &anynull, &status );
   /* Read Background: */
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
-  fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
-  fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
-  for ( int i = 0; i < nmbrOfChnnls; i++ )
+  if ( status == 0 )
   {
-    bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;
+    fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
+    fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
+    fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
+    for ( int i = 0; i < nmbrOfChnnls; i++ )
+    {
+      bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;
+    }
+  }
+  else
+  {
+    printf ( " Warning: Cannot open background table, background is set to 0.\n " );
+    for ( int i = 0; i < nmbrOfChnnls; i++ )
+    {
+      bckgrndCnts[i] = 0;
+    }
+    status = 0;
   }
   /* Read RMF file */
   fits_open_file ( &ftsPntr, rmfTbl, READONLY, &status );

@@ -7,7 +7,7 @@
 #define KMCM 1.0e5f
 #define KMCMPCCM -13.48935060694014384023e0f
 #define INF 2e30f
-#define TLR 1e-20f
+#define TLR 1e-10f
 #define ALPHA 1e0f
 #define BETA  0e0f
 #define INCXX 1
@@ -139,7 +139,7 @@ __host__ int Priors ( const Model*, Chain* );
 __host__ int Propose ( const int, const int, Chain* );
 __host__ int Update ( const int, const int, Chain* );
 __host__ int ToChain ( const int, Chain* );
-__host__ int SpecInfo ( const char*[], Spectrum* );
+__host__ int SpecInfo ( const char*[], const int, Spectrum* );
 __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int SpecData ( Cuparam*, const int, Model*, Spectrum* );
 

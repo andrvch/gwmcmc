@@ -135,7 +135,7 @@ int main ( int argc, char *argv[] )
   InitializeModel ( mdl );
   InitializeChain ( cdp, phbsPwrlwInt, chn );
 
-  SpecInfo ( spcLst, spc );
+  SpecInfo ( spcLst, verbose, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, verbose, mdl, spc );
 
