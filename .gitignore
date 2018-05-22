@@ -12,3 +12,4 @@ save-commands.json
 *.fits
 *.rmf
 *.arf
+*.chain

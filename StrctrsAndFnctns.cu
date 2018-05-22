@@ -523,7 +523,7 @@ __host__ void ReadLastPositionOfWalkersFromFile ( const char *thrdNm, const int 
   char flNm[FLEN_CARD];
   float value;
   int i = 0, k = 0, j;
-  snprintf ( flNm, sizeof ( flNm ), "%s%i", thrdNm, indx );
+  snprintf ( flNm, sizeof ( flNm ), "%s%i%s", thrdNm, indx, ".chain" );
   flPntr = fopen ( flNm, "r" );
   while ( fscanf ( flPntr, "%e", &value ) == 1 )
   {
@@ -548,7 +548,7 @@ __host__ void WriteChainToFile ( const char *thrdNm, const int indx, const int n
   FILE *flPntr;
   char flNm[FLEN_CARD];
   int ttlChnIndx, stpIndx, wlkrIndx, prmtrIndx;
-  snprintf ( flNm, sizeof ( flNm ), "%s%i", thrdNm, indx );
+  snprintf ( flNm, sizeof ( flNm ), "%s%i%s", thrdNm, indx, ".chain" );
   flPntr = fopen ( flNm, "w" );
   stpIndx = 0;
   while ( stpIndx < nmbrOfStps )
