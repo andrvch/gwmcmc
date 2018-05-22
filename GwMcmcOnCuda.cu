@@ -19,24 +19,21 @@
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int indx, cndtn = 1;
-  indx = 0;
-  cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
+  /*indx = 0;
+  cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 10. );
   indx = 1; // pl normalization
   cndtn = cndtn * (  -9. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3. );
   //indx = 2; // pl normalization
   //cndtn = cndtn * (  -9. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3. );
-  /*
-  indx = 2; // Temperature
-  cndtn = cndtn * ( 0.03 < wlkr.par[indx] ) * ( wlkr.par[indx] < 1. );
-  indx = 3; // Norm
-  cndtn = cndtn * (  -9. < wlkr.par[indx] );
-  indx = 4; // Distance
-  cndtn = cndtn * (  -1. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3.3 );
-  indx = 5;
-  cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
-  indx = 6; // plnorm
-  cndtn = cndtn * (  -9. < wlkr.par[indx] );
   */
+  indx = 0; // Temperature
+  cndtn = cndtn * ( 0.03 < wlkr.par[indx] ) * ( wlkr.par[indx] < 2. );
+  indx = 1; // Norm
+  cndtn = cndtn * (  -9. < wlkr.par[indx] );
+  //indx = 4; // Distance
+  //cndtn = cndtn * (  -1. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3.3 );
+  //indx = 5;
+  //cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
   indx = NHINDX; // Hydrogen column density
   cndtn = cndtn * ( 0. < wlkr.par[indx] );
   return cndtn;
@@ -64,17 +61,18 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int e = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
   int t = e + w * nmbrOfEnrgChnnls;
-  float f;
+  float f = 0;
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
   {
     if ( spIndx == 0 || spIndx == 2 )
     {
-      f = PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-      //f = f + BlackBody ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      //f = f + PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
     }
     else if ( spIndx == 1 || spIndx == 3 )
     {
-      f = PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      //f = f + PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
     }
     flx[t] = f * arf[e] * absrptn[t];
   }
@@ -106,9 +104,9 @@ int main ( int argc, char *argv[] )
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
   const float lwrNtcdEnrg = 0.3;
-  const float hghrNtcdEnrg = 10.0;
+  const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 1.5, -4.5, 0.5}; //, -3.4, log10f ( 8E2 ), 1.4, -4.4, 0.1 };
+  const float phbsPwrlwInt[NPRS] = { 0.1, -3., 0.5}; //, -3.4, log10f ( 8E2 ), 1.4, -4.4, 0.1 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -121,7 +119,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl2 = argv[3];
   //const char *spcFl3 = argv[4];
   //const char *spcFl4 = argv[5];
-  const char *spcLst[NSPCTR] = { spcFl1 }; //, spcFl2 }; //, spcFl3, spcFl4 }; //PNpwnExGrp1Real0.pi
+  const char *spcLst[NSPCTR] = { spcFl1 , spcFl2 }; //, spcFl3, spcFl4 }; //PNpwnExGrp1Real0.pi
   chn[0].thrdNm = argv[4];
   chn[0].nmbrOfWlkrs = atoi ( argv[5] );
   chn[0].nmbrOfStps = atoi ( argv[6] );

@@ -1032,12 +1032,12 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   if ( status == 0 )
   {
     fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
-    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to 0.\n " ); *bckgrndExptm = 0; status = 0; }
+    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = 0.0; status = 0; }
   }
   else
   {
-    printf ( " Warning: Cannot open background table, background exposure is set to 0.\n " );
-    *bckgrndExptm = 0;
+    printf ( " Warning: Cannot open background table, background exposure is set to %.8E\n ", 0.0 );
+    *bckgrndExptm = 0.0;
     status = 0;
   }
   /* Open RMF file */
