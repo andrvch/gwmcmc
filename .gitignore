@@ -13,3 +13,4 @@ save-commands.json
 *.rmf
 *.arf
 *.chain
+*.orig

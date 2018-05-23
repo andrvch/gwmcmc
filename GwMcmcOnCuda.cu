@@ -18,33 +18,19 @@
 /* Functions and Kernels: */
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
-  int indx, cndtn = 1;
-  /*indx = 0;
-  cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 10. );
-  indx = 1; // pl normalization
-  cndtn = cndtn * (  -30. < wlkr.par[indx] ) * ( wlkr.par[indx] < 30. );
-  indx = 2; // pl normalization
-  cndtn = cndtn * (  -9. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3. );
-  */
-  indx = 0; // Temperature
-  cndtn = cndtn * ( 0.01 < wlkr.par[indx] ) * ( wlkr.par[indx] < 10. );
-  indx = 1; // Norm
-  //cndtn = cndtn * (  -30. < wlkr.par[indx] );
-  //indx = 4; // Distance
-  //cndtn = cndtn * (  -1. < wlkr.par[indx] ) * ( wlkr.par[indx] < 3.3 );
-  //indx = 5;
-  //cndtn = cndtn * (   0. < wlkr.par[indx] ) * ( wlkr.par[indx] < 5.5 );
-  indx = NHINDX; // Hydrogen column density
-  cndtn = cndtn * ( 0. < wlkr.par[indx] );
+  int cndtn = 1;
+  cndtn = cndtn * ( 0. < wlkr.par[0] );
+  cndtn = cndtn * ( 0. < wlkr.par[DINDX] ) * ( wlkr.par[DINDX] < 3.3 );
+  cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
 
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh, const float sNh )
 {
   float prr = 0, sum = 0, mean = 0, sigma = 0.06;
-  //float theta = powf ( sNh, 2 ) / mNh;
-  //float kk = mNh / theta;
-  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  float theta = powf ( sNh, 2 ) / mNh;
+  float kk = mNh / theta;
+  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
   int indx = NHINDX + 1;
   while ( indx < NPRS )
@@ -64,15 +50,22 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   float f = 0;
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    if ( spIndx == 0 || spIndx == 2 )
+    if ( spIndx == 0 || spIndx == 1 || spIndx == 2 )
     {
+      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
       //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+    }
+    else if ( spIndx == 3 )
+    {
       f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
     }
-    else if ( spIndx == 1 || spIndx == 3 )
+    else if ( spIndx == 4 || spIndx == 5 || spIndx == 6 )
     {
-      //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
-      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+    }
+    else if ( spIndx == 7 )
+    {
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
     }
     flx[t] = f * arf[e] * absrptn[t];
   }
@@ -91,7 +84,7 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
 __host__ int Priors ( const Model *mdl, Chain *chn )
 {
   int blcks = Blocks ( chn[0].nmbrOfWlkrs / 2 );
-  LinearInterpolation <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, 4, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh );
+  LinearInterpolation <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, DINDX, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh );
   AssembleArrayOfPriors <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh, chn[0].sNh, chn[0].prrs );
   return 0;
 }
@@ -106,7 +99,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.3;
   const float hghrNtcdEnrg = 10.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 0.13, -3., 0.01}; //, -3.4, log10f ( 8E2 ), 1.4, -4.4, 0.1 };
+  const float phbsPwrlwInt[NPRS] = { 0.12, -2.9, 1.56, 0.05 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -117,13 +110,18 @@ int main ( int argc, char *argv[] )
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  //const char *spcFl3 = argv[4];
-  //const char *spcFl4 = argv[5];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 }; // , spcFl2 }; //, spcFl3, spcFl4 }; //PNpwnExGrp1Real0.pi
-  chn[0].thrdNm = argv[4];
-  chn[0].nmbrOfWlkrs = atoi ( argv[5] );
-  chn[0].nmbrOfStps = atoi ( argv[6] );
-  chn[0].thrdIndx = atoi ( argv[7] );
+  const char *spcFl3 = argv[4];
+  const char *spcFl4 = argv[5];
+  const char *spcFl5 = argv[6];
+  const char *spcFl6 = argv[7];
+  const char *spcFl7 = argv[8];
+  const char *spcFl8 = argv[9];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 }; //, spcFl5, spcFl6, spcFl7, spcFl8 }; //
+  int NNspec = 8;
+  chn[0].thrdNm = argv[NNspec+2];
+  chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
+  chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );
+  chn[0].thrdIndx = atoi ( argv[NNspec+5] );
   chn[0].dlt = dlt;
   for ( int i = 0; i < NSPCTR; i++ )
   {

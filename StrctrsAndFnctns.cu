@@ -1005,7 +1005,7 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
     tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
     tmpSNh = a * dsNh1 + ( -dsNh0 * a + dsNh0 );
     mNh[w] = 0.8 * tmpMNh;
-    sNh[w] = 0.8 * tmpMNh * ( tmpSNh / tmpMNh + 0.3 / 0.8 );
+    sNh[w] = 0.8 * tmpMNh * sqrtf ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2. ) ); // + powf ( 0.3 / 0.8, 2 ) );
   }
 }
 
@@ -1160,7 +1160,7 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
     rmfPntrInCsc[i+1] = sum;
   }
   int m = 0;
-  if ( nmbrOfChnnls == 4096 )
+  if ( nmbrOfChnnls != 1024 )
   {
     for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
     {
