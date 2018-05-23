@@ -15,10 +15,11 @@
 #define THRDSPERBLCK 32
 #define RANK 1
 #define NPRS 3
-#define NHINDX 2
+#define NHINDX NPRS-1
 #define NELMS 30
 #define ATNMR 18
 #define NSPCTR 2
+#define BACKIN 1
 
 /* Walker data type */
 typedef union wlk3u

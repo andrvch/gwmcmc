@@ -1029,7 +1029,7 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  if ( status == 0 )
+  if ( status == 0 && BACKIN == 1 )
   {
     fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
     if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = 0.0; status = 0; }
@@ -1088,7 +1088,7 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, arfFctrs, &anynull, &status );
   /* Read Background: */
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  if ( status == 0 )
+  if ( status == 0 && BACKIN == 1 )
   {
     fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
     fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
