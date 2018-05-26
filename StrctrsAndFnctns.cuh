@@ -14,13 +14,14 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 4
+#define NPRS 3
 #define DINDX 2
 #define NHINDX NPRS-1
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 4
+#define NSPCTR 1
 #define BACKIN 1
+#define NSTAT 3
 
 /* Walker data type */
 typedef union wlk3u
@@ -31,6 +32,16 @@ typedef union wlk3u
   } wlk3s;
   float par[NPRS];
 } Walker;
+
+/* Walker data type */
+typedef union st3u
+{
+  struct st3s
+  {
+    float cst, bst, chi;
+  } st3s;
+  float par[NSTAT];
+} Statistic;
 
 /* Complex data type */
 typedef float2 Complex;
