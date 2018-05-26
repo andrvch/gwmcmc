@@ -447,9 +447,14 @@ __host__ __device__ float BlackBody ( const float kT, const float lgRtD, const f
 __host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts )
 {
   float sttstc;
-  if ( scnts != 0 )
+  float tb = ts;
+  if ( scnts != 0 && mdl >= scnts / ( ts + tb ) )
   {
     sttstc = ts * mdl - scnts + scnts * ( logf ( scnts ) - logf ( ts * mdl ) );
+  }
+  else if ( scnts != 0 && mdl < scnts / ( ts + tb ) )
+  {
+    sttstc = - tb * mdl - scnts * logf ( ts / ( ts + tb ) );
   }
   else
   {
@@ -800,24 +805,31 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
   float xsctn, clmn, nh;
   if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) )
   {
-    elIndx = 0;
-    prIndx = elIndx + NHINDX;
-    crIndx = elIndx + enIndx * nmbrOfElmnts;
-    effElIndx = atmcNmbrs[elIndx] - 1;
-    nh = wlkrs[wlIndx].par[prIndx] * 1.E22;
-    clmn = abndncs[effElIndx];
-    xsctn = clmn * crssctns[crIndx];
-    elIndx = 1;
-    while ( elIndx < nmbrOfElmnts )
+    if ( NHINDX == NPRS-1 )
     {
+      elIndx = 0;
       prIndx = elIndx + NHINDX;
       crIndx = elIndx + enIndx * nmbrOfElmnts;
       effElIndx = atmcNmbrs[elIndx] - 1;
-      clmn = abndncs[effElIndx]; // * powf ( 10, wlkrs[wlIndx].par[prIndx] );
-      xsctn = xsctn + clmn * crssctns[crIndx];
-      elIndx += 1;
+      nh = wlkrs[wlIndx].par[prIndx] * 1.E22;
+      clmn = abndncs[effElIndx];
+      xsctn = clmn * crssctns[crIndx];
+      elIndx = 1;
+      while ( elIndx < nmbrOfElmnts )
+      {
+        prIndx = elIndx + NHINDX;
+        crIndx = elIndx + enIndx * nmbrOfElmnts;
+        effElIndx = atmcNmbrs[elIndx] - 1;
+        clmn = abndncs[effElIndx]; // * powf ( 10, wlkrs[wlIndx].par[prIndx] );
+        xsctn = xsctn + clmn * crssctns[crIndx];
+        elIndx += 1;
+      }
+      absrptnFctrs[ttIndx] = expf ( - nh * xsctn );
     }
-    absrptnFctrs[ttIndx] = expf ( - nh * xsctn );
+    else if ( NHINDX == NPRS )
+    {
+      absrptnFctrs[ttIndx] = 1;
+    }
   }
 }
 
@@ -837,14 +849,7 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
   int t = c + w * nmbrOfChnnls;
   if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    if ( bckgrndExptm == 0 )
-    {
-      chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
-    }
-    else
-    {
-      chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
-    }
+    chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
   }
 }
 
@@ -1032,12 +1037,12 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   if ( status == 0 && BACKIN == 1 )
   {
     fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
-    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = 0.0; status = 0; }
+    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = *srcExptm; status = 0; }
   }
   else
   {
     printf ( " Warning: Cannot open background table, background exposure is set to %.8E\n ", 0.0 );
-    *bckgrndExptm = 0.0;
+    *bckgrndExptm = *srcExptm;
     status = 0;
   }
   /* Open RMF file */
