@@ -17,3 +17,4 @@ save-commands.json
 Log
 GwMcmcStructuresFunctionsAndKernels.cu
 *.old
+*.ps
