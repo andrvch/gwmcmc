@@ -18,3 +18,4 @@ Log
 GwMcmcStructuresFunctionsAndKernels.cu
 *.old
 *.ps
+*.eps
