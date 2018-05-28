@@ -19,7 +19,10 @@
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
-  cndtn = cndtn * ( 0. < wlkr.par[0] );
+  //cndtn = cndtn * ( 0. < wlkr.par[0] );
+  //cndtn = cndtn * ( 0. < wlkr.par[1] );
+  //cndtn = cndtn * ( 0. < wlkr.par[2] );
+  //cndtn = cndtn * ( -10. < wlkr.par[3] ) * ( wlkr.par[3] < 10. );
   //cndtn = cndtn * ( 0. < wlkr.par[DINDX] ) * ( wlkr.par[DINDX] < 3.3 );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
@@ -52,8 +55,8 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   {
     if ( spIndx == 0 || spIndx == 1 || spIndx == 2 )
     {
-      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
     }
     else if ( spIndx == 3 )
     {
@@ -99,7 +102,10 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.3;
   const float hghrNtcdEnrg = 10.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 0.113, -3., 1.5, -7., 0.135 };
+  //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 0.31 };
+  const float phbsPwrlwInt[NPRS] = { -2.15444, log10f ( 2.91836E-08 ) };
+  //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 1.5, -7., 0.31 };
+  //const float phbsPwrlwInt[NPRS] = { 0.1, -3., 1.5, -5., 0.2 };
   //const float phbsPwrlwInt[NPRS] = { 1.5, 1E-1 };
 
   /* Initialize */

@@ -13,15 +13,22 @@ Xset.xsect = "bcmc"
 name = sys.argv[1]
 
 AllData(name)
-AllData.ignore("**-0.3")
-AllData.ignore("10.-**")
-AllData.ignore("bad")
+AllData(1).ignore("**-0.3")
+AllData(1).ignore("10.-**")
+AllData(1).ignore("bad")
 
-AllModels += "phabs*bbodyrad"
-pars = (0.121, 0.131, 10**(-3.15*2)*10**8)
+AllModels += "(bbodyrad+powerlaw)*phabs"
+pars = (0.1, 10**(-2.9*2)*10**8, 1.5, 10**-5.1, 0.12)
 AllModels(1).setPars(pars)
 
 Fit.statMethod = "cstat"
-Fit.statTest = "ad"
+Fit.statTest = "chi"
 Fit.query = "yes"
-Fit.perform()
+#Fit.perform()
+#Fit.steppar("1 0.05 0.2 10")
+#Fit.perform()
+#Fit.error("6.63 1-3")
+
+print "--------------------------------------"
+print Fit.statistic
+print Fit.testStatistic

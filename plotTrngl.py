@@ -2,43 +2,37 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
-import matplotlib.pyplot as plt
 import math
 import numpy as np
-from pylab import *
-import random
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from pycuda import driver, compiler, gpuarray, tools
+from pylab import *
+import random
 import time
-# -- initialize the device
-import pycuda.autoinit
 from cudakde import *
 
-nbins1D   = 100
-nbins2D   = 200
+nbins1D = 100
+nbins2D = 200
 
-qqlevel   = float(sys.argv[1])   # percent
-quont     = [0.99,0.90,0.68,0.40]
-
-halfqq    = (100 - qqlevel)*0.5
-qqq       = 0.01*qqlevel
-quantiles = [halfqq,50,qqlevel+halfqq]
-
-pars = read_data(sys.argv[2])
+pars = read_data(sys.argv[1])
 npars = len(pars)
 
-fig, ax = plt.subplots(ncols=npars, nrows=npars)
+qlevel = float(sys.argv[2]) # percent
+quont = [0.999,0.99,0.95,0.90]
+eqh_inter = np.empty([npars,3])
 
-eqh_inter = np.empty([npars,len(quantiles)])
+fig, ax = plt.subplots(ncols=npars, nrows=npars)
 zizi = []
 
-sttime=time.time()
+sttime = time.time()
 for j in range(npars):
     for i in range(npars):
         if i == j:
             xi,zi = kde_gauss_cuda1d(pars[i],nbins1D)
-            zin,eqh_inter[i,:] = prc(xi,zi,qqq)
+            zin,eqh_inter[i,:] = prc(xi,zi,0.01*qlevel)
             ax[i,j].plot(xi,zin,color='blue')
             xqu = [eqh_inter[i,0],eqh_inter[i,-1],eqh_inter[i,-1],eqh_inter[i,0]]
             yqu = [zin.min(),zin.min(),zin.max()+3*(zin.max()-zin.min()),zin.max()+3*(zin.max()-zin.min())]
@@ -47,7 +41,7 @@ for j in range(npars):
             zizi.append(zin)
         elif i > j:
             xi,yi,zi = kde_gauss_cuda2d(pars[j],pars[i],nbins2D)
-            lev,zin  = comp_lev(zi,quont)
+            lev,zin = comp_lev(zi,quont)
             ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='black', linewidth=.5)
         elif j > i:
@@ -56,7 +50,7 @@ print "gpu:"
 print time.time()-sttime
 
 for i in range(npars):
-    ax[i,i].set_ylabel(r'$\rm p.d.f.$',fontsize=18)
+    ax[i,i].set_ylabel(r'$\rm p.d.f.$')
     ax[i,i].yaxis.set_label_position("right")
 
 for i in range(1,npars):
@@ -82,4 +76,5 @@ for j in range(npars):
         elif i > j:
             ax[i,j].set_ylim(pars[i].min()-0.05*(pars[i].max()-pars[i].min()), pars[i].max()+0.05*(pars[i].max()-pars[i].min()))
 
-plt.show()
+#plt.show()
+fig.savefig('trngl.eps')

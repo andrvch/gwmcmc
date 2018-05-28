@@ -446,15 +446,14 @@ __host__ __device__ float BlackBody ( const float kT, const float lgRtD, const f
 
 __host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts )
 {
-  float sttstc;
-  float tb = ts;
-  if ( scnts != 0 && mdl >= scnts / ( ts + tb ) )
+  float sttstc = 0;
+  if ( scnts != 0 && ts * mdl >= TLR )
   {
-    sttstc = ts * mdl - scnts + scnts * ( logf ( scnts ) - logf ( ts * mdl ) );
+    sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
   }
-  else if ( scnts != 0 && mdl < scnts / ( ts + tb ) )
+  else if ( scnts != 0 && ts * mdl < TLR )
   {
-    sttstc = - tb * mdl - scnts * logf ( ts / ( ts + tb ) );
+    sttstc = - scnts * logf ( TLR ) - scnts * ( 1 - logf ( scnts ) );
   }
   else
   {
@@ -466,24 +465,24 @@ __host__ __device__ float Poisson ( const float scnts, const float mdl, const fl
 
 __host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb )
 {
-  float sttstc, d, f;
+  float sttstc = 0, d, f;
   d = sqrtf ( powf ( ( ts + tb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts + tb ) * bcnts * mdl );
   f = ( scnts + bcnts - ( ts + tb ) * mdl + d ) / 2 / ( ts + tb );
   if ( scnts != 0 && bcnts != 0 )
   {
     sttstc = ts * mdl + ( ts + tb ) * f - scnts * logf ( ts * mdl + ts * f ) - bcnts * logf ( tb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
   }
-  else if ( scnts == 0 && bcnts != 0 )
+  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts + tb ) )
   {
-    sttstc = ts * mdl - bcnts * logf ( tb / ( ts + tb ) );
+    sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
   }
   else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts + tb ) )
   {
-    sttstc = - tb * mdl - scnts * logf ( ts / ( ts + tb ) );
+    sttstc = - tb * mdl - scnts * logf ( ts / ( ts + tb ) ); // + scnts * ( 1 - logf ( scnts ) );
   }
-  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts + tb ) )
+  else if ( scnts == 0 && bcnts != 0 )
   {
-    sttstc = ts * mdl - scnts + scnts * ( logf ( scnts ) - logf ( ts * mdl ) );
+    sttstc = ts * mdl - bcnts * logf ( tb / ( ts + tb ) ); // + bcnts * ( 1 - logf ( bcnts ) );
   }
   else if ( scnts == 0 && bcnts == 0 )
   {
@@ -849,7 +848,14 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
   int t = c + w * nmbrOfChnnls;
   if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
+    if ( bckgrndExptm == INF )
+    {
+      chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
+    }
+    else
+    {
+      chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
+    }
   }
 }
 
@@ -1037,12 +1043,12 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   if ( status == 0 && BACKIN == 1 )
   {
     fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
-    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = *srcExptm; status = 0; }
+    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = INF; status = 0; }
   }
   else
   {
     printf ( " Warning: Cannot open background table, background exposure is set to %.8E\n ", 0.0 );
-    *bckgrndExptm = *srcExptm;
+    *bckgrndExptm = INF;
     status = 0;
   }
   /* Open RMF file */
