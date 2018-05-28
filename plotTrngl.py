@@ -50,7 +50,7 @@ print "gpu:"
 print time.time()-sttime
 
 for i in range(npars):
-    ax[i,i].set_ylabel(r'$\rm p.d.f.$')
+    ax[i,i].set_ylabel("p.d.f.")
     ax[i,i].yaxis.set_label_position("right")
 
 for i in range(1,npars):
@@ -77,4 +77,4 @@ for j in range(npars):
             ax[i,j].set_ylim(pars[i].min()-0.05*(pars[i].max()-pars[i].min()), pars[i].max()+0.05*(pars[i].max()-pars[i].min()))
 
 #plt.show()
-fig.savefig('trngl.eps')
+plt.savefig('trngl.eps')

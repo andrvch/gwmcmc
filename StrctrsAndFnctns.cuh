@@ -1,6 +1,7 @@
 #ifndef _STRCTRSANDFNCTNS_CUH_
 #define _STRCTRSANDFNCTNS_CUH_
 
+#define PIPI 3.14159265359
 #define MNS 1.4e0f
 #define RNS 1.3e1f
 #define PCCM 3.08567802e18f
@@ -14,9 +15,9 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 3
+#define NPRS 5
 #define NHINDX NPRS-1
-#define DINDX 2
+#define DINDX 1
 #define NELMS 30
 #define ATNMR 18
 #define NSPCTR 1

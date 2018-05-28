@@ -21,8 +21,9 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[0] ) * ( wlkr.par[0] < 6.5 );
   //cndtn = cndtn * ( 0. < wlkr.par[1] );
-  //cndtn = cndtn * ( 0. < wlkr.par[2] );
-  //cndtn = cndtn * ( -10. < wlkr.par[3] ) * ( wlkr.par[3] < 10. );
+  //cndtn = cndtn * ( 0.6 < wlkr.par[4] ) * ( wlkr.par[4] < 0.8 );
+  //cndtn = cndtn * ( 0.05 < wlkr.par[5] ) * ( wlkr.par[5] < 0.3 );
+  //cndtn = cndtn * ( 0.0 < wlkr.par[4] );
   //cndtn = cndtn * ( 0. < wlkr.par[DINDX] ) * ( wlkr.par[DINDX] < 3.3 );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
@@ -34,7 +35,7 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   //float theta = powf ( sNh, 2 ) / mNh;
   //float kk = mNh / theta;
   //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
-  //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
+  sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
   int indx = NHINDX + 1;
   while ( indx < NPRS )
   {
@@ -57,13 +58,13 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     {
       f = f + flx[t];
       //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-      //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
       //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     else if ( spIndx == 1 )
     {
       //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[4], en[e], en[e+1] );
     }
     else if ( spIndx == 2 )
     {
@@ -75,6 +76,8 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     {
       f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
+    //float eee = 0.5 * ( en[e] + en[e+1] );
+    //f = f * expf ( - powf ( 10., wlk[w].par[6] ) / ( sqrtf ( 2 * PIPI ) * wlk[w].par[5] ) * expf ( - 0.5 * powf ( ( eee - wlk[w].par[4] ) / wlk[w].par[5], 2. ) ) );
     flx[t] = f * arf[e] * absrptn[t];
   }
 }
@@ -110,7 +113,7 @@ int main ( int argc, char *argv[] )
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 0.31 };
   //const float phbsPwrlwInt[NPRS] = { 0.77, log10f ( 9.32443E-06 ) };
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 1.5, -7., 0.31 };
-  const float phbsPwrlwInt[NPRS] = { 6.01, 4.0, 0.1 }; //, 1.5, -4., 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 6.0, 3.6, 1.9, -5., 0.1 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
   //const float phbsPwrlwInt[NPRS] = { 1.5, 1E-1 };
 
   /* Initialize */
