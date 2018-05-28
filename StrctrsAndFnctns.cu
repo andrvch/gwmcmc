@@ -976,8 +976,8 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
     xxout = 0.5 * ( enrgChnnls[i] + enrgChnnls[i+1] ) / gr;
     yyout = wlkrs[j].par[prmtrIndx];
     sa = powf ( RNS / gr, 2. );
-    NormD = - 2 * ( wlkrs[j].par[prmtrIndx+1] );
-    DimConst = 2 * KMCMPCCM;
+    NormD = - 2. * ( wlkrs[j].par[prmtrIndx+1] );
+    DimConst = 2. * KMCMPCCM;
     v = FindElementIndex ( xin, M1, xxout );
     w = FindElementIndex ( yin, M2, yyout );
     a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
