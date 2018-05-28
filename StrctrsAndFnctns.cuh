@@ -14,12 +14,12 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 2
-#define NHINDX NPRS
+#define NPRS 5
+#define NHINDX NPRS-1
 #define DINDX 2
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 1
+#define NSPCTR 4
 #define BACKIN 1
 #define NSTAT 3
 
@@ -70,6 +70,7 @@ struct Spectrum
   float lwrNtcdEnrg, hghrNtcdEnrg;
   int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
   float srcExptm, bckgrndExptm;
+  float backscal_src, backscal_bkg;
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
@@ -118,7 +119,7 @@ __host__ __device__ float PriorStatistic ( const Walker, const int, const float,
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
-__host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float );
+__host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
 __host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, int, float*, int*, float* );
 __host__ void ReadLastPositionOfWalkersFromFile ( const char*, const int, const int, float* );
@@ -140,7 +141,7 @@ __host__ int InitializeCuda ( Cuparam* );
 __host__ int InitializeModel ( Model *mdl );
 __host__ int InitializeChain ( Cuparam*, const float*, Chain* );
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
-__host__ int ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
+__host__ int ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 __host__ int Stat ( const int, Spectrum );
 __host__ int SumUpStat ( Cuparam*, const float, const int, float*, const Spectrum );
 __host__ int FoldModel ( Cuparam*, const int, Spectrum );
@@ -163,7 +164,7 @@ __global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, 
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const Walker*, float* );
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
-__global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float*, const float*, const float*, float * );
+__global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float * );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
 __global__ void UpdateWalkers ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float* );
 __global__ void ComplexPointwiseMultiplyByConjugateAndScale ( const int, const int, const float, Complex* );

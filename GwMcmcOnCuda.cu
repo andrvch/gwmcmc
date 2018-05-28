@@ -19,7 +19,7 @@
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
-  //cndtn = cndtn * ( 0. < wlkr.par[0] );
+  cndtn = cndtn * ( 0. < wlkr.par[0] );
   //cndtn = cndtn * ( 0. < wlkr.par[1] );
   //cndtn = cndtn * ( 0. < wlkr.par[2] );
   //cndtn = cndtn * ( -10. < wlkr.par[3] ) * ( wlkr.par[3] < 10. );
@@ -53,22 +53,25 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   float f = 0;
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    if ( spIndx == 0 || spIndx == 1 || spIndx == 2 )
+    if ( spIndx == 0 ) // || spIndx == 1 || spIndx == 2 )
+    {
+      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+    }
+    else if ( spIndx == 1 )
     {
       //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-      f = f + PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+    }
+    else if ( spIndx == 2 )
+    {
+      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
+      //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     else if ( spIndx == 3 )
     {
-      f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-    }
-    else if ( spIndx == 4 || spIndx == 5 || spIndx == 6 )
-    {
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
-    }
-    else if ( spIndx == 7 )
-    {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     flx[t] = f * arf[e] * absrptn[t];
   }
@@ -79,7 +82,7 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs );
   AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( chn[0].nmbrOfWlkrs, spc[i].spec.nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[0].spec.enrgChnnls, chn[0].wlkrs, spc[0].spec.mdlFlxs );
+  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, 2, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.mdlFlxs );
   AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.mdlFlxs );
   return 0;
 }
@@ -99,13 +102,13 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.3;
+  const float lwrNtcdEnrg = 0.4;
   const float hghrNtcdEnrg = 10.0;
   const float dlt = 1.E-4;
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 0.31 };
-  const float phbsPwrlwInt[NPRS] = { -2.15444, log10f ( 2.91836E-08 ) };
+  //const float phbsPwrlwInt[NPRS] = { 0.77, log10f ( 9.32443E-06 ) };
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 1.5, -7., 0.31 };
-  //const float phbsPwrlwInt[NPRS] = { 0.1, -3., 1.5, -5., 0.2 };
+  const float phbsPwrlwInt[NPRS] = { 0.14, -2.9, 1.5, -4., 0.12 };
   //const float phbsPwrlwInt[NPRS] = { 1.5, 1E-1 };
 
   /* Initialize */
@@ -123,7 +126,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl6 = argv[7];
   const char *spcFl7 = argv[8];
   const char *spcFl8 = argv[9];
-  const char *spcLst[NSPCTR] = { spcFl1 }; //, spcFl2, spcFl3, spcFl4 }; //, spcFl5, spcFl6, spcFl7, spcFl8 }; //
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 }; //, spcFl5, spcFl6, spcFl7, spcFl8 }; //
   int NNspec = 8;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
@@ -143,6 +146,9 @@ int main ( int argc, char *argv[] )
   SpecInfo ( spcLst, verbose, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, verbose, mdl, spc );
+
+  printf ( " Scale factor scr -- %.8E\n", spc[0].backscal_src );
+  printf ( " Scale factor bkg -- %.8E\n", spc[0].backscal_bkg );
 
   /* Initialize walkers */
   if ( chn[0].thrdIndx == 0 )

@@ -20,7 +20,7 @@ __host__ int SpecData ( Cuparam *cdp, const int verbose, Model *mdl, Spectrum *s
   float smOfNtcdChnnls = 0;
   for ( int i = 0; i < NSPCTR; i++ )
   {
-    ReadFitsData ( spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls );
+    ReadFitsData ( spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls );
 
     cdp[0].cusparseStat = cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); return 1; }
@@ -130,7 +130,7 @@ __host__ int Stat ( const int nmbrOfWlkrs, Spectrum spec )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfChnnls, nmbrOfWlkrs );
-  AssembleArrayOfChannelStatistics <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, spec.srcExptm, spec.bckgrndExptm, spec.srcCnts, spec.bckgrndCnts, spec.flddMdlFlxs, spec.chnnlSttstcs );
+  AssembleArrayOfChannelStatistics <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, spec.srcExptm, spec.bckgrndExptm, spec.backscal_src, spec.backscal_bkg, spec.srcCnts, spec.bckgrndCnts, spec.flddMdlFlxs, spec.chnnlSttstcs );
   return 0;
 }
 
@@ -453,7 +453,7 @@ __host__ __device__ float Poisson ( const float scnts, const float mdl, const fl
   }
   else if ( scnts != 0 && ts * mdl < TLR )
   {
-    sttstc = - scnts * logf ( TLR ) - scnts * ( 1 - logf ( scnts ) );
+    sttstc = TLR - scnts * logf ( TLR ) - scnts * ( 1 - logf ( scnts ) );
   }
   else
   {
@@ -463,26 +463,28 @@ __host__ __device__ float Poisson ( const float scnts, const float mdl, const fl
   return sttstc;
 }
 
-__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb )
+__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )
 {
   float sttstc = 0, d, f;
-  d = sqrtf ( powf ( ( ts + tb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts + tb ) * bcnts * mdl );
-  f = ( scnts + bcnts - ( ts + tb ) * mdl + d ) / 2 / ( ts + tb );
+  float scls = 1; // / backscal_bkg;
+  float sclb = backscal_bkg / backscal_src;
+  d = sqrtf ( powf ( ( ts * scls + tb * sclb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts * scls + tb * sclb ) * bcnts * mdl );
+  f = ( scnts + bcnts - ( ts * scls + tb * sclb ) * mdl + d ) / 2 / ( ts * scls + tb * sclb );
   if ( scnts != 0 && bcnts != 0 )
   {
-    sttstc = ts * mdl + ( ts + tb ) * f - scnts * logf ( ts * mdl + ts * f ) - bcnts * logf ( tb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
+    sttstc = ts * mdl + ts * scls * f  + tb * sclb * f - scnts * logf ( ts * mdl + ts * scls * f ) - bcnts * logf ( tb * sclb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
   }
-  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts + tb ) )
+  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts * scls + tb * sclb ) )
   {
     sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
   }
-  else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts + tb ) )
+  else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts * scls + tb * sclb ) )
   {
-    sttstc = - tb * mdl - scnts * logf ( ts / ( ts + tb ) ); // + scnts * ( 1 - logf ( scnts ) );
+    sttstc = ts * ( 1 - scls ) * mdl - tb * sclb * mdl - scnts * logf ( ts * ( 1 - scls ) * mdl + ts * scls * scnts / ( ts * scls + tb * sclb ) ) + scnts * logf ( scnts );
   }
   else if ( scnts == 0 && bcnts != 0 )
   {
-    sttstc = ts * mdl - bcnts * logf ( tb / ( ts + tb ) ); // + bcnts * ( 1 - logf ( bcnts ) );
+    sttstc = ts * mdl - bcnts * logf ( tb * sclb / ( ts * scls + tb * sclb ) ); // + bcnts * ( 1 - logf ( bcnts ) );
   }
   else if ( scnts == 0 && bcnts == 0 )
   {
@@ -841,21 +843,14 @@ __global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const f
   }
 }
 
-__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
+__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
 {
   int c = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
   int t = c + w * nmbrOfChnnls;
   if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    if ( bckgrndExptm == INF )
-    {
-      chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
-    }
-    else
-    {
-      chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm );
-    }
+    chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
   }
 }
 
@@ -1016,7 +1011,7 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
     tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
     tmpSNh = a * dsNh1 + ( -dsNh0 * a + dsNh0 );
     mNh[w] = 0.8 * tmpMNh;
-    sNh[w] = 0.8 * tmpMNh * sqrtf ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2. ) ); // + powf ( 0.3 / 0.8, 2 ) );
+    sNh[w] = 0.8 * tmpMNh * sqrtf ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) ); // + powf ( 0.3 / 0.8, 2 ) );
   }
 }
 
@@ -1043,12 +1038,12 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   if ( status == 0 && BACKIN == 1 )
   {
     fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
-    if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = INF; status = 0; }
+    //if ( status != 0 ) { printf ( " Warning: Cannot read background EXPOSURE keyword, background exposure is set to %.8E\n ", 0.0 ); *bckgrndExptm = INF; status = 0; }
   }
   else
   {
-    printf ( " Warning: Cannot open background table, background exposure is set to %.8E\n ", 0.0 );
-    *bckgrndExptm = INF;
+    printf ( " Warning: Cannot open background table, background exposure is set to INF " );
+    *bckgrndExptm = 0.0;
     status = 0;
   }
   /* Open RMF file */
@@ -1078,18 +1073,18 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   return 0;
 }
 
-__host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls )
+__host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls )
 {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
   char colNgr[]="N_GRP", colNch[]="N_CHAN",  colFch[]="F_CHAN", colCounts[]="COUNTS", colSpecResp[]="SPECRESP", colEnLo[]="ENERG_LO", colEnHi[]="ENERG_HI", colMat[]="MATRIX", colEmin[]="E_MIN", colEmax[]="E_MAX";
-  float floatnull, backscal_src, backscal_bkg;
+  float floatnull;
   /* Read Spectrum: */
   fits_open_file ( &ftsPntr, srcTbl, READONLY, &status );
   fits_read_key ( ftsPntr, TSTRING, "RESPFILE", card, NULL, &status );
   snprintf ( EboundsTable, sizeof ( EboundsTable ), "%s%s", card, "[EBOUNDS]" );
-  fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_src, NULL, &status );
+  fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", backscal_src, NULL, &status );
   fits_read_key ( ftsPntr, TSTRING, "TELESCOP", Telescop, NULL, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, srcCnts, &anynull, &status );
@@ -1101,13 +1096,9 @@ __host__ int ReadFitsData ( const char srcTbl[FLEN_CARD], const char arfTbl[FLEN
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
   if ( status == 0 && BACKIN == 1 )
   {
-    fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", &backscal_bkg, NULL, &status );
+    fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", backscal_bkg, NULL, &status );
     fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
     fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
-    for ( int i = 0; i < nmbrOfChnnls; i++ )
-    {
-      bckgrndCnts[i] = bckgrndCnts[i] * backscal_src / backscal_bkg;
-    }
   }
   else
   {
