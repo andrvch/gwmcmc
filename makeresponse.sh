@@ -1,7 +1,13 @@
-rmfgen spectrumset=PNsource_spectrum.fits rmfset=PN.rmf
+#!/bin/bash
+EVTFILE="PNclean.fits"
+SPIFILE="spectrumPN_J0633_15asec_bkg.fits"
+RMFFILE="spectrumPN_J0633_15asec_bkg.rmf"
+ARFFILE="spectrumPN_J0633_c_15asec_bkg.arf"
+SPOFILE="PN_J0633_15asec_bkg.pi"
+rmfgen spectrumset=$SPIFILE rmfset=$RMFFILE
 
-arfgen spectrumset=PNsource_spectrum.fits arfset=PN.arf withrmfset=yes rmfset=PN.rmf \
-badpixlocation=PNclean.fits detmaptype=psf
+arfgen spectrumset=$SPIFILE arfset=$ARFFILE withrmfset=yes rmfset=$RMFFILE \
+badpixlocation=$EVTFILE detmaptype=psf
 
-specgroup spectrumset=PNsource_spectrum.fits mincounts=25 oversample=3 rmfset=PN.rmf \
-arfset=PN.arf backgndset=PNbackground_spectrum.fits groupedset=PN_spectrum_grp.fits
+specgroup spectrumset=$SPIFILE mincounts=1 oversample=3 rmfset=$RMFFILE \
+arfset=$ARFFILE groupedset=$SPOFILE
