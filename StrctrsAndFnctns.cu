@@ -88,6 +88,8 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc )
     cudaMallocManaged ( ( void ** ) &spc[i].crssctns, spc[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].absrptnFctrs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nsa1Flxs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nsa2Flxs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
@@ -181,6 +183,8 @@ __host__ void FreeSpec ( const Spectrum *spc )
     cudaFree ( spc[i].crssctns );
     cudaFree ( spc[i].absrptnFctrs );
     cudaFree ( spc[i].mdlFlxs );
+    cudaFree ( spc[i].nsa1Flxs );
+    cudaFree ( spc[i].nsa2Flxs );
     cudaFree ( spc[i].flddMdlFlxs );
     cudaFree ( spc[i].chnnlSttstcs );
     cudaFree ( spc[i].ntcdChnnls );
@@ -197,8 +201,10 @@ __host__ void FreeChain ( const Chain *chn )
   cudaFree ( chn[0].zRndmVls );
   cudaFree ( chn[0].prrs );
   cudaFree ( chn[0].chnOfSttstcs );
-  cudaFree ( chn[0].mNh );
-  cudaFree ( chn[0].sNh );
+  cudaFree ( chn[0].mNh1 );
+  cudaFree ( chn[0].sNh1 );
+  cudaFree ( chn[0].mNh2 );
+  cudaFree ( chn[0].sNh2 );
   cudaFree ( chn[0].rndmVls );
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atCrrFnctn );
@@ -291,8 +297,10 @@ __host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *c
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfSttstcs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].zRndmVls, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].mNh, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sNh, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].mNh1, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sNh1, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].mNh2, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sNh2, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].rndmVls, chn[0].nmbrOfRndmVls * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
@@ -788,12 +796,12 @@ __global__ void WriteWalkersAndStatisticsToChain ( const int nmbrOfWlkrs, const 
   }
 }
 
-__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, const float *mNh, const float *sNh, float *prrs )
+__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, const float *mNh1, const float *sNh1, const float *mNh2, const float *sNh2, float *prrs )
 {
   int w = threadIdx.x + blockDim.x * blockIdx.x;
   if ( w < nmbrOfWlkrs )
   {
-    prrs[w] = PriorStatistic ( wlkrs[w], PriorCondition ( wlkrs[w] ), mNh[w], sNh[w] );
+    prrs[w] = PriorStatistic ( wlkrs[w], PriorCondition ( wlkrs[w] ), mNh1[w], sNh1[w], mNh2[w], sNh2[w] );
   }
 }
 
@@ -964,7 +972,7 @@ __global__ void MakeMatrix ( const int nmbrOfStps, const float *chn, float *cmSm
   }
 }
 
-__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int prmtrIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int dIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -974,9 +982,9 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
   {
     gr = sqrtf ( 1.0 - 2.952 * MNS / RNS );
     xxout = 0.5 * ( enrgChnnls[i] + enrgChnnls[i+1] ) / gr;
-    yyout = wlkrs[j].par[prmtrIndx];
+    yyout = wlkrs[j].par[tIndx];
     sa = powf ( RNS / gr, 2. );
-    NormD = - 2. * ( wlkrs[j].par[prmtrIndx+1] );
+    NormD = - 2. * ( wlkrs[j].par[dIndx] );
     DimConst = 2. * KMCMPCCM;
     v = FindElementIndex ( xin, M1, xxout );
     w = FindElementIndex ( yin, M2, yyout );

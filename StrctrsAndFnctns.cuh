@@ -15,12 +15,13 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 5
+#define NPRS 8
 #define NHINDX NPRS-1
-#define DINDX 1
+#define DINDX1 1
+#define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 1
+#define NSPCTR 8
 #define BACKIN 1
 #define NSTAT 3
 
@@ -75,6 +76,7 @@ struct Spectrum
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
+  float *nsa1Flxs, *nsa2Flxs;
 };
 
 struct Chain
@@ -83,7 +85,7 @@ struct Chain
   char *thrdNm;
   int nmbrOfWlkrs, nmbrOfStps, thrdIndx, nmbrOfRndmVls;
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr;
-  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh, *sNh, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
+  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh1, *sNh1, *mNh2, *sNh2, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
   float elapsedTime, cufftElapsedTime;
 };
 
@@ -116,7 +118,7 @@ __host__ __device__ Complex ScaleComplex ( Complex, float );
 __host__ __device__ Complex MultiplyComplex ( Complex, Complex );
 __host__ __device__ Complex ConjugateComplex ( Complex );
 __host__ __device__ int PriorCondition ( const Walker );
-__host__ __device__ float PriorStatistic ( const Walker, const int, const float, const float );
+__host__ __device__ float PriorStatistic ( const Walker, const int, const float, const float, const float, const float );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
@@ -161,9 +163,9 @@ __host__ int SpecData ( Cuparam*, const int, Model*, Spectrum* );
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, const float*, Walker*, float* );
 __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float* );
 __global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, Walker*, float* );
-__global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, float* );
+__global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const Walker*, float* );
-__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float* );
+__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float*, const float*, const float*, const Walker*, const float*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float * );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
@@ -175,7 +177,7 @@ __global__ void ReturnChainFunction ( const int, const int, const int, const Wal
 __global__ void ReturnCentralChainFunction ( const int, const int, const float*, const float*, float* );
 __global__ void NormalizeChain ( const int, float* );
 __global__ void MakeMatrix ( const int, const float*, float* );
-__global__ void BilinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
+__global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float*, float* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
