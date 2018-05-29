@@ -14,11 +14,19 @@ import random
 import time
 from cudakde import *
 
+Mns = 1.4
+Rns = 13.
+kb = 1.38E-16
+kev = 1.6022E-9
+gr = math.sqrt(1 - 2.952 * Mns / Rns)
+
 nbins1D = 100
 nbins2D = 200
 
 pars = read_data(sys.argv[1])
 npars = len(pars)
+
+pars[0] = gr * kb * 10**pars[0] / keV
 
 qlevel = float(sys.argv[2]) # percent
 quont = [0.999,0.99,0.95,0.90]
