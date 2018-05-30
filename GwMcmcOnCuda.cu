@@ -32,13 +32,13 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh1, const float sNh1, const float mNh2, const float sNh2 )
 {
   float prr = 0, sum = 0, mean = 0, sigma = 0.06;
-  float theta = powf ( sNh1, 2 ) / mNh1;
-  float kk = mNh1 / theta;
-  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  //float theta = powf ( sNh1, 2 ) / mNh1;
+  //float kk = mNh1 / theta;
+  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //theta = powf ( sNh2, 2 ) / mNh2;
   //kk = mNh2 / theta;
   //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
-  //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
+  //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh1 ) / sNh1, 2 );
   int indx = NHINDX + 1;
   while ( indx < NPRS )
   {
@@ -132,13 +132,13 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.4;
-  const float hghrNtcdEnrg = 8.0;
+  const float lwrNtcdEnrg = 0.3;
+  const float hghrNtcdEnrg = 10.0;
   const float dlt = 1.E-4;
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 0.31 };
   //const float phbsPwrlwInt[NPRS] = { 0.77, log10f ( 9.32443E-06 ) };
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 1.5, -7., 0.31 };
-  const float phbsPwrlwInt[NPRS] = { 5.98, 2.5, 1.7, -5., 0.12 }; // 1.5, -5., 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.98, 2.5, 1.1, -5., 0.12 }; // 1.5, -5., 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
   //const float phbsPwrlwInt[NPRS] = { 1.5, 1E-1 };
 
   /* Initialize */

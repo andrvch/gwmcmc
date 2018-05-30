@@ -107,7 +107,7 @@ struct Model
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  const char *nsmaxgFl = "nsmaxg_HB1230ThB00g1438.in";
+  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
   int numNsmaxgE = 117;
   int numNsmaxgT = 14;
   float *nsmaxgDt, *nsmaxgE, *nsmaxgT, *nsmaxgFlxs;
