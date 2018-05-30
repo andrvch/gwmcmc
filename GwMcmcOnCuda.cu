@@ -21,10 +21,10 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
   //cndtn = cndtn * ( 0. < wlkr.par[1] );
-  cndtn = cndtn * ( 0.6 < wlkr.par[2] ) * ( wlkr.par[2] < 5.8 );
-  cndtn = cndtn * ( -10. < wlkr.par[3] ) * ( wlkr.par[3] < 1. );
-  cndtn = cndtn * ( 1.1 < wlkr.par[4] ) * ( wlkr.par[4] < 1.3 );
-  cndtn = cndtn * ( -10. < wlkr.par[5] ) * ( wlkr.par[5] < 1. );
+  //cndtn = cndtn * ( 0.6 < wlkr.par[2] ) * ( wlkr.par[2] < 5.8 );
+  //cndtn = cndtn * ( -10. < wlkr.par[3] ) * ( wlkr.par[3] < 1. );
+  //cndtn = cndtn * ( 1.1 < wlkr.par[4] ) * ( wlkr.par[4] < 1.3 );
+  //cndtn = cndtn * ( -10. < wlkr.par[5] ) * ( wlkr.par[5] < 1. );
   //cndtn = cndtn * ( 0.05 < wlkr.par[5] ) * ( wlkr.par[5] < 0.3 );
   //cndtn = cndtn * ( 0.0 < wlkr.par[4] );
   //cndtn = cndtn * ( 0. < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < 3.3 );
@@ -99,7 +99,7 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, DINDX1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa2Flxs );
   BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
   //BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, 0, 6, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa2Flxs );
-  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.enrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
+  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
   return 0;
 }
 
@@ -119,13 +119,13 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.3;
-  const float hghrNtcdEnrg = 10.0;
+  const float lwrNtcdEnrg = 0.5;
+  const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 0.31 };
   //const float phbsPwrlwInt[NPRS] = { 0.77, log10f ( 9.32443E-06 ) };
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 1.5, -7., 0.31 };
-  const float phbsPwrlwInt[NPRS] = { 5.8, 3.9, 1.7, -5.5, 1.2, -5.1, 0.12 }; // 1.5, -5., 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.8, 3.4, 1.68, log10f ( 2.7E-5 ), 0.7, -4.1, 0.12 }; // 1.5, -5., 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
   //const float phbsPwrlwInt[NPRS] = { 1.5, 1E-1 };
 
   /* Initialize */
