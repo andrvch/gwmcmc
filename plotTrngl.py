@@ -26,7 +26,7 @@ nbins2D = 200
 pars = read_data(sys.argv[1])
 npars = len(pars)
 
-pars[0] = gr * kb * 10**pars[0] / keV
+#pars[0] = gr * kb * 10**pars[0] / kev
 
 qlevel = float(sys.argv[2]) # percent
 quont = [0.999,0.99,0.95,0.90]

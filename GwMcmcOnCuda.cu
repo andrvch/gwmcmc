@@ -19,12 +19,12 @@
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
-  cndtn = cndtn * ( 5.5 < wlkr.par[0] ) * ( wlkr.par[0] < 6.5 );
+  cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
   //cndtn = cndtn * ( 0. < wlkr.par[1] );
   //cndtn = cndtn * ( 0.6 < wlkr.par[4] ) * ( wlkr.par[4] < 0.8 );
   //cndtn = cndtn * ( 0.05 < wlkr.par[5] ) * ( wlkr.par[5] < 0.3 );
   //cndtn = cndtn * ( 0.0 < wlkr.par[4] );
-  //cndtn = cndtn * ( 0. < wlkr.par[DINDX] ) * ( wlkr.par[DINDX] < 3.3 );
+  //cndtn = cndtn * ( 0. < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < 3.3 );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -35,9 +35,9 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   float theta = powf ( sNh1, 2 ) / mNh1;
   float kk = mNh1 / theta;
   sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
-  theta = powf ( sNh2, 2 ) / mNh2;
-  kk = mNh2 / theta;
-  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  //theta = powf ( sNh2, 2 ) / mNh2;
+  //kk = mNh2 / theta;
+  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh ) / sNh, 2 );
   int indx = NHINDX + 1;
   while ( indx < NPRS )
@@ -62,7 +62,6 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + nsa1Flx[t];
       //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
       f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
-      //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     else if ( spIndx == 1 )
     {
@@ -71,23 +70,23 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     }
     else if ( spIndx == 2 )
     {
-      f = f + nsa2Flx[t];
+      f = f + nsa1Flx[t];
       //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
       //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     else if ( spIndx == 3 )
     {
-      f = f + PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     else if ( spIndx == 4 )
     {
-      f = f + nsa2Flx[t];
+      f = f + nsa1Flx[t];
       //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
       //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     else if ( spIndx == 5 )
     {
-      f = f + PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     else if ( spIndx == 6 )
     {
@@ -97,7 +96,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     }
     else if ( spIndx == 7 )
     {
-      f = f + PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
     }
     //float eee = 0.5 * ( en[e] + en[e+1] );
     //f = f * expf ( - powf ( 10., wlk[w].par[6] ) / ( sqrtf ( 2 * PIPI ) * wlk[w].par[5] ) * expf ( - 0.5 * powf ( ( eee - wlk[w].par[4] ) / wlk[w].par[5], 2. ) ) );
@@ -110,8 +109,9 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs );
   AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, 0, 1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, 0, 6, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa2Flxs );
+  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, DINDX1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa2Flxs );
+  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, 0, 6, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa2Flxs );
   AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
   return 0;
 }
@@ -120,7 +120,7 @@ __host__ int Priors ( const Model *mdl, Chain *chn )
 {
   int blcks = Blocks ( chn[0].nmbrOfWlkrs / 2 );
   LinearInterpolation <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, DINDX1, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh1, chn[0].sNh1 );
-  LinearInterpolation <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, DINDX2, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh2, chn[0].sNh2 );
+  //LinearInterpolation <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, DINDX2, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh2, chn[0].sNh2 );
   AssembleArrayOfPriors <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh1, chn[0].sNh1, chn[0].mNh2, chn[0].sNh2, chn[0].prrs );
   return 0;
 }
@@ -132,13 +132,13 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.3;
-  const float hghrNtcdEnrg = 10.0;
+  const float lwrNtcdEnrg = 0.4;
+  const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 0.31 };
   //const float phbsPwrlwInt[NPRS] = { 0.77, log10f ( 9.32443E-06 ) };
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 1.5, -7., 0.31 };
-  const float phbsPwrlwInt[NPRS] = { 5.819, 3.22, 2.5, -6., 1.9, -4., 2.9, 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.98, 2.5, 1.7, -5., 0.12 }; // 1.5, -5., 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
   //const float phbsPwrlwInt[NPRS] = { 1.5, 1E-1 };
 
   /* Initialize */
@@ -156,7 +156,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl6 = argv[7];
   const char *spcFl7 = argv[8];
   const char *spcFl8 = argv[9];
-  const char *spcLst[NSPCTR] = { spcFl1 , spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8 }; //
+  const char *spcLst[NSPCTR] = { spcFl1}; // , spcFl2}; // , spcFl3, spcFl4, spcFl5, spcFl6}; //, spcFl7, spcFl8 }; //
   int NNspec = 8;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
@@ -265,6 +265,11 @@ int main ( int argc, char *argv[] )
   SimpleWriteDataFloat ( "Autocor.out", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
   SimpleWriteDataFloat ( "AutocorCM.out", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
   SimpleWriteDataFloat ( "Spec1Counts.out", spc[0].nmbrOfChnnls, spc[0].srcCnts );
+  SimpleWriteDataFloat ( "nsmaxgEnergy.out", mdl[0].numNsmaxgE, mdl[0].nsmaxgE );
+  SimpleWriteDataFloat ( "nsmaxgTemperature.out", mdl[0].numNsmaxgT, mdl[0].nsmaxgT );
+  SimpleWriteDataFloat ( "nsmaxgFluxes.out", mdl[0].numNsmaxgE * mdl[0].numNsmaxgT, mdl[0].nsmaxgFlxs );
+  SimpleWriteDataFloat ( "nsmaxgFluxesInter.out", spc[0].nmbrOfEnrgChnnls, spc[0].nsa1Flxs );
+  SimpleWriteDataFloat ( "nsaFluxesInter.out", spc[0].nmbrOfEnrgChnnls, spc[0].nsa2Flxs );
   //SimpleWriteDataFloat ( "spec2Counts.out", spc[1].nmbrOfChnnls, spc[1].srcCnts );
   WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
 

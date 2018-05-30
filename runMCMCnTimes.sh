@@ -1,17 +1,17 @@
 #!/bin/bash
 CUDAID=0
-SPECFILE1="psrj0633.pi"
-SPECFILE2="pwnj0633.pi"
-SPECFILE3="PN_J0633_15asec_grp15.pi"
-SPECFILE4="PN_pwn_ex_grp15.pi"
-SPECFILE5="M1_J0633_15asec_grp15.pi"
-SPECFILE6="M1_pwn_ex_grp15.pi"
-SPECFILE7="M2_J0633_15asec_grp15.pi"
-SPECFILE8="M2_pwn_ex_grp15.pi"
+SPECFILE1="PN_J0633_15asec_grp15.pi"
+SPECFILE2="PN_pwn_ex_grp15.pi"
+SPECFILE3="M1_J0633_15asec_grp15.pi"
+SPECFILE4="M1_pwn_ex_grp15.pi"
+SPECFILE5="M2_J0633_15asec_grp15.pi"
+SPECFILE6="M2_pwn_ex_grp15.pi"
+SPECFILE7="psrj0633.pi"
+SPECFILE8="pwnj0633.pi"
 CHAINFILE=$1
 LOGFILE="Log"
-NWALK=256
-LSTEP=4096
+NWALK=128
+LSTEP=512
 i=$2
 NCHAINS=$3
 let NCHAINS=NCHAINS+i

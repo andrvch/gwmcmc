@@ -25,9 +25,9 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 pars = read_data(sys.argv[2])
 npars = len(pars)
 
-pars[0] = gr * kb * 10**pars[0] / kev
-pars[1] = 10**pars[1]
-pars[6] = 10**pars[6]
+#pars[0] = gr * kb * 10**pars[0] / kev
+#pars[1] = 10**pars[1]
+#pars[6] = 10**pars[6]
 
 eqh_inter = np.empty([npars,len(quantiles)])
 

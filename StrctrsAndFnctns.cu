@@ -278,10 +278,15 @@ __host__ int InitializeModel ( Model *mdl )
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaE, mdl[0].numNsaE * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaT, mdl[0].numNsaT * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgE, mdl[0].numNsaE * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgT, mdl[0].numNsaT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
   for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
   SimpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
   SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
+  SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
   return 0;
 }
 
@@ -474,7 +479,7 @@ __host__ __device__ float Poisson ( const float scnts, const float mdl, const fl
 __host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )
 {
   float sttstc = 0, d, f;
-  float scls = 1; // / backscal_bkg;
+  float scls = 1;
   float sclb = backscal_bkg / backscal_src;
   d = sqrtf ( powf ( ( ts * scls + tb * sclb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts * scls + tb * sclb ) * bcnts * mdl );
   f = ( scnts + bcnts - ( ts * scls + tb * sclb ) * mdl + d ) / 2 / ( ts * scls + tb * sclb );
@@ -492,7 +497,7 @@ __host__ __device__ float PoissonWithBackground ( const float scnts, const float
   }
   else if ( scnts == 0 && bcnts != 0 )
   {
-    sttstc = ts * mdl - bcnts * logf ( tb * sclb / ( ts * scls + tb * sclb ) ); // + bcnts * ( 1 - logf ( bcnts ) );
+    sttstc = ts * mdl - bcnts * logf ( tb * sclb / ( ts * scls + tb * sclb ) );
   }
   else if ( scnts == 0 && bcnts == 0 )
   {
@@ -609,6 +614,37 @@ __host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int 
     for (int i = 0; i < numTe; i++)
     {
       fluxes[j+i*numEn] = data[(i+1)+(j+1)*(numTe+1)];
+    }
+  }
+  fclose ( flPntr );
+}
+
+__host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes )
+{
+  FILE *flPntr;
+  float value;
+  int i = 0;
+  flPntr = fopen ( flNm, "r" );
+  while ( fscanf ( flPntr, "%e", &value ) == 1 )
+  {
+    data[i] = value;
+    i += 1;
+  }
+  //numTe = (int*)data[0];
+  for (int j = 0; j < numTe; j++)
+  {
+    Te[j] = data[1+j];
+  }
+  //numEn = (int*)data[17];
+  for (int j = 0; j < numEn; j++)
+  {
+    En[j] = data[18+j];
+  }
+  for (int i = 0; i < numTe; i++)
+  {
+    for (int j = 0; j < numEn; j++)
+    {
+      fluxes[j+i*numEn] = data[(18+numEn)+j+i*numEn];
     }
   }
   fclose ( flPntr );
@@ -990,15 +1026,15 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
     w = FindElementIndex ( yin, M2, yyout );
     a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
     b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
-    //float INFi = 1e10f;
-    if ( ( v < M1 ) && ( w < M2 ) ) d00 = data[w*M1+v]; else d00 = 0; //-INFi;
-    if ( ( v+1 < M1 ) && ( w < M2 ) ) d10 = data[w*M1+v+1]; else d10 = 0; // -INFi;
-    if ( ( v < M1 ) && ( w+1 < M2 ) ) d01 = data[(w+1)*M1+v]; else d01 = 0; // -INFi;
-    if ( ( v+1 < M1 ) && ( w+1 < M2 ) ) d11 = data[(w+1)*M1+v+1]; else d11 = 0; // -INFi;
+    if ( ( v < M1 ) && ( w < M2 ) ) d00 = log10f ( data[w*M1+v] ); else d00 = 0.;
+    if ( ( v+1 < M1 ) && ( w < M2 ) ) d10 = log10f ( data[w*M1+v+1] ); else d10 = 0;
+    if ( ( v < M1 ) && ( w+1 < M2 ) ) d01 = log10f ( data[(w+1)*M1+v] ); else d01 = 0;
+    if ( ( v+1 < M1 ) && ( w+1 < M2 ) ) d11 = log10f ( data[(w+1)*M1+v+1] ); else d11 = 0;
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    mdlFlxs[i+j*nmbrOfEnrgChnnls] = tmp3 * sa * powf ( 10., NormD + DimConst ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
+    tmp3 = tmp3 + LOGPLANCK - log10f ( enrgChnnls[i+1] );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa * powf ( 10., NormD + DimConst ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
   }
 }
 

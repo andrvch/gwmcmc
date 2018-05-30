@@ -7,7 +7,9 @@
 #define PCCM 3.08567802e18f
 #define KMCM 1.0e5f
 #define KMCMPCCM -13.48935060694014384023e0f
+#define LOGPLANCK 26.1787440e0f
 #define INF 2e30f
+#define INFi -30e0f
 #define TLR 1e-25f
 #define ALPHA 1e0f
 #define BETA  0e0f
@@ -15,13 +17,14 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 8
+#define NPRS 5
 #define NHINDX NPRS-1
+#define TINDX 0
 #define DINDX1 1
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 8
+#define NSPCTR 1
 #define BACKIN 1
 #define NSTAT 3
 
@@ -104,6 +107,10 @@ struct Model
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
+  const char *nsmaxgFl = "nsmaxg_HB1230ThB00g1438.in";
+  int numNsmaxgE = 117;
+  int numNsmaxgT = 14;
+  float *nsmaxgDt, *nsmaxgE, *nsmaxgT, *nsmaxgFlxs;
 };
 
 /* Functions */
@@ -128,6 +135,7 @@ __host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, i
 __host__ void ReadLastPositionOfWalkersFromFile ( const char*, const int, const int, float* );
 __host__ void WriteChainToFile ( const char*, const int, const int, const int, const Walker*, const float* );
 __host__ void SimpleReadNsaTable ( const char*, const int, const int, float*, float*, float*, float* );
+__host__ void SimpleReadNsmaxgTable ( const char*, const int, const int, float*, float*, float*, float* );
 __host__ void SimpleReadReddenningData ( const char*, const int, float*, float*, float*, float*, float* );
 __host__ void SimpleReadDataFloat ( const char*, float* );
 __host__ void SimpleReadDataInt ( const char*, int* );
