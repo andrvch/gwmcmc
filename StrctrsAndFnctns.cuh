@@ -17,7 +17,7 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 7
+#define NPRS 11
 #define NHINDX NPRS-1
 #define TINDX 0
 #define DINDX1 1
@@ -25,7 +25,7 @@
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 2
+#define NSPCTR 4
 #define BACKIN 1
 #define NSTAT 3
 

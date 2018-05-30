@@ -36,9 +36,9 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh1, const float sNh1, const float mNh2, const float sNh2 )
 {
   float prr = 0, sum = 0, mean = 0, sigma = 0.06;
-  //float theta = powf ( sNh1, 2 ) / mNh1;
-  //float kk = mNh1 / theta;
-  //ssum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  float theta = powf ( sNh1, 2 ) / mNh1;
+  float kk = mNh1 / theta;
+  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //theta = powf ( sNh2, 2 ) / mNh2;
   //kk = mNh2 / theta;
   //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
@@ -75,15 +75,19 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
-    else if ( spIndx == 6 )
+    else if ( spIndx == 2 )
     {
-      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
+      //f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
       //f = f + BlackBody ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
-      //f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[6], wlk[w].par[7], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[8], wlk[w].par[9], en[e], en[e+1] );
+      flx[t] = f * arf[e];
     }
-    else if ( spIndx == 7 )
+    else if ( spIndx == 3 )
     {
-      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[4], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[8], wlk[w].par[9], en[e], en[e+1] );
+      flx[t] = f * arf[e];
     }
     //float eee = 0.5 * ( en[e] + en[e+1] );
     //f = f * expf ( - powf ( 10., wlk[w].par[6] ) / ( sqrtf ( 2 * PIPI ) * wlk[w].par[5] ) * expf ( - 0.5 * powf ( ( eee - wlk[w].par[4] ) / wlk[w].par[5], 2. ) ) );
@@ -125,7 +129,7 @@ int main ( int argc, char *argv[] )
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 0.31 };
   //const float phbsPwrlwInt[NPRS] = { 0.77, log10f ( 9.32443E-06 ) };
   //const float phbsPwrlwInt[NPRS] = { 0.131, -3., 1.5, -7., 0.31 };
-  const float phbsPwrlwInt[NPRS] = { 5.8, 3.4, 1.68, log10f ( 2.7E-5 ), 0.7, -4.1, 0.12 }; // 1.5, -5., 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.8, 2.9, 1.26, -5.22, 0.7, -4.2, 1.8, log10f ( 2.5E-5 ), 0.8, -4.1, 0.12 }; // 1.5, -5., 0.2 }; // 0.7, 0.15, -2., 0.1 }; // 0.7, 0.1, -2., 0.2 }; //, 1.5, -4., 0.12 };
   //const float phbsPwrlwInt[NPRS] = { 1.5, 1E-1 };
 
   /* Initialize */
@@ -143,7 +147,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl6 = argv[7];
   const char *spcFl7 = argv[8];
   const char *spcFl8 = argv[9];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 }; //, spcFl3 }; //, spcFl4, spcFl5, spcFl6}; //, spcFl7, spcFl8 }; //
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 }; //, spcFl5, spcFl6}; //, spcFl7, spcFl8 }; //
   int NNspec = 8;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
