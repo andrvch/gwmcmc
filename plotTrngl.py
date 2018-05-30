@@ -29,7 +29,8 @@ npars = len(pars)
 #pars[0] = gr * kb * 10**pars[0] / kev
 
 qlevel = float(sys.argv[2]) # percent
-quont = [0.999,0.99,0.95,0.90]
+#quont = [0.999,0.99,0.95,0.90]
+quont = [0.99,0.95,0.90,0.68,0.40]
 eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)

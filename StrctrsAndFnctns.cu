@@ -225,6 +225,10 @@ __host__ void FreeModel ( const Model *mdl )
   cudaFree ( mdl[0].nsaT );
   cudaFree ( mdl[0].nsaE );
   cudaFree ( mdl[0].nsaFlxs );
+  cudaFree ( mdl[0].nsmaxgDt );
+  cudaFree ( mdl[0].nsmaxgT );
+  cudaFree ( mdl[0].nsmaxgE );
+  cudaFree ( mdl[0].nsmaxgFlxs );
 }
 
 __host__ int InitializeCuda ( Cuparam *cdp )
@@ -894,7 +898,8 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
   int t = c + w * nmbrOfChnnls;
   if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
   {
-    chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
+    //chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
+    chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
   }
 }
 
@@ -1017,11 +1022,11 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
   if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
   {
     gr = sqrtf ( 1.0 - 2.952 * MNS / RNS );
-    xxout = 0.5 * ( enrgChnnls[i] + enrgChnnls[i+1] ) / gr;
-    yyout = wlkrs[j].par[tIndx];
     sa = powf ( RNS / gr, 2. );
     NormD = - 2. * ( wlkrs[j].par[dIndx] );
     DimConst = 2. * KMCMPCCM;
+    xxout = 0.5 * ( enrgChnnls[i] + enrgChnnls[i+1] ) / gr;
+    yyout = wlkrs[j].par[tIndx];
     v = FindElementIndex ( xin, M1, xxout );
     w = FindElementIndex ( yin, M2, yyout );
     a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
@@ -1033,7 +1038,6 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    tmp3 = tmp3 + LOGPLANCK - log10f ( enrgChnnls[i+1] );
     mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa * powf ( 10., NormD + DimConst ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
   }
 }

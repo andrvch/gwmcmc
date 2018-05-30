@@ -17,14 +17,15 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 5
+#define NPRS 7
 #define NHINDX NPRS-1
 #define TINDX 0
 #define DINDX1 1
+#define RINDX 5
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 1
+#define NSPCTR 2
 #define BACKIN 1
 #define NSTAT 3
 
@@ -95,7 +96,7 @@ struct Chain
 struct Model
 {
   int sgFlg = 3; // Xset.xsect = "bcmc"
-  const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr" and redshift = 0
+  const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
   const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
   int *atmcNmbrs;
   float *abndncs;
@@ -103,7 +104,7 @@ struct Model
   const int nmbrOfDistBins = 442;
   const int numRedCol = 4;
   float *RedData, *Dist, *EBV, *errDist, *errEBV;
-  const char *nsaFl = "nsa_spec_B_1e12G.dat";
+  const char *nsaFl = "nsa_spec_B_1e13G.dat";
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
@@ -173,7 +174,7 @@ __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const f
 __global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, Walker*, float* );
 __global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const Walker*, float* );
-__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float*, const float*, const float*, const Walker*, const float*, const float*, float* );
+__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float * );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );

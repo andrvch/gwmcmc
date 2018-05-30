@@ -26,8 +26,8 @@ pars = read_data(sys.argv[2])
 npars = len(pars)
 
 #pars[0] = gr * kb * 10**pars[0] / kev
-pars[1] = 10**pars[1]
-pars[3] = 10**pars[3]
+#pars[1] = 10**pars[1]
+#pars[3] = 10**pars[3]
 
 eqh_inter = np.empty([npars,len(quantiles)])
 
