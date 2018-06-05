@@ -1,9 +1,9 @@
 #!/bin/bash
 EVTFILE="PNclean.fits"
-SPIFILE="spectrumPN_pwn_ex_bkg.fits"
-RMFFILE="spectrumPN_pwn_ex_bkg.rmf"
-ARFFILE="spectrumPN_pwn_ex_bkg.arf"
-SPOFILE="PN_pwn_ex_bkg.pi"
+SPIFILE="spectrumM2_J0633_15asec_bkg.fits"
+RMFFILE="spectrumM2_J0633_15asec_bkg.rmf"
+ARFFILE="spectrumM2_J0633_15asec_bkg.arf"
+SPOFILE="M2_J0633_15asec_bkg.pi"
 rmfgen spectrumset=$SPIFILE rmfset=$RMFFILE
 
 arfgen spectrumset=$SPIFILE arfset=$ARFFILE withrmfset=yes rmfset=$RMFFILE \
