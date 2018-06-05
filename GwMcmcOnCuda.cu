@@ -153,7 +153,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.63, 1.3, -5.8, 1.7, -4.7, 0.9, -5.1, 0.8, -5.0, 0.7, -4.5, 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.63, 1.3, -5.8, 1.7, -4.7, 0.9, -5.1, 0.12 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -174,7 +174,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl10 = argv[11];
   const char *spcFl11 = argv[12];
   const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 }; //
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4}; //, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 }; //
   int NNspec = 12;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
@@ -186,6 +186,7 @@ int main ( int argc, char *argv[] )
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg;
   }
+
 
   InitializeCuda ( cdp );
   InitializeModel ( mdl );
