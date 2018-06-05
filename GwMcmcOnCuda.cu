@@ -71,6 +71,19 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
+    else if ( spIndx == 4 )
+    {
+      f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 5 )
+    {
+      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
   }
 }
 
@@ -102,7 +115,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.8, 1., 3.0, 1.3, log10f ( 5.E-6 ), 1.8, log10f ( 2.5E-5 ), 0.9, -5.1, 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.8, 1., 3.0, 1.3, log10f ( 5.E-6 ), 1.8, log10f ( 2.5E-5 ), 0.9, -5.1, 0.7, -5.3, 0.12 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -119,7 +132,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl6 = argv[7];
   const char *spcFl7 = argv[8];
   const char *spcFl8 = argv[9];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 }; //, spcFl5, spcFl6}; //, spcFl7, spcFl8 }; //
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6}; //, spcFl7, spcFl8 }; //
   int NNspec = 8;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
