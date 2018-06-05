@@ -21,7 +21,6 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
   cndtn = cndtn * ( log10f ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
-  //cndtn = cndtn * ( log10f ( 5.E1 ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 2.E3 ) );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -48,7 +47,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   {
     if ( spIndx == 0 )
     {
-      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e] ) );
+      f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
       f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
@@ -71,56 +70,6 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
-    else if ( spIndx == 4 )
-    {
-      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e] ) );
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 5 )
-    {
-      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 6 )
-    {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 7 )
-    {
-      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 8 )
-    {
-      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e] ) );
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 9 )
-    {
-      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 10 )
-    {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 11 )
-    {
-      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
   }
 }
 
@@ -129,8 +78,8 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs );
   AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
   AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
   return 0;
 }
@@ -166,16 +115,8 @@ int main ( int argc, char *argv[] )
   const char *spcFl2 = argv[3];
   const char *spcFl3 = argv[4];
   const char *spcFl4 = argv[5];
-  const char *spcFl5 = argv[6];
-  const char *spcFl6 = argv[7];
-  const char *spcFl7 = argv[8];
-  const char *spcFl8 = argv[9];
-  const char *spcFl9 = argv[10];
-  const char *spcFl10 = argv[11];
-  const char *spcFl11 = argv[12];
-  const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4}; //, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 }; //
-  int NNspec = 12;
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 };
+  int NNspec = 4;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
   chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );
@@ -186,7 +127,6 @@ int main ( int argc, char *argv[] )
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg;
   }
-
 
   InitializeCuda ( cdp );
   InitializeModel ( mdl );
@@ -280,13 +220,6 @@ int main ( int argc, char *argv[] )
   /* Write results to a file */
   SimpleWriteDataFloat ( "Autocor.out", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
   SimpleWriteDataFloat ( "AutocorCM.out", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
-  SimpleWriteDataFloat ( "Spec1Counts.out", spc[0].nmbrOfChnnls, spc[0].srcCnts );
-  SimpleWriteDataFloat ( "nsmaxgEnergy.out", mdl[0].numNsmaxgE, mdl[0].nsmaxgE );
-  SimpleWriteDataFloat ( "nsmaxgTemperature.out", mdl[0].numNsmaxgT, mdl[0].nsmaxgT );
-  SimpleWriteDataFloat ( "nsmaxgFluxes.out", mdl[0].numNsmaxgE * mdl[0].numNsmaxgT, mdl[0].nsmaxgFlxs );
-  SimpleWriteDataFloat ( "nsmaxgFluxesInter.out", spc[0].nmbrOfEnrgChnnls, spc[0].nsa1Flxs );
-  SimpleWriteDataFloat ( "nsaFluxesInter.out", spc[0].nmbrOfEnrgChnnls, spc[0].nsa2Flxs );
-  //SimpleWriteDataFloat ( "spec2Counts.out", spc[1].nmbrOfChnnls, spc[1].srcCnts );
   WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
 
   /* Destroy cuda related contexts and things: */
