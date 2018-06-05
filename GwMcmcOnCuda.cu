@@ -48,77 +48,77 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   {
     if ( spIndx == 0 )
     {
-      f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
+      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e] ) );
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 1 )
     {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 2 )
     {
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 3 )
     {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 4 )
     {
-      f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
-      //f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e] ) );
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 5 )
     {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 6 )
     {
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 7 )
     {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 8 )
     {
-      f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
-      //f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e] ) );
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 9 )
     {
-      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 10 )
     {
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 11 )
     {
-      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
@@ -129,7 +129,8 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs );
   AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
   AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
   return 0;
 }
@@ -152,7 +153,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.9, 1.23, -5.8, 0.9, -5.1, 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.63, 1.3, -5.8, 1.7, -4.7, 0.9, -5.1, 0.8, -5.0, 0.7, -4.5, 0.12 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -173,7 +174,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl10 = argv[11];
   const char *spcFl11 = argv[12];
   const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 }; //, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 }; //
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 }; //
   int NNspec = 12;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );

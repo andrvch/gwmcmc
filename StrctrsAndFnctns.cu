@@ -609,7 +609,7 @@ __host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int 
   }
   for (int j = 0; j < numEn; j++)
   {
-    En[j] = data[(j+1)*(numTe+1)];
+    En[j] = log10f ( data[(j+1)*(numTe+1)] );
   }
   for (int j = 0; j < numTe; j++)
   {
@@ -619,7 +619,7 @@ __host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int 
   {
     for (int i = 0; i < numTe; i++)
     {
-      fluxes[j+i*numEn] = data[(i+1)+(j+1)*(numTe+1)];
+      fluxes[j+i*numEn] = log10f ( data[(i+1)+(j+1)*(numTe+1)] );
     }
   }
   fclose ( flPntr );
@@ -644,13 +644,13 @@ __host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const i
   //numEn = (int*)data[17];
   for (int j = 0; j < numEn; j++)
   {
-    En[j] = data[18+j];
+    En[j] = log10f ( data[18+j] );
   }
   for (int i = 0; i < numTe; i++)
   {
     for (int j = 0; j < numEn; j++)
     {
-      fluxes[j+i*numEn] = data[(18+numEn)+j+i*numEn];
+      fluxes[j+i*numEn] = log10f ( data[(18+numEn)+j+i*numEn] );
     }
   }
   fclose ( flPntr );
@@ -1019,7 +1019,7 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  float xxout, yyout, sa, gr, NormD, DimConst, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  float xxout, yyout, sa, gr, NormD, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
   float R_ns;
   if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
@@ -1027,22 +1027,21 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
     R_ns = powf ( 10.,  wlkrs[j].par[rIndx] );
     gr = sqrtf ( 1.0 - 2.952 * MNS / R_ns );
     sa = powf ( R_ns, 2. );
-    NormD = - 2. * ( wlkrs[j].par[dIndx] );
-    DimConst = 2. * KMCMPCCM;
-    xxout = 0.5 * ( enrgChnnls[i] + enrgChnnls[i+1] ) / gr;
+    NormD = - 2. * ( wlkrs[j].par[dIndx] - KMCMPCCM );
+    xxout = log10f ( enrgChnnls[i+1] / gr );
     yyout = wlkrs[j].par[tIndx];
     v = FindElementIndex ( xin, M1, xxout );
     w = FindElementIndex ( yin, M2, yyout );
     a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
     b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
-    if ( ( v < M1 ) && ( w < M2 ) ) d00 = log10f ( data[w*M1+v] ); else d00 = 0.;
-    if ( ( v+1 < M1 ) && ( w < M2 ) ) d10 = log10f ( data[w*M1+v+1] ); else d10 = 0;
-    if ( ( v < M1 ) && ( w+1 < M2 ) ) d01 = log10f ( data[(w+1)*M1+v] ); else d01 = 0;
-    if ( ( v+1 < M1 ) && ( w+1 < M2 ) ) d11 = log10f ( data[(w+1)*M1+v+1] ); else d11 = 0;
+    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
+    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
+    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
+    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    mdlFlxs[i+j*nmbrOfEnrgChnnls] = gr * powf ( 10., tmp3 ) * sa * powf ( 10., NormD + DimConst ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa * powf ( 10., NormD ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
   }
 }
 
