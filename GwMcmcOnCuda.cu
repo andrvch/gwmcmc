@@ -109,6 +109,18 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
+    else if ( spIndx == 10 )
+    {
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 11 )
+    {
+      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
   }
 }
 
@@ -159,8 +171,10 @@ int main ( int argc, char *argv[] )
   const char *spcFl8 = argv[9];
   const char *spcFl9 = argv[10];
   const char *spcFl10 = argv[11];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10 }; //
-  int NNspec = 10;
+  const char *spcFl11 = argv[12];
+  const char *spcFl12 = argv[13];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 }; //
+  int NNspec = 12;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
   chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );
