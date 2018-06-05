@@ -21,6 +21,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
   cndtn = cndtn * ( log10f ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
+  cndtn = cndtn * ( log10f ( 5.E1 ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 2.E3 ) );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -31,12 +32,7 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   float theta = powf ( sNh1, 2 ) / mNh1;
   float kk = mNh1 / theta;
   sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
-  int indx = NHINDX + 1;
-  while ( indx < NPRS )
-  {
-    sum = sum + powf ( ( wlkr.par[indx] - mean ) / sigma, 2 );
-    indx += 1;
-  }
+  //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh1 ) / sNh1, 2 );
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
 }
