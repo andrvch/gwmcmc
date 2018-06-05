@@ -22,8 +22,8 @@ Xset.xsect = "bcmc"
 Fit.statMethod = "chi"
 Fit.statTest   = "chi"
 
-SPECNAME = "1:1 PN_J0633_15asec.pi 2:2 PN_J0633_15asec_bkg.pi"
-nspec = 2
+SPECNAME = "1:1 PN_J0633_15asec.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec.pi 4:4 M1_J0633_bkg.pi"
+nspec = 4
 
 ignore_less = "**-0.5"
 ignore_more = "7.0-**"
@@ -34,21 +34,26 @@ AllData.ignore(ignore_more)
 AllData.ignore("bad")
 
 gr = math.sqrt(1-2.952*1.4/10**1.08)
-scl = (288000. / 2241600.)
-bckPhIndx = 0.91
-bckNrm = -4.99
-nh = 0.31
-Teff = 5.807
+scl1 = 288000. / 2241600.
+scl2 = 271732. / 2207424.
+bckPhIndx1 = 0.88
+bckNrm1 = -5.00
+bckPhIndx2 = 1.165
+bckNrm2 = -5.092
+nh = 0.311
+Teff = 5.83
 Mns = 1.4
-logR = 0.9232
+logR = 0.919
 magfld = 1e12
-logD = 2.593
-psrPhIndx = 1.25
-psrNrm = -5.186
+logD = 2.597
+psrPhIndx = 1.246
+psrNrm = -5.193
 
 AllModels += "(nsa+powerlaw)*phabs + powerlaw"
-AllModels(1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx, scl*10**bckNrm))
-AllModels(2).setPars((Teff, Mns, 10**logR, magfld, 0., psrPhIndx, 0., nh, bckPhIndx, 10**bckNrm))
+AllModels(1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx1, scl1*10**bckNrm1))
+AllModels(2).setPars((Teff, Mns, 10**logR, magfld, 0., psrPhIndx, 0., nh, bckPhIndx1, 10**bckNrm1))
+AllModels(3).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx2, scl2*10**bckNrm2))
+AllModels(4).setPars((Teff, Mns, 10**logR, magfld, 0., psrPhIndx, 0., nh, bckPhIndx2, 10**bckNrm2))
 
 Fit.show()
 print Fit.statistic
@@ -87,7 +92,7 @@ gs  = gridspec.GridSpec(8,1)
 ax1 = plt.subplot(gs[:5,0])
 ax2 = plt.subplot(gs[5:8,0],sharex=ax1)
 
-set_colours = ['g','gray']
+set_colours = ['g','gray','b','gray']
 
 #for i in range(nspec):
 i = 0
@@ -95,9 +100,17 @@ ax1.errorbar(spcx[i],spcy[i],xerr=spcrrx[i],yerr=spcrry[i],color=set_colours[i],
 ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(mod[i][0],mod[i]),color=set_colours[i])
 ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(chiy[i][0],chiy[i]),color=set_colours[i])
 i = 1
-ax1.errorbar(spcx[i],scl*spcy[i],xerr=spcrrx[i],yerr=scl*spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
-ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(scl*mod[i][0],scl*mod[i]),color=set_colours[i])
-ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(scl*chiy[i][0],scl*chiy[i]),color=set_colours[i])
+ax1.errorbar(spcx[i],scl1*spcy[i],xerr=spcrrx[i],yerr=scl1*spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
+ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(scl1*mod[i][0],scl1*mod[i]),color=set_colours[i])
+ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(scl1*chiy[i][0],scl1*chiy[i]),color=set_colours[i])
+i = 2
+ax1.errorbar(spcx[i],spcy[i],xerr=spcrrx[i],yerr=spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
+ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(mod[i][0],mod[i]),color=set_colours[i])
+ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(chiy[i][0],chiy[i]),color=set_colours[i])
+i = 3
+ax1.errorbar(spcx[i],scl2*spcy[i],xerr=spcrrx[i],yerr=scl2*spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
+ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(scl2*mod[i][0],scl2*mod[i]),color=set_colours[i])
+ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(scl2*chiy[i][0],scl2*chiy[i]),color=set_colours[i])
 
 ax2.plot([E_str,E_fin],[0.0,0.0],'--',color='k')
 

@@ -54,9 +54,22 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
-    else if ( spIndx == 1 )
+    if ( spIndx == 1 )
     {
       f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 2 )
+    {
+      f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 3 )
+    {
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
@@ -91,7 +104,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.80, 1.0, 2.6, 1.2, -5.2, 0.9, -5.0, 0.30 };
+  const float phbsPwrlwInt[NPRS] = { 5.80, 1.0, 2.6, 1.2, -5.2, 0.9, -5.0, 0.87, -5.05, 0.30 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -102,8 +115,10 @@ int main ( int argc, char *argv[] )
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
-  int NNspec = 2;
+  const char *spcFl3 = argv[4];
+  const char *spcFl4 = argv[5];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 };
+  int NNspec = 4;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
   chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );
