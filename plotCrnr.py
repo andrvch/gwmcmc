@@ -12,5 +12,5 @@ import corner
 samples = np.transpose(cudakde.read_data(sys.argv[1]))
 print samples.shape
 
-fig = corner.corner(samples)
+fig = corner.corner(samples, no_fill_contours=False, draw_datapoints=True)
 fig.savefig("crnr.eps")
