@@ -669,10 +669,10 @@ __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, fl
   }
   for ( int j = 0; j < numDist; j++ )
   {
-    Dist[j] = data[4*j];
-    EBV[j] = data[4*j+1];
-    errDist[j] = data[4*j+2];
-    errEBV[j] = data[4*j+3];
+    Dist[j] = log10f ( data[4*j] );
+    EBV[j] = log10f ( data[4*j+1] );
+    errDist[j] = log10f ( data[4*j+2] );
+    errEBV[j] = log10f ( data[4*j+3] );
   }
   fclose ( flPntr );
 }
@@ -1045,24 +1045,26 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
   }
 }
 
-__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int prmtrIndx, const float *Dist, const float *EBV, const float *errEBV, const Walker *wlkrs, float *mNh, float *sNh )
+__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const Walker *wlkrs, float *mNh, float *sNh )
 {
   int w = threadIdx.x + blockDim.x * blockIdx.x;
   float xxout, a, dmNh0, dmNh1, dsNh0, dsNh1, tmpMNh, tmpSNh;
   int v;
   if ( w < nmbrOfWlkrs )
   {
-    xxout = powf ( 10, wlkrs[w].par[prmtrIndx] );
+    xxout = wlkrs[w].par[dIndx];
     v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
     a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
-    dmNh0 = EBV[v];
-    dmNh1 = EBV[v+1];
-    dsNh0 = errEBV[v];
-    dsNh1 = errEBV[v+1];
+    if ( v < nmbrOfDistBins ) dmNh0 = EBV[v]; else dmNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dmNh1 = EBV[v+1]; else dmNh1 = 0;
     tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
+    if ( v < nmbrOfDistBins ) dsNh0 = errEBV[v]; else dsNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dsNh1 = errEBV[v+1]; else dsNh1 = 0;
     tmpSNh = a * dsNh1 + ( -dsNh0 * a + dsNh0 );
+    tmpMNh = powf ( 10, tmpMNh );
+    tmpSNh = powf ( 10, tmpSNh );
     mNh[w] = 0.8 * tmpMNh;
-    sNh[w] = 0.8 * tmpMNh * sqrtf ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) ); // + powf ( 0.3 / 0.8, 2 ) );
+    sNh[w] = 0.8 * tmpMNh * sqrtf ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) );
   }
 }
 

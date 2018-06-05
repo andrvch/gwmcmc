@@ -21,6 +21,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
   cndtn = cndtn * ( log10f ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
+  cndtn = cndtn * ( log10f ( 80. ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 2200. ) );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -28,9 +29,9 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh1, const float sNh1, const float mNh2, const float sNh2 )
 {
   float prr = 0, sum = 0;
-  //float theta = powf ( sNh1, 2 ) / mNh1;
-  //float kk = mNh1 / theta;
-  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  float theta = powf ( sNh1, 2 ) / mNh1;
+  float kk = mNh1 / theta;
+  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh1 ) / sNh1, 2 );
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
@@ -50,24 +51,12 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 1 )
     {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 2 )
-    {
       f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    else if ( spIndx == 3 )
-    {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
@@ -102,7 +91,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.63, 1.3, -5.8, 1.7, -4.7, 0.9, -5.1, 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.9, 1.3, -5.8, 0.9, -5.1, 0.12 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -113,10 +102,8 @@ int main ( int argc, char *argv[] )
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  const char *spcFl3 = argv[4];
-  const char *spcFl4 = argv[5];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 };
-  int NNspec = 4;
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  int NNspec = 2;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
   chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );

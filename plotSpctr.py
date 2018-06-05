@@ -19,9 +19,10 @@ import matplotlib.patches as mpatches
 #Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
+Fit.statMethod = "chi"
+Fit.statTest   = "chi"
 
-#SPECNAME = "1:1 PNJ063315asecGrp15Real0.pi 2:2 PN_J0633_15asec_bkg.pi"
-SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi"
+SPECNAME = "1:1 PN_J0633_15asec.pi 2:2 PN_J0633_15asec_bkg.pi"
 nspec = 2
 
 ignore_less = "**-0.5"
@@ -32,19 +33,24 @@ AllData.ignore(ignore_less)
 AllData.ignore(ignore_more)
 AllData.ignore("bad")
 
-scl = (288000. / 2241600.)
-
 gr = math.sqrt(1-2.952*1.4/10**1.08)
-AllModels += "powerlaw + phabs*(nsmaxg+powerlaw)"
-AllModels(1).setPars((0.87, scl*10**-5.00, 0.30, 5.77, 1.4, 10**1.09, 10**(2.66-3.), 1260, 1., 1.1, 10**-5.3))
-AllModels(2).setPars((0.87, 10**-5.00, 0.30, 5.77, 1.4, 10**1.09, 10**(2.66-3.), 1260, 0., 1.1, 0.))
+scl = (288000. / 2241600.)
+bckPhIndx = 0.86
+bckNrm = -5.00
+nh = 0.31
+Teff = 5.80
+Mns = 1.4
+logR = 0.92
+magfld = 1e12
+logD = 2.58
+psrPhIndx = 1.3
+psrNrm = -5.16
 
-AllData.show()
-AllModels.show()
+AllModels += "(nsa+powerlaw)*phabs + powerlaw"
+AllModels(1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx, scl*10**bckNrm))
+AllModels(2).setPars((Teff, Mns, 10**logR, magfld, 0., psrPhIndx, 0., nh, bckPhIndx, 10**bckNrm))
+
 Fit.show()
-
-Fit.statMethod = "cstat"
-Fit.statTest   = "chi"
 print Fit.statistic
 
 Plot.xAxis = "keV"
@@ -89,25 +95,19 @@ ax1.errorbar(spcx[i],spcy[i],xerr=spcrrx[i],yerr=spcrry[i],color=set_colours[i],
 ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(mod[i][0],mod[i]),color=set_colours[i])
 ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(chiy[i][0],chiy[i]),color=set_colours[i])
 i = 1
-ax1.errorbar(spcx[i],spcy[i],xerr=spcrrx[i],yerr=spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
-ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(mod[i][0],mod[i]),color=set_colours[i])
-ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(chiy[i][0],chiy[i]),color=set_colours[i])
-#red_patch   = mpatches.Patch(color='green', label=r'$\rm src$')
-#blu_patch   = mpatches.Patch(color='red',   label=r'$\rm back$')
-#green_patch = mpatches.Patch(color='blue',  label=r'$\rm CC$')
-#black_patch = mpatches.Patch(color='black', label=r'$\rm ACIS-S$')
-
-#ax1.legend(handles=[red_patch,blu_patch,green_patch,black_patch],loc='upper right',shadow=True)
+ax1.errorbar(spcx[i],scl*spcy[i],xerr=spcrrx[i],yerr=scl*spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
+ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(scl*mod[i][0],scl*mod[i]),color=set_colours[i])
+ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(scl*chiy[i][0],scl*chiy[i]),color=set_colours[i])
 
 ax2.plot([E_str,E_fin],[0.0,0.0],'--',color='k')
 
-ax1.set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
-ax2.set_xlabel(r'$ \rm E  \, [\, \rm keV\,] $',fontsize=10)
-ax2.set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
+#ax1.set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
+#ax2.set_xlabel(r'$ \rm E  \, [\, \rm keV\,] $',fontsize=10)
+#ax2.set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
 
 ax1.set_xlim(E_str,E_fin)
 ax1.set_ylim(5.E-6,2.E-1)
-ax2.set_ylim(-10.,10.)
+#ax2.set_ylim(-10.,10.)
 
 ax1.set_yscale('log',nonposy='clip')
 ax1.set_xscale('log')
@@ -116,11 +116,7 @@ ax2.set_xscale('log')
 ax2.xaxis.set_major_formatter(LogFormatter(base=10.0,labelOnlyBase=False))
 setp(ax1.get_xticklabels(), visible=False)
 
-#ax2.set_xticks(arange(1.,E_fin,1.))
-#ax1.set_xticks(arange(1.,E_fin,1.))
-#ax2.set_xticks([0.3, 0.5, 0.7, 1, 2, 3, 5])
 ax1.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-#ax2.set_yticks(arange(-.02,.02+0.001,0.02))
 
 plt.savefig('spctr.eps')
 #plt.show()
