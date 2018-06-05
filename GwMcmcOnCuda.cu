@@ -195,9 +195,6 @@ int main ( int argc, char *argv[] )
   SpecAlloc ( chn, spc );
   SpecData ( cdp, verbose, mdl, spc );
 
-  printf ( " Scale factor scr -- %.8E\n", spc[0].backscal_src );
-  printf ( " Scale factor bkg -- %.8E\n", spc[0].backscal_bkg );
-
   /* Initialize walkers */
   if ( chn[0].thrdIndx == 0 )
   {

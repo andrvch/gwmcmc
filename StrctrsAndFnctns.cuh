@@ -154,7 +154,7 @@ __host__ int InitializeCuda ( Cuparam* );
 __host__ int InitializeModel ( Model *mdl );
 __host__ int InitializeChain ( Cuparam*, const float*, Chain* );
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
-__host__ int ReadFitsData ( const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
+__host__ int ReadFitsData ( const int, const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 __host__ int Stat ( const int, Spectrum );
 __host__ int SumUpStat ( Cuparam*, const float, const int, float*, const Spectrum );
 __host__ int FoldModel ( Cuparam*, const int, Spectrum );
