@@ -17,15 +17,16 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 7
+#define NPRS 12
 #define NHINDX NPRS-1
 #define TINDX 0
-#define DINDX1 1
+#define RINDX1 1
+#define DINDX1 2
 #define RINDX 5
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 2
+#define NSPCTR 12
 #define BACKIN 1
 #define NSTAT 3
 
@@ -186,7 +187,7 @@ __global__ void ReturnChainFunction ( const int, const int, const int, const Wal
 __global__ void ReturnCentralChainFunction ( const int, const int, const float*, const float*, float* );
 __global__ void NormalizeChain ( const int, float* );
 __global__ void MakeMatrix ( const int, const float*, float* );
-__global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
+__global__ void BilinearInterpolation ( const int, const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float*, float* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

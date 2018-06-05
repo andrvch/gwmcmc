@@ -35,6 +35,8 @@ __host__ int SpecData ( Cuparam *cdp, const int verbose, Model *mdl, Spectrum *s
     {
       printf ( ".................................................................\n" );
       printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
+      printf ( " Backscale src -- %4.0f\n", spc[i].backscal_src );
+      printf ( " Backscale bkg -- %4.0f\n", spc[i].backscal_bkg );
     }
   }
   if ( verbose == 1 )
@@ -1013,7 +1015,7 @@ __global__ void MakeMatrix ( const int nmbrOfStps, const float *chn, float *cmSm
   }
 }
 
-__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int dIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int rIndx, const int dIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -1022,7 +1024,7 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
   if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
   {
     gr = sqrtf ( 1.0 - 2.952 * MNS / RNS );
-    sa = powf ( RNS / gr, 2. );
+    sa = 2. * ( wlkrs[j].par[rIndx] - log10f ( gr ) );
     NormD = - 2. * ( wlkrs[j].par[dIndx] );
     DimConst = 2. * KMCMPCCM;
     xxout = 0.5 * ( enrgChnnls[i] + enrgChnnls[i+1] ) / gr;

@@ -22,8 +22,16 @@ halfqq = (100 - qqlevel)*0.5
 qqq = 0.01*qqlevel
 quantiles = [halfqq,50,qqlevel+halfqq]
 
-pars = read_data(sys.argv[2])
-npars = len(pars)
+#nsm = 500000
+#samples = read_data_nsmpl(sys.argv[2],nsm)
+samples = read_data(sys.argv[2])
+print samples.shape
+#samples = samples[np.r_[0:7, 13:samples.shape[0]],:]
+print samples.shape
+samples = samples[:,np.where(samples[-1,:]<14000)[0]]
+print samples.shape
+
+npars = len(samples)
 
 #pars[0] = gr * kb * 10**pars[0] / kev
 #pars[1] = 10**pars[1]
@@ -34,7 +42,7 @@ eqh_inter = np.empty([npars,len(quantiles)])
 sttime=time.time()
 
 for i in range(npars):
-    xi,zi = kde_gauss_cuda1d(pars[i],nbins)
+    xi,zi = kde_gauss_cuda1d(samples[i],nbins)
     zin,eqh_inter[i,:] = prc(xi,zi,qqq)
     print eqh_inter[i,:]
 

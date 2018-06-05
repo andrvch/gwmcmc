@@ -20,12 +20,18 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
+<<<<<<< HEAD
+=======
+  cndtn = cndtn * ( log10f ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
+  cndtn = cndtn * ( log10f ( 5.E1 ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 2.E3 ) );
+>>>>>>> master
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
 
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh1, const float sNh1, const float mNh2, const float sNh2 )
 {
+<<<<<<< HEAD
   float prr = 0, sum = 0, mean = 0, sigma = 0.06;
   //float theta = powf ( sNh1, 2 ) / mNh1;
   //float kk = mNh1 / theta;
@@ -36,6 +42,13 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
     sum = sum + powf ( ( wlkr.par[indx] - mean ) / sigma, 2 );
     indx += 1;
   }
+=======
+  float prr = 0, sum = 0;
+  float theta = powf ( sNh1, 2 ) / mNh1;
+  float kk = mNh1 / theta;
+  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh1 ) / sNh1, 2 );
+>>>>>>> master
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
 }
@@ -52,16 +65,81 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     if ( spIndx == 0 )
     {
       f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
-      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      //f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 1 )
     {
-      f = f + PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
+<<<<<<< HEAD
+=======
+    else if ( spIndx == 2 )
+    {
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 3 )
+    {
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 4 )
+    {
+      f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
+      //f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 5 )
+    {
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 6 )
+    {
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 7 )
+    {
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 8 )
+    {
+      f = f + nsa1Flx[t] * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
+      //f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 9 )
+    {
+      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 10 )
+    {
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 11 )
+    {
+      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+>>>>>>> master
   }
 }
 
@@ -70,7 +148,11 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs );
   AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
+<<<<<<< HEAD
   BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+=======
+  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+>>>>>>> master
   AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
   return 0;
 }
@@ -93,7 +175,11 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
+<<<<<<< HEAD
   const float phbsPwrlwInt[NPRS] = { 5.8, 2.9, 1.26, -5.22, 0.9, -5.1, 0.12 };
+=======
+  const float phbsPwrlwInt[NPRS] = { 5.8, 1., 3.0, 1.8, log10f ( 2.5E-5 ), 0.9, -5.1, 0.7, -5.3, 0.8, -5.2, 0.2 };
+>>>>>>> master
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -110,8 +196,17 @@ int main ( int argc, char *argv[] )
   const char *spcFl6 = argv[7];
   const char *spcFl7 = argv[8];
   const char *spcFl8 = argv[9];
+<<<<<<< HEAD
   const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
   int NNspec = 8;
+=======
+  const char *spcFl9 = argv[10];
+  const char *spcFl10 = argv[11];
+  const char *spcFl11 = argv[12];
+  const char *spcFl12 = argv[13];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 }; //
+  int NNspec = 12;
+>>>>>>> master
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
   chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );
