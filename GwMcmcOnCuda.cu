@@ -89,7 +89,7 @@ int main ( int argc, char *argv[] )
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
   const float lwrNtcdEnrg = 0.5;
-  const float hghrNtcdEnrg = 8.0;
+  const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
   const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.9, 1.3, -5.8, 0.9, -5.1, 0.12 };
 

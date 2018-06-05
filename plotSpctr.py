@@ -16,7 +16,7 @@ from matplotlib import rc, font_manager
 import pyfits
 import matplotlib.patches as mpatches
 
-#Xset.chatter = 0
+Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 Fit.statMethod = "chi"
@@ -26,7 +26,7 @@ SPECNAME = "1:1 PN_J0633_15asec.pi 2:2 PN_J0633_15asec_bkg.pi"
 nspec = 2
 
 ignore_less = "**-0.5"
-ignore_more = "8.0-**"
+ignore_more = "7.0-**"
 
 AllData(SPECNAME)
 AllData.ignore(ignore_less)
@@ -35,16 +35,16 @@ AllData.ignore("bad")
 
 gr = math.sqrt(1-2.952*1.4/10**1.08)
 scl = (288000. / 2241600.)
-bckPhIndx = 0.86
+bckPhIndx = 0.90
 bckNrm = -5.00
-nh = 0.31
+nh = 0.30
 Teff = 5.80
 Mns = 1.4
 logR = 0.92
 magfld = 1e12
-logD = 2.58
-psrPhIndx = 1.3
-psrNrm = -5.16
+logD = 2.60
+psrPhIndx = 1.16
+psrNrm = -5.21
 
 AllModels += "(nsa+powerlaw)*phabs + powerlaw"
 AllModels(1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx, scl*10**bckNrm))
@@ -81,13 +81,13 @@ for i in range(nspec):
     chiy.append(np.array(Plot.y(i+1)))
 
 E_str = .5  # energy range
-E_fin = 8.
+E_fin = 7.
 
 gs  = gridspec.GridSpec(8,1)
 ax1 = plt.subplot(gs[:5,0])
 ax2 = plt.subplot(gs[5:8,0],sharex=ax1)
 
-set_colours = ['g','r','r','r','b','b','k']
+set_colours = ['g','gray']
 
 #for i in range(nspec):
 i = 0
