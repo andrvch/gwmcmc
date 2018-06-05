@@ -9,12 +9,15 @@ matplotlib.use('Agg')
 import cudakde
 import corner
 
-samples = np.transpose(cudakde.read_data(sys.argv[1]))
+nsm = 500000
+samples = cudakde.read_data_nsmpl(sys.argv[1],nsm)
 print samples.shape
-msamples = samples[:,np.r_[0:7, 13:samples.shape[1]]]
-print msamples.shape
-fsamples = msamples[np.where(msamples[:,-1]<14000),:]
-print fsamples.shape
+samples = samples[np.r_[0:7, 13:samples.shape[0]],:]
+print samples.shape
+samples = samples[:,np.where(samples[-1,:]<14000)[0]]
+print samples.shape
+samples = np.transpose(samples)
+print samples.shape
 
-fig = corner.corner(msamples[np.where(msamples[:,-1]<14000)[0],:], no_fill_contours=False, draw_datapoints=True)
+fig = corner.corner(samples, no_fill_contours=False, draw_datapoints=True)
 fig.savefig("crnr.eps")
