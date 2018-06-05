@@ -1021,10 +1021,12 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   float xxout, yyout, sa, gr, NormD, DimConst, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
+  float R_ns;
   if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
   {
-    gr = sqrtf ( 1.0 - 2.952 * MNS / RNS );
-    sa = 2. * ( wlkrs[j].par[rIndx] - log10f ( gr ) );
+    R_ns = powf ( 10.,  wlkrs[j].par[rIndx] );
+    gr = sqrtf ( 1.0 - 2.952 * MNS / R_ns );
+    sa = powf ( R_ns, 2. );
     NormD = - 2. * ( wlkrs[j].par[dIndx] );
     DimConst = 2. * KMCMPCCM;
     xxout = 0.5 * ( enrgChnnls[i] + enrgChnnls[i+1] ) / gr;
@@ -1040,7 +1042,7 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa * powf ( 10., NormD + DimConst ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = gr * powf ( 10., tmp3 ) * sa * powf ( 10., NormD + DimConst ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
   }
 }
 

@@ -20,6 +20,7 @@ import matplotlib.patches as mpatches
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 
+#SPECNAME = "1:1 PNJ063315asecGrp15Real0.pi 2:2 PN_J0633_15asec_bkg.pi"
 SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi"
 nspec = 2
 
@@ -33,15 +34,16 @@ AllData.ignore("bad")
 
 scl = (288000. / 2241600.)
 
-AllModels += "powerlaw + phabs*nsmaxg"
-AllModels(1).setPars((0.90, scl*10**-4.61, 0.23, 5.83, 1.4, 10**1.07, 10**(2.57-3.), 1260, 1.))
-AllModels(2).setPars((0.90, 10**-4.61, 0.19, 5.96, 1.4, 10**1.07, 10**(2.57-3.), 1260, 0.))
+gr = math.sqrt(1-2.952*1.4/10**1.08)
+AllModels += "powerlaw + phabs*(nsmaxg+powerlaw)"
+AllModels(1).setPars((0.87, scl*10**-5.00, 0.30, 5.77, 1.4, 10**1.09, 10**(2.66-3.), 1260, 1., 1.1, 10**-5.3))
+AllModels(2).setPars((0.87, 10**-5.00, 0.30, 5.77, 1.4, 10**1.09, 10**(2.66-3.), 1260, 0., 1.1, 0.))
 
 AllData.show()
 AllModels.show()
 Fit.show()
 
-Fit.statMethod = "chi"
+Fit.statMethod = "cstat"
 Fit.statTest   = "chi"
 print Fit.statistic
 
@@ -104,7 +106,7 @@ ax2.set_xlabel(r'$ \rm E  \, [\, \rm keV\,] $',fontsize=10)
 ax2.set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
 
 ax1.set_xlim(E_str,E_fin)
-ax1.set_ylim(5.E-6,1.)
+ax1.set_ylim(5.E-6,2.E-1)
 ax2.set_ylim(-10.,10.)
 
 ax1.set_yscale('log',nonposy='clip')
