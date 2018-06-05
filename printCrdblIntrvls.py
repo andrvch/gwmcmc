@@ -22,10 +22,11 @@ halfqq = (100 - qqlevel)*0.5
 qqq = 0.01*qqlevel
 quantiles = [halfqq,50,qqlevel+halfqq]
 
-nsm = 500000
-samples = read_data_nsmpl(sys.argv[1],nsm)
+#nsm = 500000
+#samples = read_data_nsmpl(sys.argv[2],nsm)
+samples = read_data(sys.argv[2])
 print samples.shape
-samples = samples[np.r_[0:7, 13:samples.shape[0]],:]
+#samples = samples[np.r_[0:7, 13:samples.shape[0]],:]
 print samples.shape
 samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 print samples.shape

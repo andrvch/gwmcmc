@@ -35,6 +35,8 @@ __host__ int SpecData ( Cuparam *cdp, const int verbose, Model *mdl, Spectrum *s
     {
       printf ( ".................................................................\n" );
       printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
+      printf ( " Backscale src -- %4.0f\n", spc[i].backscal_src );
+      printf ( " Backscale bkg -- %4.0f\n", spc[i].backscal_bkg );
     }
   }
   if ( verbose == 1 )
