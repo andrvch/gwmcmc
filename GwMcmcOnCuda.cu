@@ -28,7 +28,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh1, const float sNh1, const float mNh2, const float sNh2 )
 {
-  float prr = 0, sum = 0, mean = 0, sigma = 0.06;
+  float prr = 0, sum = 0;
   float theta = powf ( sNh1, 2 ) / mNh1;
   float kk = mNh1 / theta;
   sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
@@ -84,6 +84,18 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
+    else if ( spIndx == 6 )
+    {
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    else if ( spIndx == 7 )
+    {
+      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
   }
 }
 
@@ -132,7 +144,7 @@ int main ( int argc, char *argv[] )
   const char *spcFl6 = argv[7];
   const char *spcFl7 = argv[8];
   const char *spcFl8 = argv[9];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6}; //, spcFl7, spcFl8 }; //
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8 }; //
   int NNspec = 8;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );

@@ -26,7 +26,7 @@
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 6
+#define NSPCTR 8
 #define BACKIN 1
 #define NSTAT 3
 
