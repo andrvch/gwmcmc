@@ -91,7 +91,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.7, 1., 2.9, 1.3, -5.8, 0.9, -5.1, 0.12 };
+  const float phbsPwrlwInt[NPRS] = { 5.80, 1.0, 2.6, 1.2, -5.2, 0.9, -5.0, 0.30 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];

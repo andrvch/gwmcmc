@@ -35,16 +35,16 @@ AllData.ignore("bad")
 
 gr = math.sqrt(1-2.952*1.4/10**1.08)
 scl = (288000. / 2241600.)
-bckPhIndx = 0.90
-bckNrm = -5.00
-nh = 0.30
-Teff = 5.80
+bckPhIndx = 0.91
+bckNrm = -4.99
+nh = 0.31
+Teff = 5.807
 Mns = 1.4
-logR = 0.92
+logR = 0.9232
 magfld = 1e12
-logD = 2.60
-psrPhIndx = 1.16
-psrNrm = -5.21
+logD = 2.593
+psrPhIndx = 1.25
+psrNrm = -5.186
 
 AllModels += "(nsa+powerlaw)*phabs + powerlaw"
 AllModels(1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx, scl*10**bckNrm))
