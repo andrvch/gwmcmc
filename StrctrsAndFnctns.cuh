@@ -17,7 +17,7 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 8
+#define NPRS 11
 #define NHINDX NPRS-1
 #define TINDX 0
 #define RINDX1 1
@@ -128,6 +128,7 @@ __host__ __device__ Complex MultiplyComplex ( Complex, Complex );
 __host__ __device__ Complex ConjugateComplex ( Complex );
 __host__ __device__ int PriorCondition ( const Walker );
 __host__ __device__ float PriorStatistic ( const Walker, const int, const float, const float, const float, const float );
+__host__ __device__ float GaussianAbsorption ( const float, const float, const float, const float );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );

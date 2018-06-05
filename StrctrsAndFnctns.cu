@@ -408,6 +408,16 @@ __host__ __device__ Complex ConjugateComplex ( Complex a )
   return c;
 }
 
+__host__ __device__ float GaussianAbsorption ( const float lcen, const float lwidth, const float ldepth, const float enrgHghr )
+{
+  float fctr;
+  float depth = powf ( 10., ldepth );
+  float width = powf ( 10., lwidth );
+  float cen = powf ( 10., lcen );
+  fctr = expf ( - depth / sqrtf ( 2 * PIPI ) / width * expf ( - 0.5 * powf ( ( enrgHghr - cen ) / width , 2. ) ) );
+  return fctr;
+}
+
 __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr )
 {
   float flx;

@@ -22,6 +22,8 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
   cndtn = cndtn * ( log10f ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
   cndtn = cndtn * ( log10f ( 80. ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 2200. ) );
+  cndtn = cndtn * ( log10f ( 0.7 ) < wlkr.par[3] ) * ( wlkr.par[3] < log10f ( 0.9 ) );
+  cndtn = cndtn * ( log10f ( 0.01 ) < wlkr.par[4] ) * ( wlkr.par[4] < log10f ( 0.5 ) );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -49,14 +51,15 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     if ( spIndx == 0 )
     {
       f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * GaussianAbsorption ( wlk[w].par[3], wlk[w].par[4], wlk[w].par[5], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[6], wlk[w].par[7], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[8], wlk[w].par[9], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     else if ( spIndx == 1 )
     {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[8], wlk[w].par[9], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
@@ -91,7 +94,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.80, 1.0, 2.6, 1.2, -5.2, 0.9, -5.0, 0.30 };
+  const float phbsPwrlwInt[NPRS] = { 5.80, 1.0, 2.6, log10f ( 0.8 ), log10f ( 0.15 ), -1., 1.2, -5.2, 0.9, -5.0, 0.30 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
