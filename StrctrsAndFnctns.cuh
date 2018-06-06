@@ -17,11 +17,12 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 11
+#define NPRS 12
 #define NHINDX NPRS-1
 #define TINDX 0
 #define RINDX1 1
-#define DINDX1 1
+#define GRINDX 1
+#define DINDX1 2
 #define RINDX 5
 #define DINDX2 6
 #define NELMS 30

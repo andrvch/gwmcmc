@@ -1032,16 +1032,17 @@ __global__ void MakeMatrix ( const int nmbrOfStps, const float *chn, float *cmSm
   }
 }
 
-__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int rIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  float xxout, yyout, sa, R_ns, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
   if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
   {
-    gr = sqrtf ( 1.0 - 2.952 * MNS / RNS );
-    sa = powf ( RNS, 2. );
+    gr = powf ( 10., wlkrs[j].par[grIndx] );
+    R_ns = 2.952 * MNS * 1 / ( 1 - powf ( gr, 2. ) );
+    sa = powf ( R_ns, 2. );
     xxout = log10f ( enrgChnnls[i] / gr );
     yyout = wlkrs[j].par[tIndx];
     v = FindElementIndex ( xin, M1, xxout );

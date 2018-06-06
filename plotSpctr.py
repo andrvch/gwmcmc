@@ -23,7 +23,7 @@ Fit.statMethod = "chi"
 Fit.statTest = "chi"
 
 nspec = 6
-SPECNAME = "1:1 PN_J0633_15asec.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi"
+SPECNAME = "1:1 PNJ063315asecGrp15Real0.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1J063315asecGrp15Real0.pi 4:4 M1_J0633_bkg.pi 5:5 M2J063315asecGrp15Real0.pi 6:6 M2_J0633_15asec_bkg.pi"
 AllData(SPECNAME)
 AllData.ignore("**-0.5 7.0-**")
 AllData.ignore("bad")
@@ -32,14 +32,17 @@ scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600.]
 bckPhIndx = [0.89, 1.13, 1.19]
 bckNrm = [-5.00, -5.09, -5.05]
 
-nh = 0.23
-Teff = 5.77
+gr = 0.702
 Mns = 1.4
-logR = 1.113
+Rns = 2.952 * Mns / ( 1 - gr**2 )
+
+nh = 0.21
+Teff = 5.88
+logR = math.log10(Rns)
 magfld = 1.e12
-logD = 2.89
+logD = 2.94
 psrPhIndx = 1.6
-psrNrm = -5.08
+psrNrm = -5.06
 
 #AllModels += "(nsmaxg+powerlaw)*phabs + powerlaw"
 #AllModels(1).setPars((Teff, Mns, 10**logR, 10**(logD-3.), magfld, 1., psrPhIndx, 10**psrNrm, nh, bckPhIndx1, scl1*10**bckNrm1))
@@ -72,7 +75,7 @@ mod = []
 for i in range(nspec):
     mod.append(np.array(AllModels(i+1).folded(i+1))/spcrrx[i]/2.)
 
-Plot("chi")
+Plot("resid")
 
 chix   = []
 chiy   = []
@@ -81,9 +84,11 @@ chirry = []
 for i in range(nspec):
     chix.append(np.array(Plot.x(i+1)))
     chiy.append(np.array(Plot.y(i+1)))
+    chirrx.append(np.array(Plot.xErr(i+1)))
+    chirry.append(np.array(Plot.yErr(i+1)))
 
 E_str = .5  # energy range
-E_fin = 3.
+E_fin = 5.
 
 gs  = gridspec.GridSpec(8,1)
 ax1 = plt.subplot(gs[:5,0])
@@ -94,10 +99,12 @@ set_colours = ['g','gray','b','gray','y','gray']
 for i in range(int(nspec/2.)):
     ax1.errorbar(spcx[2*i],spcy[2*i],xerr=spcrrx[2*i],yerr=spcrry[2*i],color=set_colours[2*i],fmt=' ',capsize=0)
     ax1.step(np.append(spcx[2*i][0]-spcrrx[2*i][0],spcx[2*i]+spcrrx[2*i]),np.append(mod[2*i][0],mod[2*i]),color=set_colours[2*i])
-    ax2.step(np.append(chix[2*i][0]-spcrrx[2*i][0],chix[2*i]+spcrrx[2*i]),np.append(chiy[2*i][0],chiy[2*i]),color=set_colours[2*i])
+    #ax2.step(np.append(chix[2*i][0]-spcrrx[2*i][0],chix[2*i]+spcrrx[2*i]),np.append(chiy[2*i][0],chiy[2*i]),color=set_colours[2*i])
+    ax2.errorbar(spcx[2*i],chiy[2*i],xerr=spcrrx[2*i],yerr=chirry[2*i],color=set_colours[2*i],fmt=' ',capsize=0)
     ax1.errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=set_colours[2*i+1],fmt=' ',capsize=0)
     ax1.step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=set_colours[2*i+1])
-    ax2.step(np.append(chix[2*i+1][0]-spcrrx[2*i+1][0],chix[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*chiy[2*i+1][0],scl[i]*chiy[2*i+1]),color=set_colours[2*i+1])
+    #ax2.step(np.append(chix[2*i+1][0]-spcrrx[2*i+1][0],chix[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*chiy[2*i+1][0],scl[i]*chiy[2*i+1]),color=set_colours[2*i+1])
+    ax2.errorbar(spcx[2*i+1],scl[i]*chiy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*chirry[2*i+1],color=set_colours[2*i+1],fmt=' ',capsize=0)
 
 ax2.plot([E_str,E_fin],[0.0,0.0],'--',color='k')
 
