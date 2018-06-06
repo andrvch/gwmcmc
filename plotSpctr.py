@@ -33,42 +33,20 @@ AllData.ignore(ignore_less)
 AllData.ignore(ignore_more)
 AllData.ignore("bad")
 
-<<<<<<< HEAD
-gr = math.sqrt(1-2.952*1.4/10**1.08)
 scl1 = 288000. / 2241600.
 scl2 = 271732. / 2207424.
-bckPhIndx1 = 0.88
-bckNrm1 = -5.00
-bckPhIndx2 = 1.165
-bckNrm2 = -5.092
-nh = 0.311
-Teff = 5.83
-Mns = 1.4
-logR = 0.919
-magfld = 1e12
-logD = 2.597
-psrPhIndx = 1.246
-psrNrm = -5.193
-
-AllModels += "(nsa+powerlaw)*phabs + powerlaw"
-AllModels(1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx1, scl1*10**bckNrm1))
-AllModels(2).setPars((Teff, Mns, 10**logR, magfld, 0., psrPhIndx, 0., nh, bckPhIndx1, 10**bckNrm1))
-AllModels(3).setPars((Teff, Mns, 10**logR, magfld, 10**(-2*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx2, scl2*10**bckNrm2))
-=======
-scl1 = 288000. / 2241600.
-scl2 = 271732. / 2207424.
-bckPhIndx1 = 0.90
+bckPhIndx1 = 0.89
 bckNrm1 = -5.00
 bckPhIndx2 = 1.17
 bckNrm2 = -5.09
-nh = 0.11
-Teff = 5.88
+nh = 0.24
+Teff = 5.78
 Mns = 1.4
-logR = 1.17
+logR = 1.113
 magfld = 1.e12
-logD = 3.26
-psrPhIndx = 1.27
-psrNrm = -5.22
+logD = 2.89
+psrPhIndx = 1.2
+psrNrm = -5.2
 
 #AllModels += "(nsmaxg+powerlaw)*phabs + powerlaw"
 #AllModels(1).setPars((Teff, Mns, 10**logR, 10**(logD-3.), magfld, 1., psrPhIndx, 10**psrNrm, nh, bckPhIndx1, scl1*10**bckNrm1))
@@ -80,7 +58,6 @@ AllModels += "(nsa+powerlaw)*phabs + powerlaw"
 AllModels(1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2.*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx1, scl1*10**bckNrm1))
 AllModels(2).setPars((Teff, Mns, 10**logR, magfld, 0., psrPhIndx, 0., nh, bckPhIndx1, 10**bckNrm1))
 AllModels(3).setPars((Teff, Mns, 10**logR, magfld, 10**(-2.*logD), psrPhIndx, 10**psrNrm, nh, bckPhIndx2, scl2*10**bckNrm2))
->>>>>>> two_spectra+background
 AllModels(4).setPars((Teff, Mns, 10**logR, magfld, 0., psrPhIndx, 0., nh, bckPhIndx2, 10**bckNrm2))
 
 Fit.show()
@@ -131,17 +108,6 @@ i = 1
 ax1.errorbar(spcx[i],scl1*spcy[i],xerr=spcrrx[i],yerr=scl1*spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
 ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(scl1*mod[i][0],scl1*mod[i]),color=set_colours[i])
 ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(scl1*chiy[i][0],scl1*chiy[i]),color=set_colours[i])
-<<<<<<< HEAD
-=======
-i = 2
-ax1.errorbar(spcx[i],spcy[i],xerr=spcrrx[i],yerr=spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
-ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(mod[i][0],mod[i]),color=set_colours[i])
-ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(chiy[i][0],chiy[i]),color=set_colours[i])
-i = 3
-ax1.errorbar(spcx[i],scl2*spcy[i],xerr=spcrrx[i],yerr=scl2*spcrry[i],color=set_colours[i],fmt=' ',capsize=0)
-ax1.step(np.append(spcx[i][0]-spcrrx[i][0],spcx[i]+spcrrx[i]),np.append(scl2*mod[i][0],scl2*mod[i]),color=set_colours[i])
-ax2.step(np.append(chix[i][0]-spcrrx[i][0],chix[i]+spcrrx[i]),np.append(scl2*chiy[i][0],scl2*chiy[i]),color=set_colours[i])
->>>>>>> two_spectra+background
 
 ax2.plot([E_str,E_fin],[0.0,0.0],'--',color='k')
 

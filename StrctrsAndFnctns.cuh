@@ -17,20 +17,16 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-<<<<<<< HEAD
-#define NPRS 11
-=======
-#define NPRS 9
->>>>>>> two_spectra+background
+#define NPRS 7
 #define NHINDX NPRS-1
 #define TINDX 0
 #define RINDX1 1
-#define DINDX1 2
+#define DINDX1 1
 #define RINDX 5
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 4
+#define NSPCTR 2
 #define BACKIN 1
 #define NSTAT 3
 

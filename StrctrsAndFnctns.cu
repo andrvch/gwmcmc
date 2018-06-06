@@ -1036,11 +1036,10 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  float xxout, yyout, sa, R_ns, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
   if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
   {
-    //R_ns = powf ( 10.,  wlkrs[j].par[rIndx] );
     gr = sqrtf ( 1.0 - 2.952 * MNS / RNS );
     sa = powf ( RNS, 2. );
     xxout = log10f ( enrgChnnls[i] / gr );
