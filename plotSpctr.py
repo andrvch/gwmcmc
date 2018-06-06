@@ -33,21 +33,20 @@ AllData.ignore(ignore_less)
 AllData.ignore(ignore_more)
 AllData.ignore("bad")
 
-gr = math.sqrt(1-2.952*1.4/10**1.08)
 scl1 = 288000. / 2241600.
 scl2 = 271732. / 2207424.
-bckPhIndx1 = 0.892
-bckNrm1 = -4.997
-bckPhIndx2 = 1.133
-bckNrm2 = -5.086
-nh = 0.296
-Teff = 5.753
+bckPhIndx1 = 0.90
+bckNrm1 = -5.00
+bckPhIndx2 = 1.17
+bckNrm2 = -5.09
+nh = 0.11
+Teff = 5.88
 Mns = 1.4
-logR = 0.927
+logR = 1.17
 magfld = 1.e12
-logD = 2.62
-psrPhIndx = 1.184
-psrNrm = -5.248
+logD = 3.26
+psrPhIndx = 1.27
+psrNrm = -5.22
 
 #AllModels += "(nsmaxg+powerlaw)*phabs + powerlaw"
 #AllModels(1).setPars((Teff, Mns, 10**logR, 10**(logD-3.), magfld, 1., psrPhIndx, 10**psrNrm, nh, bckPhIndx1, scl1*10**bckNrm1))

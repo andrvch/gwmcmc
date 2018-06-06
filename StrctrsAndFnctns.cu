@@ -90,8 +90,8 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc )
     cudaMallocManaged ( ( void ** ) &spc[i].crssctns, spc[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].absrptnFctrs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spc[i].nsa1Flxs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spc[i].nsa2Flxs, spc[i].nmbrOfEnrgChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nsa1Flxs, ( spc[i].nmbrOfEnrgChnnls + 1 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nsa2Flxs, ( spc[i].nmbrOfEnrgChnnls + 1 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
@@ -419,6 +419,13 @@ __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, 
   {
     flx = powf ( 10, nrmlztn ) * ( logf ( enrgHghr ) - logf ( enrgLwr ) );
   }
+  return flx;
+}
+
+__host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 )
+{
+  float flx;
+  flx = 0.5 * ( flx1 + flx2 ) * ( en2 - en1 );
   return flx;
 }
 
@@ -1015,20 +1022,18 @@ __global__ void MakeMatrix ( const int nmbrOfStps, const float *chn, float *cmSm
   }
 }
 
-__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int rIndx, const int dIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int rIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  float xxout, yyout, sa, gr, NormD, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  float xxout, yyout, sa, R_ns, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
-  float R_ns;
   if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
   {
-    R_ns = powf ( 10.,  wlkrs[j].par[rIndx] );
-    gr = sqrtf ( 1.0 - 2.952 * MNS / R_ns );
-    sa = powf ( R_ns, 2. );
-    NormD = - 2. * ( wlkrs[j].par[dIndx] - KMCMPCCM );
-    xxout = log10f ( enrgChnnls[i+1] / gr );
+    //R_ns = powf ( 10.,  wlkrs[j].par[rIndx] );
+    gr = sqrtf ( 1.0 - 2.952 * MNS / RNS );
+    sa = powf ( RNS, 2. );
+    xxout = log10f ( enrgChnnls[i] / gr );
     yyout = wlkrs[j].par[tIndx];
     v = FindElementIndex ( xin, M1, xxout );
     w = FindElementIndex ( yin, M2, yyout );
@@ -1041,7 +1046,7 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa * powf ( 10., NormD ) * ( enrgChnnls[i+1] - enrgChnnls[i] );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa;
   }
 }
 
