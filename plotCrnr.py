@@ -13,11 +13,7 @@ nsm = 500000
 #samples = cudakde.read_data_nsmpl(sys.argv[1],nsm)
 samples = cudakde.read_data(sys.argv[1])
 print samples.shape
-<<<<<<< HEAD
-samples = samples[np.r_[0:8, 10:samples.shape[0]],:]
-=======
-samples = samples[np.r_[0:5, 9:samples.shape[0]],:]
->>>>>>> two_spectra+background
+samples = samples[np.r_[0:4, 8:samples.shape[0]],:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
