@@ -17,7 +17,11 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
+<<<<<<< HEAD
 #define NPRS 11
+=======
+#define NPRS 9
+>>>>>>> two_spectra+background
 #define NHINDX NPRS-1
 #define TINDX 0
 #define RINDX1 1
@@ -26,7 +30,7 @@
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 2
+#define NSPCTR 4
 #define BACKIN 1
 #define NSTAT 3
 
@@ -105,7 +109,7 @@ struct Model
   const int nmbrOfDistBins = 442;
   const int numRedCol = 4;
   float *RedData, *Dist, *EBV, *errDist, *errEBV;
-  const char *nsaFl = "nsa_spec_B_1e13G.dat";
+  const char *nsaFl = "nsa_spec_B_1e12G.dat";
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
@@ -130,6 +134,7 @@ __host__ __device__ int PriorCondition ( const Walker );
 __host__ __device__ float PriorStatistic ( const Walker, const int, const float, const float, const float, const float );
 __host__ __device__ float GaussianAbsorption ( const float, const float, const float, const float );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
+__host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
 __host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
@@ -188,7 +193,7 @@ __global__ void ReturnChainFunction ( const int, const int, const int, const Wal
 __global__ void ReturnCentralChainFunction ( const int, const int, const float*, const float*, float* );
 __global__ void NormalizeChain ( const int, float* );
 __global__ void MakeMatrix ( const int, const float*, float* );
-__global__ void BilinearInterpolation ( const int, const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
+__global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float*, float* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

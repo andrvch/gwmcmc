@@ -20,10 +20,13 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
+<<<<<<< HEAD
   cndtn = cndtn * ( log10f ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
   cndtn = cndtn * ( log10f ( 80. ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 2200. ) );
   cndtn = cndtn * ( log10f ( 0.7 ) < wlkr.par[3] ) * ( wlkr.par[3] < log10f ( 0.9 ) );
   cndtn = cndtn * ( log10f ( 0.01 ) < wlkr.par[4] ) * ( wlkr.par[4] < log10f ( 0.5 ) );
+=======
+>>>>>>> two_spectra+background
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -33,7 +36,7 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   float prr = 0, sum = 0;
   float theta = powf ( sNh1, 2 ) / mNh1;
   float kk = mNh1 / theta;
-  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh1 ) / sNh1, 2 );
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
@@ -44,22 +47,50 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int e = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
   int t = e + w * nmbrOfEnrgChnnls;
-  float f = 0;
+  float f = 0, NormD, intNsaFlx;
   float scl = backscal_src / backscal_bkg;
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
   {
     if ( spIndx == 0 )
     {
+<<<<<<< HEAD
       f = f + nsa1Flx[t]; // * powf ( 10., LOGPLANCK - log10f ( en[e+1] ) );
       f = f * GaussianAbsorption ( wlk[w].par[3], wlk[w].par[4], wlk[w].par[5], en[e+1] );
       f = f + PowerLaw ( wlk[w].par[6], wlk[w].par[7], en[e], en[e+1] );
       f = f * absrptn[t];
       f = f + scl * PowerLaw ( wlk[w].par[8], wlk[w].par[9], en[e], en[e+1] );
+=======
+      NormD = powf ( 10., - 2. * ( wlk[w].par[DINDX1] - KMCMPCCM ) );
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      f = f + NormD * intNsaFlx;
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
+>>>>>>> two_spectra+background
       flx[t] = f * arf[e];
     }
-    else if ( spIndx == 1 )
+    if ( spIndx == 1 )
     {
+<<<<<<< HEAD
       f = f + PowerLaw ( wlk[w].par[8], wlk[w].par[9], en[e], en[e+1] );
+=======
+      f = f + PowerLaw ( wlk[w].par[4], wlk[w].par[5], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 2 )
+    {
+      NormD = powf ( 10., - 2. * ( wlk[w].par[DINDX1] - KMCMPCCM ) );
+      intNsaFlx = NormD * IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      f = f + intNsaFlx;
+      f = f + PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[6], wlk[w].par[7], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 3 )
+    {
+      f = f + PowerLaw ( wlk[w].par[6], wlk[w].par[7], en[e], en[e+1] );
+>>>>>>> two_spectra+background
       flx[t] = f * arf[e];
     }
   }
@@ -68,11 +99,10 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
 __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, const int indx, Spectrum spec )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  dim3 dimGrid = Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs );
-  AssembleArrayOfAbsorptionFactors <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  //BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  BilinearInterpolation <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  AssembleArrayOfModelFluxes <<< dimGrid, dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
+  AssembleArrayOfAbsorptionFactors <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
+  //BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, RINDX1, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  AssembleArrayOfModelFluxes <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
   return 0;
 }
 
@@ -94,7 +124,11 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
+<<<<<<< HEAD
   const float phbsPwrlwInt[NPRS] = { 5.80, 1.0, 2.6, log10f ( 0.8 ), log10f ( 0.15 ), -1., 1.2, -5.2, 0.9, -5.0, 0.30 };
+=======
+  const float phbsPwrlwInt[NPRS] = { 6.0, 3.5, 1.0, -5.3, 0.90, -5.0, 1.2, -5.1, 0.17 };
+>>>>>>> two_spectra+background
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -105,8 +139,10 @@ int main ( int argc, char *argv[] )
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
-  int NNspec = 2;
+  const char *spcFl3 = argv[4];
+  const char *spcFl4 = argv[5];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 };
+  int NNspec = 4;
   chn[0].thrdNm = argv[NNspec+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
   chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );
