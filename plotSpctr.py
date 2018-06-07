@@ -33,29 +33,29 @@ AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
 
-bckIndx = [0.92, 0.87, 1.01, 0.88, 1.12, 1.13 ]
-bckNrm = [-5.00, -5.14, -5.09, -5.00, -5.08, -5.05]
+bckIndx = [0.90, 1.12, 1.14, 0.88, 1.12, 1.13 ]
+bckNrm = [-5.00, -5.08, -5.06, -5.00, -5.08, -5.05]
 
-gr = 10**-0.08
 Mns = 1.4
-Rns = 2.952 * Mns / ( 1 - gr**2 )
+Rns = 13.
 
-nh = 0.21
-Teff = 5.77
+nh = 0.09
+Teff = 5.93
 logR = math.log10(Rns)
+logN = 1.14 - logR
 magfld = 1.e12
-logD = 2.88
-psrIndx = 1.33
-psrNrm = -5.19
-pwnIndx = 1.84
-pwnNrm = -4.57
+logD = 3.48
+psrIndx = 1.3
+psrNrm = -5.26
+pwnIndx = 1.56
+pwnNrm = -4.698
 
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
-    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, magfld, 10**(-2.*logD), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
+    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, magfld, 10**(2.*(logN-logD)), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
     AllModels(2*i+2).setPars((Teff, Mns, 10**logR, magfld, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
-    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, magfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i+int(nspec/2./2.)], scl[i+int(nspec/2./2.)]*10**bckNrm[i+int(nspec/2./2.)]))
-    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, magfld, 0., pwnIndx, 0., nh, bckIndx[i+int(nspec/2./2.)], 10**bckNrm[i+int(nspec/2./2.)]))
+    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, magfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
+    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, magfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
 
 Fit.show()
 print Fit.statistic
