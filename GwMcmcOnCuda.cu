@@ -94,36 +94,36 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     {
       f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[13], wlk[w].par[14], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 7 )
     {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[13], wlk[w].par[14], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 8 )
     {
       f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[15], wlk[w].par[16], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 9 )
     {
-      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[15], wlk[w].par[16], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 10 )
     {
       f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[17], wlk[w].par[18], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 11 )
     {
-      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[17], wlk[w].par[18], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
@@ -157,7 +157,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 0.83 ), 3., 1.1, -5.3, 1.8, -4.5, 0.90, -5.0, 1.0, -5.1, 1.05, -5.05, 0.17 };
+  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 0.83 ), 3., 1.1, -5.3, 1.8, -4.5, 0.90, -5.0, 0.91, -5.01, 0.92, -5.02, 0.89, -5.03, 1.05, -5.1, 1.17, -5.2, 0.17 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
