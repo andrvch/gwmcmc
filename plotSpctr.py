@@ -23,7 +23,8 @@ Fit.statMethod = "chi"
 Fit.statTest = "chi"
 
 nspec = 6
-SPECNAME = "1:1 PNJ063315asecGrp15Real0.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1J063315asecGrp15Real0.pi 4:4 M1_J0633_bkg.pi 5:5 M2J063315asecGrp15Real0.pi 6:6 M2_J0633_15asec_bkg.pi"
+#SPECNAME = "1:1 PNJ063315asecGrp15Real0.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1J063315asecGrp15Real0.pi 4:4 M1_J0633_bkg.pi 5:5 M2J063315asecGrp15Real0.pi 6:6 M2_J0633_15asec_bkg.pi"
+SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi"
 AllData(SPECNAME)
 AllData.ignore("**-0.5 7.0-**")
 AllData.ignore("bad")
