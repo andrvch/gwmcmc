@@ -23,7 +23,6 @@ Fit.statMethod = "chi"
 Fit.statTest = "chi"
 
 nspec = 6
-#SPECNAME = "1:1 PNJ063315asecGrp15Real0.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1J063315asecGrp15Real0.pi 4:4 M1_J0633_bkg.pi 5:5 M2J063315asecGrp15Real0.pi 6:6 M2_J0633_15asec_bkg.pi"
 SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi"
 AllData(SPECNAME)
 AllData.ignore("**-0.5 7.0-**")
@@ -44,12 +43,6 @@ magfld = 1.e12
 logD = 2.94
 psrPhIndx = 1.6
 psrNrm = -5.06
-
-#AllModels += "(nsmaxg+powerlaw)*phabs + powerlaw"
-#AllModels(1).setPars((Teff, Mns, 10**logR, 10**(logD-3.), magfld, 1., psrPhIndx, 10**psrNrm, nh, bckPhIndx1, scl1*10**bckNrm1))
-#AllModels(2).setPars((Teff, Mns, 10**logR, 10**(logD-3.), magfld, 0., psrPhIndx, 0., nh, bckPhIndx1, 10**bckNrm1))
-#AllModels(3).setPars((Teff, Mns, 10**logR, 10**(logD-3.), magfld, 1., psrPhIndx, 10**psrNrm, nh, bckPhIndx2, scl2*10**bckNrm2))
-#AllModels(4).setPars((Teff, Mns, 10**logR, 10**(logD-3.), magfld, 0., psrPhIndx, 0., nh, bckPhIndx2, 10**bckNrm2))
 
 AllModels += "(nsa+powerlaw)*phabs + powerlaw"
 for i in range(int(nspec/2.)):
