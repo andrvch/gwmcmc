@@ -52,12 +52,12 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + NormD * intNsaFlx;
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 1 )
     {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 2 )
@@ -67,12 +67,12 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + NormD * intNsaFlx;
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 3 )
     {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 4 )
@@ -82,12 +82,48 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + NormD * intNsaFlx;
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 5 )
     {
+      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 6 )
+    {
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 7 )
+    {
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 8 )
+    {
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 9 )
+    {
       f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 10 )
+    {
+      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 11 )
+    {
+      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
