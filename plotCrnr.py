@@ -9,7 +9,7 @@ matplotlib.use('Agg')
 import cudakde
 import corner
 
-nsm = 500000
+#nsm = 500000
 #samples = cudakde.read_data_nsmpl(sys.argv[1],nsm)
 samples = cudakde.read_data(sys.argv[1])
 print samples.shape
@@ -21,4 +21,4 @@ samples = np.transpose(samples)
 print samples.shape
 
 fig = corner.corner(samples, no_fill_contours=False, draw_datapoints=True)
-fig.savefig('crnr.eps')
+fig.savefig('psrcrnr.eps')

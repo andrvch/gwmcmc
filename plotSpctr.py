@@ -29,20 +29,20 @@ AllData.ignore("**-0.5 7.0-**")
 AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600.]
-bckPhIndx = [0.89, 1.13, 1.19]
-bckNrm = [-5.00, -5.09, -5.05]
+bckPhIndx = [0.89, 1.13, 1.21]
+bckNrm = [-5.01, -5.09, -5.04]
 
-gr = 0.702
+gr = 10**-0.089
 Mns = 1.4
 Rns = 2.952 * Mns / ( 1 - gr**2 )
 
-nh = 0.21
-Teff = 5.88
+nh = 0.23
+Teff = 5.78
 logR = math.log10(Rns)
 magfld = 1.e12
-logD = 2.94
-psrPhIndx = 1.6
-psrNrm = -5.06
+logD = 2.88
+psrPhIndx = 1.67
+psrNrm = -5.05
 
 AllModels += "(nsa+powerlaw)*phabs + powerlaw"
 for i in range(int(nspec/2.)):
@@ -93,11 +93,9 @@ set_colours = ['g','gray','b','gray','y','gray']
 for i in range(int(nspec/2.)):
     ax1.errorbar(spcx[2*i],spcy[2*i],xerr=spcrrx[2*i],yerr=spcrry[2*i],color=set_colours[2*i],fmt=' ',capsize=0)
     ax1.step(np.append(spcx[2*i][0]-spcrrx[2*i][0],spcx[2*i]+spcrrx[2*i]),np.append(mod[2*i][0],mod[2*i]),color=set_colours[2*i])
-    #ax2.step(np.append(chix[2*i][0]-spcrrx[2*i][0],chix[2*i]+spcrrx[2*i]),np.append(chiy[2*i][0],chiy[2*i]),color=set_colours[2*i])
     ax2.errorbar(spcx[2*i],chiy[2*i],xerr=spcrrx[2*i],yerr=chirry[2*i],color=set_colours[2*i],fmt=' ',capsize=0)
     ax1.errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=set_colours[2*i+1],fmt=' ',capsize=0)
     ax1.step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=set_colours[2*i+1])
-    #ax2.step(np.append(chix[2*i+1][0]-spcrrx[2*i+1][0],chix[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*chiy[2*i+1][0],scl[i]*chiy[2*i+1]),color=set_colours[2*i+1])
     ax2.errorbar(spcx[2*i+1],scl[i]*chiy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*chirry[2*i+1],color=set_colours[2*i+1],fmt=' ',capsize=0)
 
 ax2.plot([E_str,E_fin],[0.0,0.0],'--',color='k')
@@ -119,5 +117,5 @@ setp(ax1.get_xticklabels(), visible=False)
 
 ax1.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
-plt.savefig('spctr.eps')
+plt.savefig('psrspctr.eps')
 #plt.show()
