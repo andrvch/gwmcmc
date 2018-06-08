@@ -2,27 +2,48 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
-from xspec import *
+import math
+import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import math
-import numpy as np
 from pylab import *
 import matplotlib.gridspec as gridspec
-import matplotlib as mpl
-from matplotlib.font_manager import FontProperties
-from matplotlib import rc, font_manager
-import pyfits
-import matplotlib.patches as mpatches
+from matplotlib.ticker import LogFormatterSciNotation
+from matplotlib import ticker
+from xspec import *
 
-#Xset.chatter = 0
+class CustomTicker(LogFormatterSciNotation):
+    def __call__(self, x, pos=None):
+        if x not in [0.1,1,10]:
+            return LogFormatterSciNotation.__call__(self,x, pos=None)
+        else:
+            return "{x:g}".format(x=x)
+
+def ticks_format(value, index):
+    """
+    get the value and returns the value as:
+       integer: [0,99]
+       1 digit float: [0.1, 0.99]
+       n*10^m: otherwise
+    To have all the number of the same size they are all returned as latex strings
+    """
+    exp = np.floor(np.log10(value))
+    base = value/10**exp
+    if exp == 0 or exp == 1:
+        return '${0:d}$'.format(int(value))
+    if exp == -1:
+        return '${0:.1f}$'.format(value)
+    else:
+        return '${0:d}\\times10^{{{1:d}}}$'.format(int(base), int(exp))
+
+Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 Fit.statMethod = "chi"
 Fit.statTest = "chi"
 
-erange = [0.5, 10.0]
+erange = [0.5, 8.0]
 
 SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
 
@@ -112,10 +133,10 @@ for i in range(int(nspec/2./2.)):
     ax[0].step(np.append(spcx[2*i][0]-spcrrx[2*i][0],spcx[2*i]+spcrrx[2*i]),np.append(mod[2*i][0],mod[2*i]),color=setcolours[i])
     ax[1].errorbar(spcx[2*i+int(nspec/2.)],spcy[2*i+int(nspec/2.)],xerr=spcrrx[2*i+int(nspec/2.)],yerr=spcrry[2*i+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
     ax[1].step(np.append(spcx[2*i+int(nspec/2.)][0]-spcrrx[2*i+int(nspec/2.)][0],spcx[2*i+int(nspec/2.)]+spcrrx[2*i+int(nspec/2.)]),np.append(mod[2*i+int(nspec/2.)][0],mod[2*i+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)])
-    ax[2].errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=setcolours[i],fmt=' ',capsize=0)
-    ax[2].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*spcy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*spcrry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
-    ax[2].step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=setcolours[i])
-    ax[2].step(np.append(spcx[2*i+1+int(nspec/2.)][0]-spcrrx[2*i+1+int(nspec/2.)][0],spcx[2*i+1+int(nspec/2.)]+spcrrx[2*i+1+int(nspec/2.)]),np.append(scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)][0],scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)])
+    ax[2].errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=setcolours[i],fmt=' ',capsize=0,alpha=0.5)
+    ax[2].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*spcy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*spcrry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0,alpha=0.5)
+    ax[2].step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=setcolours[i],alpha=0.5)
+    ax[2].step(np.append(spcx[2*i+1+int(nspec/2.)][0]-spcrrx[2*i+1+int(nspec/2.)][0],spcx[2*i+1+int(nspec/2.)]+spcrrx[2*i+1+int(nspec/2.)]),np.append(scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)][0],scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)],alpha=0.5)
     ax[3].errorbar(spcx[2*i],chiy[2*i],xerr=spcrrx[2*i],yerr=chirry[2*i],color=setcolours[i],fmt=' ',capsize=0)
     ax[3].errorbar(spcx[2*i+int(nspec/2./2.)],chiy[2*i+int(nspec/2./2.)],xerr=spcrrx[2*i+int(nspec/2./2.)],yerr=chirry[2*i+int(nspec/2./2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
     ax[3].errorbar(spcx[2*i+1],scl[i]*chiy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*chirry[2*i+1],color=setcolours[i],fmt=' ',capsize=0)
@@ -123,19 +144,27 @@ for i in range(int(nspec/2./2.)):
 
 ax[3].plot(erange,[0.0,0.0],'--',color='k')
 
+subs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0]
+
 for i in range(4):
     ax[i].set_xlim(erange[0],erange[1])
     ax[i].set_xscale('log')
+    #ax[i].xaxis.set_major_formatter(CustomTicker())
+    ax[i].xaxis.set_minor_locator(ticker.LogLocator(subs=subs)) #set the ticks position
+    ax[i].xaxis.set_major_formatter(ticker.NullFormatter())   # remove the major ticks
+
+ax[3].xaxis.set_minor_formatter(ticker.FuncFormatter(ticks_format))  #add the custom ticks
+
+plt.setp(ax[3].get_xticklabels(minor=True), visible=True)
 
 for i in range(3):
     ax[i].set_yscale('log',nonposy='clip')
-    #ax[i].xaxis.set_major_formatter(LogFormatter(base=10.0,labelOnlyBase=True))
-    #ax[i].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    #ax[i].yaxis.set_major_formatter(LogFormatterSciNotation())
 
 setp([a.get_xticklabels() for a in ax[:4-1]], visible=False)
 
 #ax[i].set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
-#ax[3].set_xlabel(r'$ \rm E  \, [\, \rm keV\,] $',fontsize=10)
+ax[3].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
 #ax[3].set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
 
 plt.savefig('psrpwnspctr.eps')
