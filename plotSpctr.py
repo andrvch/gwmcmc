@@ -16,18 +16,23 @@ from matplotlib import rc, font_manager
 import pyfits
 import matplotlib.patches as mpatches
 
-Xset.chatter = 0
+#Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 Fit.statMethod = "chi"
 Fit.statTest = "chi"
 
+erange = [0.5, 10.0]
+
 SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
 
-erange = [0.5, 5.0]
 nspec = 12
 
 AllData(SPECNAME)
+
+for i in range(nspec):
+    AllData(i+1).background = " "
+
 AllData.ignore("**-%2.1f %2.1f-**"%(erange[0],erange[1]))
 AllData.ignore("bad")
 
@@ -39,16 +44,16 @@ bckNrm = [-5.00, -5.08, -5.06, -5.00, -5.08, -5.05]
 Mns = 1.4
 Rns = 13.
 
-nh = 0.09
-Teff = 5.93
+nh = 0.20
+Teff = 5.76
 logR = math.log10(Rns)
-logN = 1.14 - logR
+logN = 1.08 - logR
 magfld = 1.e12
-logD = 3.48
-psrIndx = 1.3
-psrNrm = -5.26
-pwnIndx = 1.56
-pwnNrm = -4.698
+logD = 2.88
+psrIndx = 1.84
+psrNrm = -4.97
+pwnIndx = 1.82
+pwnNrm = -4.58
 
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
@@ -79,7 +84,7 @@ mod = []
 for i in range(nspec):
     mod.append(np.array(AllModels(i+1).folded(i+1))/spcrrx[i]/2.)
 
-Plot("resid")
+Plot("delchi")
 
 chix = []
 chiy = []
@@ -124,8 +129,8 @@ for i in range(4):
 
 for i in range(3):
     ax[i].set_yscale('log',nonposy='clip')
-    ax[i].xaxis.set_major_formatter(LogFormatter(base=10.0,labelOnlyBase=False))
-    ax[i].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    #ax[i].xaxis.set_major_formatter(LogFormatter(base=10.0,labelOnlyBase=True))
+    #ax[i].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
 setp([a.get_xticklabels() for a in ax[:4-1]], visible=False)
 
