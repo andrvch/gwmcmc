@@ -25,13 +25,13 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   return cndtn;
 }
 
-__host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float mNh1, const float sNh1, const float mNh2, const float sNh2 )
+__host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float nhMd, const float nhSg )
 {
   float prr = 0, sum = 0;
-  float theta = powf ( sNh1, 2 ) / mNh1;
-  float kk = mNh1 / theta;
+  float theta = powf ( nhSg, 2 ) / nhMd;
+  float kk = nhMd / theta;
   sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
-  //sum = sum + powf ( ( wlkr.par[NHINDX] - mNh1 ) / sNh1, 2 );
+  //sum = sum + powf ( ( wlkr.par[NHINDX] - nhMd ) / nhSg, 2 );
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
 }
@@ -139,11 +139,10 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   return 0;
 }
 
-__host__ int Priors ( const Model *mdl, Chain *chn )
+__host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, float *nhMd, float *nhSg, float *prrs )
 {
-  int blcks = Blocks ( chn[0].nmbrOfWlkrs / 2 );
-  LinearInterpolation <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, mdl[0].nmbrOfDistBins, DINDX1, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, chn[0].prpsdWlkrs, chn[0].mNh1, chn[0].sNh1 );
-  AssembleArrayOfPriors <<< blcks, THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].mNh1, chn[0].sNh1, chn[0].mNh2, chn[0].sNh2, chn[0].prrs );
+  LinearInterpolation <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, mdl[0].nmbrOfDistBins, DINDX1, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, wlkrs, nhMd, nhSg );
+  AssembleArrayOfPriors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, wlkrs, nhMd, nhSg, prrs );
   return 0;
 }
 
@@ -203,6 +202,7 @@ int main ( int argc, char *argv[] )
   if ( chn[0].thrdIndx == 0 )
   {
     InitAtRandom ( cdp, chn );
+    Priors ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].nhMd, chn[0].nhSg, chn[0].prrs );
     for ( int i = 0; i < NSPCTR; i++ )
     {
       ModelFluxes ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, i, spc[i] );
@@ -231,7 +231,7 @@ int main ( int argc, char *argv[] )
     while ( sbstIndx < 2 )
     {
       Propose ( stpIndx, sbstIndx, chn );
-      Priors ( mdl, chn );
+      Priors ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].nhMd, chn[0].nhSg, chn[0].prpsdPrrs );
       for ( int i = 0; i < NSPCTR; i++ )
       {
         ModelFluxes ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, i, spc[i] );
@@ -283,7 +283,7 @@ int main ( int argc, char *argv[] )
   /* Write results to a file */
   SimpleWriteDataFloat ( "Autocor.out", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
   SimpleWriteDataFloat ( "AutocorCM.out", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
-  WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
+  WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs, chn[0].chnOfPrrs );
 
   /* Destroy cuda related contexts and things: */
   DestroyAllTheCudaStaff ( cdp );

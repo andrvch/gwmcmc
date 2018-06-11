@@ -101,13 +101,13 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc )
 
 __host__ int ToChain ( const int stpIndx, Chain *chn )
 {
-  WriteWalkersAndStatisticsToChain <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, stpIndx, chn[0].wlkrs, chn[0].sttstcs, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs );
+  WriteWalkersAndStatisticsToChain <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, stpIndx, chn[0].wlkrs, chn[0].sttstcs, chn[0].prrs, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs, chn[0].chnOfPrrs );
   return 0;
 }
 
 __host__ int Update ( const int stpIndx, const int sbstIndx, Chain *chn )
 {
-  UpdateWalkers <<< Blocks ( chn[0].nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, stpIndx, sbstIndx, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prrs, chn[0].zRndmVls, chn[0].rndmVls, chn[0].wlkrs, chn[0].sttstcs );
+  UpdateWalkers <<< Blocks ( chn[0].nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, stpIndx, sbstIndx, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prpsdPrrs, chn[0].zRndmVls, chn[0].rndmVls, chn[0].wlkrs, chn[0].sttstcs, chn[0].prrs );
   return 0;
 }
 
@@ -119,7 +119,7 @@ __host__ int Propose ( const int stpIndx, const int sbstIndx, Chain *chn )
 
 __host__ int InitFromLast ( Chain *chn )
 {
-  InitializeWalkersAndStatisticsFromLastChain <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs );
+  InitializeWalkersAndStatisticsFromLastChain <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs, chn[0].wlkrs, chn[0].sttstcs, chn[0].prrs );
   return 0;
 }
 
@@ -199,14 +199,14 @@ __host__ void FreeChain ( const Chain *chn )
   cudaFree ( chn[0].prpsdWlkrs );
   cudaFree ( chn[0].chnOfWlkrs );
   cudaFree ( chn[0].sttstcs );
-  cudaFree ( chn[0].prpsdSttstcs );
-  cudaFree ( chn[0].zRndmVls );
   cudaFree ( chn[0].prrs );
+  cudaFree ( chn[0].prpsdSttstcs );
+  cudaFree ( chn[0].prpsdPrrs );
+  cudaFree ( chn[0].zRndmVls );
   cudaFree ( chn[0].chnOfSttstcs );
-  cudaFree ( chn[0].mNh1 );
-  cudaFree ( chn[0].sNh1 );
-  cudaFree ( chn[0].mNh2 );
-  cudaFree ( chn[0].sNh2 );
+  cudaFree ( chn[0].chnOfPrrs );
+  cudaFree ( chn[0].nhMd );
+  cudaFree ( chn[0].nhSg );
   cudaFree ( chn[0].rndmVls );
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atCrrFnctn );
@@ -304,19 +304,19 @@ __host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *c
   cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfWlkrs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sttstcs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prrs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prpsdSttstcs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdPrrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfSttstcs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnOfPrrs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].zRndmVls, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].mNh1, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sNh1, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].mNh2, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sNh2, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].nhMd, chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].nhSg, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].rndmVls, chn[0].nmbrOfRndmVls * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 1 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 2 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   if ( chn[0].thrdIndx > 0 )
   {
     ReadLastPositionOfWalkersFromFile ( chn[0].thrdNm, chn[0].thrdIndx-1, chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs );
@@ -575,9 +575,9 @@ __host__ void ReadLastPositionOfWalkersFromFile ( const char *thrdNm, const int 
   flPntr = fopen ( flNm, "r" );
   while ( fscanf ( flPntr, "%e", &value ) == 1 )
   {
-    if ( k >= i - nmbrOfWlkrs * ( NPRS + 1 ) )
+    if ( k >= i - nmbrOfWlkrs * ( NPRS + 2 ) )
     {
-      j = k - ( i - nmbrOfWlkrs * ( NPRS + 1 ) );
+      j = k - ( i - nmbrOfWlkrs * ( NPRS + 2 ) );
       lstChn[j] = value;
     }
     k += 1;
@@ -585,7 +585,7 @@ __host__ void ReadLastPositionOfWalkersFromFile ( const char *thrdNm, const int 
   fclose ( flPntr );
 }
 
-__host__ void WriteChainToFile ( const char *thrdNm, const int indx, const int nmbrOfWlkrs, const int nmbrOfStps, const Walker *chnOfWlkrs, const float *chnOfSttstcs )
+__host__ void WriteChainToFile ( const char *thrdNm, const int indx, const int nmbrOfWlkrs, const int nmbrOfStps, const Walker *chnOfWlkrs, const float *chnOfSttstcs, const float *chnOfPrrs )
 {
   FILE *flPntr;
   char flNm[FLEN_CARD];
@@ -605,7 +605,9 @@ __host__ void WriteChainToFile ( const char *thrdNm, const int indx, const int n
         fprintf ( flPntr, " %.8E ", chnOfWlkrs[ttlChnIndx].par[prmtrIndx] );
         prmtrIndx += 1;
       }
-      fprintf ( flPntr, " %.8E\n", chnOfSttstcs[ttlChnIndx] );
+      fprintf ( flPntr, " %.8E ", chnOfSttstcs[ttlChnIndx] );
+      prmtrIndx += 1;
+      fprintf ( flPntr, " %.8E\n", chnOfPrrs[ttlChnIndx] );
       wlkrIndx += 1;
     }
     stpIndx += 1;
@@ -825,26 +827,25 @@ __global__ void InitializeWalkersAtRandom ( const int nmbrOfWlkrs, const float d
   }
 }
 
-__global__ void InitializeWalkersAndStatisticsFromLastChain ( const int nmbrOfWlkrs, const float *lstChn, Walker *wlkrs, float *sttstcs )
+__global__ void InitializeWalkersAndStatisticsFromLastChain ( const int nmbrOfWlkrs, const float *lstChn, Walker *wlkrs, float *sttstcs, float *prrs )
 {
-  int wlIndx = threadIdx.x + blockDim.x * blockIdx.x;
-  int k = ( NPRS + 1 ) * wlIndx;
-  int prIndx, chIndx;
-  if ( wlIndx < nmbrOfWlkrs )
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int p;
+  if ( i < nmbrOfWlkrs )
   {
-    prIndx = 0;
-    while ( prIndx < NPRS )
+    p = 0;
+    while ( p < NPRS )
     {
-      chIndx = prIndx + k;
-      wlkrs[wlIndx].par[prIndx] = lstChn[chIndx];
-      prIndx += 1;
+      wlkrs[i].par[p] = lstChn[p+i*(NPRS+2)];
+      p += 1;
     }
-    chIndx = prIndx + k;
-    sttstcs[wlIndx] = lstChn[chIndx];
+    sttstcs[i] = lstChn[p+i*(NPRS+2)];
+    p += 1;
+    prrs[i] = lstChn[p+i*(NPRS+2)];
   }
 }
 
-__global__ void WriteWalkersAndStatisticsToChain ( const int nmbrOfWlkrs, const int stpIndx, const Walker *wlkrs, const float *sttstcs, Walker *chnOfWlkrs, float *chnOfSttstcs )
+__global__ void WriteWalkersAndStatisticsToChain ( const int nmbrOfWlkrs, const int stpIndx, const Walker *wlkrs, const float *sttstcs, const float *prrs, Walker *chnOfWlkrs, float *chnOfSttstcs, float *chnOfPrrs )
 {
   int w = threadIdx.x + blockDim.x * blockIdx.x;
   int t = w + stpIndx * nmbrOfWlkrs;
@@ -852,15 +853,16 @@ __global__ void WriteWalkersAndStatisticsToChain ( const int nmbrOfWlkrs, const 
   {
     chnOfWlkrs[t] = wlkrs[w];
     chnOfSttstcs[t] = sttstcs[w];
+    chnOfPrrs[t] = prrs[w];
   }
 }
 
-__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, const float *mNh1, const float *sNh1, const float *mNh2, const float *sNh2, float *prrs )
+__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, const float *nhMd, const float *nhSg, float *prrs )
 {
-  int w = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( w < nmbrOfWlkrs )
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nmbrOfWlkrs )
   {
-    prrs[w] = PriorStatistic ( wlkrs[w], PriorCondition ( wlkrs[w] ), mNh1[w], sNh1[w], mNh2[w], sNh2[w] );
+    prrs[i] = PriorStatistic ( wlkrs[i], PriorCondition ( wlkrs[i] ), nhMd[i], nhSg[i] );
   }
 }
 
@@ -945,7 +947,7 @@ __global__ void GenerateProposal ( const int nmbrOfHlfTheWlkrs, const int stpInd
   }
 }
 
-__global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, const int sbstIndx, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prrs, const float *zRndmVls, const float *rndmVls, Walker *wlkrs, float *sttstcs )
+__global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, const int sbstIndx, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prpsdPrrs, const float *zRndmVls, const float *rndmVls, Walker *wlkrs, float *sttstcs, float *prrs )
 {
   int wlIndx = threadIdx.x + blockDim.x * blockIdx.x;
   int ttSbIndx = wlIndx + sbstIndx * nmbrOfHlfTheWlkrs;
@@ -954,13 +956,14 @@ __global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, 
   float q;
   if ( wlIndx < nmbrOfHlfTheWlkrs )
   {
-    q = - 0.5 * ( prpsdSttstcs[wlIndx] + prrs[wlIndx] - sttstcs[ttSbIndx] );
+    q = - 0.5 * ( prpsdSttstcs[wlIndx] + prpsdPrrs[wlIndx] - sttstcs[ttSbIndx] - prrs[ttSbIndx] );
     q = expf ( q ) * powf ( zRndmVls[wlIndx], NPRS - 1 );
     if ( q > rndmVls[ttRnIndx] )
     {
       wlkrs[ttSbIndx] = prpsdWlkrs[wlIndx];
       sttstcs[ttSbIndx] = prpsdSttstcs[wlIndx];
-    }
+      prrs[ttSbIndx] = prpsdPrrs[wlIndx];
+     }
   }
 }
 

@@ -91,7 +91,7 @@ struct Chain
   char *thrdNm;
   int nmbrOfWlkrs, nmbrOfStps, thrdIndx, nmbrOfRndmVls;
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr;
-  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *mNh1, *sNh1, *mNh2, *sNh2, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
+  float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *nhMd, *nhSg, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
   float elapsedTime, cufftElapsedTime;
 };
 
@@ -128,7 +128,7 @@ __host__ __device__ Complex ScaleComplex ( Complex, float );
 __host__ __device__ Complex MultiplyComplex ( Complex, Complex );
 __host__ __device__ Complex ConjugateComplex ( Complex );
 __host__ __device__ int PriorCondition ( const Walker );
-__host__ __device__ float PriorStatistic ( const Walker, const int, const float, const float, const float, const float );
+__host__ __device__ float PriorStatistic ( const Walker, const int, const float, const float );
 __host__ __device__ float GaussianAbsorption ( const float, const float, const float, const float );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
@@ -138,7 +138,7 @@ __host__ __device__ float PoissonWithBackground ( const float, const float, cons
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
 __host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, int, float*, int*, float* );
 __host__ void ReadLastPositionOfWalkersFromFile ( const char*, const int, const int, float* );
-__host__ void WriteChainToFile ( const char*, const int, const int, const int, const Walker*, const float* );
+__host__ void WriteChainToFile ( const char*, const int, const int, const int, const Walker*, const float*, const float* );
 __host__ void SimpleReadNsaTable ( const char*, const int, const int, float*, float*, float*, float* );
 __host__ void SimpleReadNsmaxgTable ( const char*, const int, const int, float*, float*, float*, float* );
 __host__ void SimpleReadReddenningData ( const char*, const int, float*, float*, float*, float*, float* );
@@ -164,7 +164,7 @@ __host__ int FoldModel ( Cuparam*, const int, Spectrum );
 __host__ int ModelFluxes ( const Model*, const int, const Walker*, Spectrum );
 __host__ int InitAtRandom ( Cuparam*, Chain* );
 __host__ int InitFromLast ( Chain* );
-__host__ int Priors ( const Model*, Chain* );
+__host__ int Priors ( const Model*, const int, const Walker*, float*, float*, float* );
 __host__ int Propose ( const int, const int, Chain* );
 __host__ int Update ( const int, const int, Chain* );
 __host__ int ToChain ( const int, Chain* );
@@ -174,15 +174,15 @@ __host__ int SpecData ( Cuparam*, const int, Model*, Spectrum* );
 
 /* Kernels */
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, const float*, Walker*, float* );
-__global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float* );
-__global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, Walker*, float* );
-__global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, const float*, const float*, float* );
+__global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float*, float* );
+__global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, const float*, Walker*, float*, float* );
+__global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, float* );
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const Walker*, float* );
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float * );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
-__global__ void UpdateWalkers ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float* );
+__global__ void UpdateWalkers ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float*, float* );
 __global__ void ComplexPointwiseMultiplyByConjugateAndScale ( const int, const int, const float, Complex* );
 __global__ void ReturnConstantArray ( const int, const float, float* );
 __global__ void ReturnChainFunctionTest ( const int, const int, const int, float*, Complex* );
