@@ -90,7 +90,7 @@ struct Chain
   float dlt;
   char *thrdNm;
   int nmbrOfWlkrs, nmbrOfStps, thrdIndx, nmbrOfRndmVls;
-  Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr;
+  Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr, *rndmWlkr;
   float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *nhMd, *nhSg, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
   float elapsedTime, cufftElapsedTime;
 };
@@ -173,7 +173,8 @@ __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int SpecData ( Cuparam*, const int, Model*, Spectrum* );
 
 /* Kernels */
-__global__ void InitializeWalkersAtRandom ( const int, const float, Walker, const float*, Walker*, float* );
+__global__ void AssembleArrayOfRandomWalkers ( const int, const float*, Walker* );
+__global__ void InitializeWalkersAtRandom ( const int, const float, Walker, Walker*, Walker*, float* );
 __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float*, float* );
 __global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, const float*, Walker*, float*, float* );
 __global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, float* );

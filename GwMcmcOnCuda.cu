@@ -20,7 +20,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
-  cndtn = cndtn * ( log10 ( 12. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 14. ) );
+  cndtn = cndtn * ( log10 ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -28,9 +28,9 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float nhMd, const float nhSg )
 {
   float prr = 0, sum = 0;
-  float theta = powf ( nhSg, 2 ) / nhMd;
-  float kk = nhMd / theta;
-  sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
+  //float theta = powf ( nhSg, 2 ) / nhMd;
+  //float kk = nhMd / theta;
+  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
   //sum = sum + powf ( ( wlkr.par[NHINDX] - nhMd ) / nhSg, 2 );
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
@@ -156,7 +156,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.5;
   const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.9, log10f ( RNS ), 2.9, 1.3, -5.3, 1.6, -4.7, 0.9, -5.00, 1.1, -5.08, 1.2, -5.05, 0.17 };
+  const float phbsPwrlwInt[NPRS] = { 5.7, log10f ( RNS ), 3.0, 1.3, -5.3, 1.8, -4.7, 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];

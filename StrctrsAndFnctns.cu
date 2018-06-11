@@ -125,8 +125,9 @@ __host__ int InitFromLast ( Chain *chn )
 
 __host__ int InitAtRandom ( Cuparam *cdp, Chain *chn )
 {
-  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfWlkrs );
-  InitializeWalkersAtRandom <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, chn[0].dlt, chn[0].strtngWlkr, chn[0].rndmVls, chn[0].wlkrs, chn[0].sttstcs );
+  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfWlkrs * NPRS );
+  AssembleArrayOfRandomWalkers <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, chn[0].rndmVls, chn[0].rndmWlkr );
+  InitializeWalkersAtRandom <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, chn[0].dlt, chn[0].strtngWlkr, chn[0].rndmWlkr, chn[0].wlkrs, chn[0].sttstcs );
   return 0;
 }
 
@@ -208,6 +209,7 @@ __host__ void FreeChain ( const Chain *chn )
   cudaFree ( chn[0].nhMd );
   cudaFree ( chn[0].nhSg );
   cudaFree ( chn[0].rndmVls );
+  cudaFree ( chn[0].rndmWlkr );
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atCrrFnctn );
   cudaFree ( chn[0].cmSmAtCrrFnctn );
@@ -313,6 +315,7 @@ __host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *c
   cudaMallocManaged ( ( void ** ) &chn[0].nhMd, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nhSg, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].rndmVls, chn[0].nmbrOfRndmVls * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].rndmWlkr, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
@@ -817,12 +820,24 @@ __host__ int ChooseWindow ( const int nmbrOfStps, const float c, const float *cm
 }
 
 /* Kernels: */
-__global__ void InitializeWalkersAtRandom ( const int nmbrOfWlkrs, const float dlt, Walker strtngWlkr, const float *rndmVls, Walker *wlkrs, float *sttstcs )
+__global__ void AssembleArrayOfRandomWalkers ( const int nmbrOfWlkrs, const float *rndmVls, Walker *rndmWlkr )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nmbrOfWlkrs )
+  {
+    for ( int p = 0; p < NPRS; p++ )
+    {
+      rndmWlkr[i].par[p] = rndmVls[p+i*nmbrOfWlkrs];
+    }
+  }
+}
+
+__global__ void InitializeWalkersAtRandom ( const int nmbrOfWlkrs, const float dlt, Walker strtngWlkr, Walker *rndmWlkr, Walker *wlkrs, float *sttstcs )
 {
   int wlIndx = threadIdx.x + blockDim.x * blockIdx.x;
   if ( wlIndx < nmbrOfWlkrs )
   {
-    wlkrs[wlIndx] = AddWalkers ( strtngWlkr, ScaleWalker ( strtngWlkr, dlt * rndmVls[wlIndx] ) );
+    wlkrs[wlIndx] = AddWalkers ( strtngWlkr, ScaleWalker ( rndmWlkr[wlIndx], dlt ) );
     sttstcs[wlIndx] = 0;
   }
 }
@@ -1081,7 +1096,7 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
     tmpMNh = powf ( 10, tmpMNh );
     tmpSNh = powf ( 10, tmpSNh );
     mNh[w] = 0.8 * tmpMNh;
-    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) );
+    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) );// + powf ( 0.3 / 0.8, 2 ) );
   }
 }
 
