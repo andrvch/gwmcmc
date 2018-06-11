@@ -442,6 +442,14 @@ __host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, con
   return flx;
 }
 
+__host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, const float en1, const float en2 )
+{
+  float flx;
+  float gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+  flx = gr * powf ( 10, 26.1787440 ) * 0.5 * ( flx1 / en1 + flx2 / en2 ) * ( en2 - en1 );
+  return flx;
+}
+
 __host__ __device__ float BlackBody ( const float kT, const float lgRtD, const float enrgLwr, const float enrgHghr )
 {
   float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
@@ -1074,6 +1082,33 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
     mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa;
+  }
+}
+
+__global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const Walker *wlkrs, float *mdlFlxs )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  int v, w;
+  if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
+  {
+    gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+    sa = powf ( RNS, 2. );
+    xxout = log10f ( enrgChnnls[i] / gr );
+    yyout = wlkrs[j].par[tIndx];
+    v = FindElementIndex ( xin, M1, xxout );
+    w = FindElementIndex ( yin, M2, yyout );
+    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
+    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
+    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
+    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
+    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
+    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 + 26.1787440 - xxout ) * sa;
   }
 }
 

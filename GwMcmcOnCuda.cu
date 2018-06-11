@@ -36,7 +36,7 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   return prr;
 }
 
-__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const Walker *wlk, const float *nsa1Flx, const float *nsa2Flx, float *flx )
+__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const Walker *wlk, const float *nsa1Flx, float *flx )
 {
   int e = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
@@ -47,6 +47,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   {
     if ( spIndx == 0 )
     {
+      //intNsaFlx = IntegrateNsmax ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
       f = f + Norm * intNsaFlx;
@@ -62,6 +63,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     }
     if ( spIndx == 2 )
     {
+      //intNsaFlx = IntegrateNsmax ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
       f = f + Norm * intNsaFlx;
@@ -77,6 +79,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     }
     if ( spIndx == 4 )
     {
+      //intNsaFlx = IntegrateNsmax ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
       f = f + Norm * intNsaFlx;
@@ -133,9 +136,9 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   AssembleArrayOfAbsorptionFactors <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  //BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, TINDX, RINDX1, DINDX1, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  AssembleArrayOfModelFluxes <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.nsa2Flxs, spec.mdlFlxs );
+  BilinearInterpolationNsmax <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  //BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  AssembleArrayOfModelFluxes <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.mdlFlxs );
   return 0;
 }
 
@@ -153,10 +156,10 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.5;
-  const float hghrNtcdEnrg = 7.0;
+  const float lwrNtcdEnrg = 0.4;
+  const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 5.7, log10f ( RNS ), 3.0, 1.3, -5.3, 1.8, -4.7, 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
+  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( RNS ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];

@@ -98,7 +98,8 @@ struct Chain
 struct Model
 {
   int sgFlg = 3; // Xset.xsect = "bcmc"
-  const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
+  //const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
+  const char *abndncsFl = "WilmAbundances.dat"; // Xset.abund = "wilms"
   const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
   int *atmcNmbrs;
   float *abndncs;
@@ -110,7 +111,9 @@ struct Model
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
   int numNsmaxgE = 117;
   int numNsmaxgT = 14;
   float *nsmaxgDt, *nsmaxgE, *nsmaxgT, *nsmaxgFlxs;
@@ -132,6 +135,7 @@ __host__ __device__ float PriorStatistic ( const Walker, const int, const float,
 __host__ __device__ float GaussianAbsorption ( const float, const float, const float, const float );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
+__host__ __device__ float IntegrateNsmax ( const float, const float, const float, const float );
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
 __host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
@@ -179,7 +183,7 @@ __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const f
 __global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, const float*, Walker*, float*, float* );
 __global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, float* );
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const Walker*, float* );
-__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, const float*, float* );
+__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float * );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
@@ -192,6 +196,7 @@ __global__ void ReturnCentralChainFunction ( const int, const int, const float*,
 __global__ void NormalizeChain ( const int, float* );
 __global__ void MakeMatrix ( const int, const float*, float* );
 __global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
+__global__ void BilinearInterpolationNsmax ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float*, float* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
