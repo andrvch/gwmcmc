@@ -699,10 +699,10 @@ __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, fl
   }
   for ( int j = 0; j < numDist; j++ )
   {
-    Dist[j] = log10f ( data[4*j] );
-    EBV[j] = log10f ( data[4*j+1] );
-    errDist[j] = log10f ( data[4*j+2] );
-    errEBV[j] = log10f ( data[4*j+3] );
+    Dist[j] = log10f ( data[5*j] );
+    EBV[j] = log10f ( data[5*j+1] );
+    errDist[j] = log10f ( data[5*j+2] );
+    errEBV[j] = log10f ( data[5*j+3] );
   }
   fclose ( flPntr );
 }
@@ -1131,7 +1131,7 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
     tmpMNh = powf ( 10, tmpMNh );
     tmpSNh = powf ( 10, tmpSNh );
     mNh[w] = 0.8 * tmpMNh;
-    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) );// + powf ( 0.3 / 0.8, 2 ) );
+    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) );
   }
 }
 

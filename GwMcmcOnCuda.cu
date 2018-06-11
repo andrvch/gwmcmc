@@ -31,7 +31,7 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   //float theta = powf ( nhSg, 2 ) / nhMd;
   //float kk = nhMd / theta;
   //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
-  //sum = sum + powf ( ( wlkr.par[NHINDX] - nhMd ) / nhSg, 2 );
+  sum = sum + powf ( ( wlkr.par[NHINDX] - nhMd ) / nhSg, 2 );
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
 }
@@ -159,7 +159,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.4;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( RNS ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
+  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( RNS ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.17 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];

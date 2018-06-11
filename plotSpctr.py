@@ -37,15 +37,15 @@ def ticks_format(value, index):
     else:
         return '${0:d}\\times10^{{{1:d}}}$'.format(int(base), int(exp))
 
-Xset.chatter = 0
-Xset.abund = "angr"
+#Xset.chatter = 0
+Xset.abund = "wilm"
 Xset.xsect = "bcmc"
-Fit.statMethod = "chi"
+Fit.statMethod = "cstat"
 Fit.statTest = "chi"
 
-erange = [0.5, 8.0]
+erange = [0.4, 8.0]
 
-SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
+SPECNAME = "1:1 PN_J0633_15asec_grp1.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp1.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp1.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp1.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp1.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp1.pi 12:12 M2_pwn_ex_bkg.pi"
 
 nspec = 12
 
@@ -59,32 +59,41 @@ AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
 
-bckIndx = [0.90, 1.12, 1.14, 0.88, 1.12, 1.13 ]
-bckNrm = [-5.00, -5.08, -5.06, -5.00, -5.08, -5.05]
+bckIndx = [0.91, 1.07, 1.08, 0.88, 1.12, 1.13 ]
+bckNrm = [-4.98, -5.07, -5.06, -5.00, -5.08, -5.05]
 
 Mns = 1.4
 Rns = 13.
 
-nh = 0.20
-Teff = 5.76
+nh = 0.119
+Teff = 5.69
 logR = math.log10(Rns)
-logN = 1.08 - logR
-magfld = 1.e12
-logD = 2.88
-psrIndx = 1.84
-psrNrm = -4.97
-pwnIndx = 1.82
-pwnNrm = -4.58
-
+logN = 1.11 - logR
+mgfld = 123100
+logD = 2.92
+psrIndx = 1.27
+psrNrm = -5.29
+pwnIndx = 1.48
+pwnNrm = -4.73
+"""
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
-    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, magfld, 10**(2.*(logN-logD)), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
-    AllModels(2*i+2).setPars((Teff, Mns, 10**logR, magfld, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
-    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, magfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
-    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, magfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, mgfld, 10**(2.*logN)*10**(-2.*logD), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
+    AllModels(2*i+2).setPars((Teff, Mns, 10**logR, mgfld, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, mgfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
+    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, mgfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+"""
+AllModels += "(nsmaxg+powerlaw)*phabs+powerlaw"
+for i in range(int(nspec/2./2.)):
+    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 10**(2*logN), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
+    AllModels(2*i+2).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
+    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
 
 Fit.show()
+AllModels.show()
 print Fit.statistic
+Fit.show()
 
 Plot.xAxis = "keV"
 Plot("data")
