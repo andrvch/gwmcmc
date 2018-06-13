@@ -450,12 +450,12 @@ __host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, c
   return flx;
 }
 
-__host__ __device__ float BlackBody ( const float kT, const float lgRtD, const float enrgLwr, const float enrgHghr )
+__host__ __device__ float BlackBody ( const float kT, const float logRtD, const float enrgLwr, const float enrgHghr )
 {
   float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
   t = kT;
   tinv = 1. / t;
-  anorm = 1.0344e-3f * 1e8f * powf ( 10, 2 * lgRtD ) ;
+  anorm = 1.0344e-3f * 1e8f * powf ( 10, 2 * logRtD ) ;
   anormh = 0.5 * anorm;
   elow = enrgLwr;
   x = elow * tinv;

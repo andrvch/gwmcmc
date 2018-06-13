@@ -59,22 +59,22 @@ AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
 
-bckIndx = [0.91, 1.07, 1.08, 0.88, 1.12, 1.13 ]
-bckNrm = [-4.98, -5.07, -5.06, -5.00, -5.08, -5.05]
+bckIndx = [0.93, 1.11, 1.10, 0.88, 1.12, 1.13 ]
+bckNrm = [-4.98, -5.08, -5.06, -5.00, -5.08, -5.05]
 
 Mns = 1.4
 Rns = 13.
 
-nh = 0.119
-Teff = 5.69
-logR = math.log10(Rns)
+nh = 0.051
+Teff = 0.141
+logR = -3.27
 logN = 1.11 - logR
 mgfld = 123100
-logD = 2.92
-psrIndx = 1.27
-psrNrm = -5.29
-pwnIndx = 1.48
-pwnNrm = -4.73
+logD = 2.76
+psrIndx = 1.49
+psrNrm = -5.14
+pwnIndx = 1.36
+pwnNrm = -4.80
 """
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
@@ -83,12 +83,20 @@ for i in range(int(nspec/2./2.)):
     AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, mgfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
     AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, mgfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
 """
+"""
 AllModels += "(nsmaxg+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
     AllModels(2*i+1).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 10**(2*logN), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
     AllModels(2*i+2).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
     AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
     AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+"""
+AllModels += "(bbodyrad+powerlaw)*phabs+powerlaw"
+for i in range(int(nspec/2./2.)):
+    AllModels(2*i+1).setPars((Teff, 1.E8*10**(2*logR), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
+    AllModels(2*i+2).setPars((Teff, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
+    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
 
 Fit.show()
 AllModels.show()
