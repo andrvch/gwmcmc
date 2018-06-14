@@ -98,8 +98,8 @@ struct Chain
 struct Model
 {
   int sgFlg = 3; // Xset.xsect = "bcmc"
-  const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
-  //const char *abndncsFl = "WilmAbundances.dat"; // Xset.abund = "wilms"
+  //const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
+  const char *abndncsFl = "WilmAbundances.dat"; // Xset.abund = "wilms"
   const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
   int *atmcNmbrs;
   float *abndncs;
@@ -115,8 +115,8 @@ struct Model
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
-  const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";

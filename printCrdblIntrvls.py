@@ -33,7 +33,7 @@ print samples.shape
 
 npars = len(samples)
 
-#samples[1] = samples[1] # + samples[2]
+#samples[1] = samples[1] + samples[2]
 #pars[1] = 10**pars[1]
 #pars[3] = 10**pars[3]
 

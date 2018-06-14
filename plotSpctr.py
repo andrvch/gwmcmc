@@ -43,7 +43,7 @@ Xset.xsect = "bcmc"
 Fit.statMethod = "cstat"
 Fit.statTest = "chi"
 
-erange = [0.5, 7.0]
+erange = [0.4, 7.0]
 
 #SPECNAME = "1:1 PN_J0633_15asec_grp1.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp1.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp1.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp1.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp1.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp1.pi 12:12 M2_pwn_ex_bkg.pi"
 SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
@@ -60,22 +60,22 @@ AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
 
-bckIndx = [0.91, 1.14, 1.16, 0.88, 1.12, 1.13 ]
-bckNrm = [-5.00, -5.08, -5.06, -5.00, -5.08, -5.05]
+bckIndx = [0.96, 1.17, 1.14, 0.88, 1.12, 1.13 ]
+bckNrm = [-4.98, -5.06, -5.06, -5.00, -5.08, -5.05]
 
 Mns = 1.4
 Rns = 13.
 
-nh = 0.063
-Teff = 5.75
+nh = 0.126
+Teff = 5.95
 logR = math.log10(Rns)
-logN = -3.12
-mgfld = 123100
-logD = 2.83
-psrIndx = 1.03
-psrNrm = -5.42
-pwnIndx = 1.43
-pwnNrm = -4.77
+logN = -3.53
+mgfld = 1260
+logD = 2.85
+psrIndx = 1.18
+psrNrm = -5.35
+pwnIndx = 1.49
+pwnNrm = -4.73
 """
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
