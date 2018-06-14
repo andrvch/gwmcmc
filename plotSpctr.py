@@ -13,6 +13,8 @@ from matplotlib.ticker import LogFormatterSciNotation
 from matplotlib import ticker
 from xspec import *
 
+psr = int(sys.argv[1])
+
 class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
         if x not in [0.1,1,10]:
@@ -45,8 +47,8 @@ Fit.statTest = "chi"
 
 erange = [0.4, 7.0]
 
-#SPECNAME = "1:1 PN_J0633_15asec_grp1.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp1.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp1.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp1.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp1.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp1.pi 12:12 M2_pwn_ex_bkg.pi"
-SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
+SPECNAME = "1:1 PN_J0633_15asec_grp1.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp1.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp1.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp1.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp1.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp1.pi 12:12 M2_pwn_ex_bkg.pi"
+#SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
 
 nspec = 12
 
@@ -60,21 +62,21 @@ AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
 
-bckIndx = [0.96, 1.17, 1.14, 0.88, 1.12, 1.13 ]
-bckNrm = [-4.98, -5.06, -5.06, -5.00, -5.08, -5.05]
+bckIndx = [0.96, 1.19, 1.16, 0.88, 1.12, 1.13 ]
+bckNrm = [-4.97, -5.06, -5.06, -5.00, -5.08, -5.05]
 
 Mns = 1.4
 Rns = 13.
 
-nh = 0.126
+nh = 0.121
 Teff = 5.95
 logR = math.log10(Rns)
-logN = -3.53
+logN = -3.56
 mgfld = 1260
 logD = 2.85
-psrIndx = 1.18
+psrIndx = 1.10
 psrNrm = -5.35
-pwnIndx = 1.49
+pwnIndx = 1.46
 pwnNrm = -4.73
 """
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
@@ -138,30 +140,34 @@ for i in range(nspec):
 fig, ax = plt.subplots(nrows=4)
 gs = gridspec.GridSpec(14,1)
 
-ax[0] = plt.subplot(gs[:4,0])
-ax[1] = plt.subplot(gs[4:8,0])
-ax[2] = plt.subplot(gs[8:12,0])
+ax[0] = plt.subplot(gs[:5,0])
+ax[1] = plt.subplot(gs[5:10,0])
+ax[2] = plt.subplot(gs[10:12,0])
 ax[3] = plt.subplot(gs[12:14,0])
 
 setcolours = ['b','g','r','c','m','y']
 
-for i in range(int(nspec/2./2.)):
-    ax[0].errorbar(spcx[2*i],spcy[2*i],xerr=spcrrx[2*i],yerr=spcrry[2*i],color=setcolours[i],fmt=' ',capsize=0)
-    ax[0].step(np.append(spcx[2*i][0]-spcrrx[2*i][0],spcx[2*i]+spcrrx[2*i]),np.append(mod[2*i][0],mod[2*i]),color=setcolours[i])
-    ax[1].errorbar(spcx[2*i+int(nspec/2.)],spcy[2*i+int(nspec/2.)],xerr=spcrrx[2*i+int(nspec/2.)],yerr=spcrry[2*i+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
-    ax[1].step(np.append(spcx[2*i+int(nspec/2.)][0]-spcrrx[2*i+int(nspec/2.)][0],spcx[2*i+int(nspec/2.)]+spcrrx[2*i+int(nspec/2.)]),np.append(mod[2*i+int(nspec/2.)][0],mod[2*i+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)])
-    ax[2].errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=setcolours[i],fmt=' ',capsize=0,alpha=0.5)
-    ax[2].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*spcy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*spcrry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0,alpha=0.5)
-    ax[2].step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=setcolours[i],alpha=0.5)
-    ax[2].step(np.append(spcx[2*i+1+int(nspec/2.)][0]-spcrrx[2*i+1+int(nspec/2.)][0],spcx[2*i+1+int(nspec/2.)]+spcrrx[2*i+1+int(nspec/2.)]),np.append(scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)][0],scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)],alpha=0.5)
-    ax[3].errorbar(spcx[2*i],chiy[2*i],xerr=spcrrx[2*i],yerr=chirry[2*i],color=setcolours[i],fmt=' ',capsize=0)
-    ax[3].errorbar(spcx[2*i+int(nspec/2./2.)],chiy[2*i+int(nspec/2./2.)],xerr=spcrrx[2*i+int(nspec/2./2.)],yerr=chirry[2*i+int(nspec/2./2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
-    ax[3].errorbar(spcx[2*i+1],scl[i]*chiy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*chirry[2*i+1],color=setcolours[i],fmt=' ',capsize=0)
-    ax[3].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*chiy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*chirry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
+if ( psr == 1 ):
+    for i in range(int(nspec/2./2.)):
+        ax[0].errorbar(spcx[2*i],spcy[2*i],xerr=spcrrx[2*i],yerr=spcrry[2*i],color=setcolours[i],fmt=' ',capsize=0)
+        ax[0].step(np.append(spcx[2*i][0]-spcrrx[2*i][0],spcx[2*i]+spcrrx[2*i]),np.append(mod[2*i][0],mod[2*i]),color=setcolours[i])
+        ax[1].errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=setcolours[i],fmt=' ',capsize=0,alpha=0.5)
+        ax[1].step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=setcolours[i],alpha=0.5)
+        ax[2].errorbar(spcx[2*i],chiy[2*i],xerr=spcrrx[2*i],yerr=chirry[2*i],color=setcolours[i],fmt=' ',capsize=0)
+        ax[3].errorbar(spcx[2*i+1],scl[i]*chiy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*chirry[2*i+1],color=setcolours[i],fmt=' ',capsize=0)
+else:
+    for i in range(int(nspec/2./2.)):
+        ax[0].errorbar(spcx[2*i+int(nspec/2.)],spcy[2*i+int(nspec/2.)],xerr=spcrrx[2*i+int(nspec/2.)],yerr=spcrry[2*i+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
+        ax[0].step(np.append(spcx[2*i+int(nspec/2.)][0]-spcrrx[2*i+int(nspec/2.)][0],spcx[2*i+int(nspec/2.)]+spcrrx[2*i+int(nspec/2.)]),np.append(mod[2*i+int(nspec/2.)][0],mod[2*i+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)])
+        ax[1].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*spcy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*spcrry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0,alpha=0.5)
+        ax[1].step(np.append(spcx[2*i+1+int(nspec/2.)][0]-spcrrx[2*i+1+int(nspec/2.)][0],spcx[2*i+1+int(nspec/2.)]+spcrrx[2*i+1+int(nspec/2.)]),np.append(scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)][0],scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)],alpha=0.5)
+        ax[2].errorbar(spcx[2*i+int(nspec/2.)],chiy[2*i+int(nspec/2.)],xerr=spcrrx[2*i+int(nspec/2.)],yerr=chirry[2*i+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
+        ax[3].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*chiy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*chirry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
 
+ax[2].plot(erange,[0.0,0.0],'--',color='k')
 ax[3].plot(erange,[0.0,0.0],'--',color='k')
 
-subs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0]
+subs = [1.0, 2.0, 5.0]
 
 for i in range(4):
     ax[i].set_xlim(erange[0],erange[1])
@@ -174,15 +180,15 @@ ax[3].xaxis.set_minor_formatter(ticker.FuncFormatter(ticks_format))  #add the cu
 
 plt.setp(ax[3].get_xticklabels(minor=True), visible=True)
 
-for i in range(3):
+for i in range(2):
     ax[i].set_yscale('log',nonposy='clip')
     #ax[i].yaxis.set_major_formatter(LogFormatterSciNotation())
 
-setp([a.get_xticklabels() for a in ax[:4-1]], visible=False)
+setp([a.get_xticklabels() for a in ax[:3]], visible=False)
 
 #ax[i].set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
 ax[3].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
 #ax[3].set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
 
-plt.savefig('psrpwnspctr.eps')
+plt.savefig(sys.argv[2])
 #plt.show()
