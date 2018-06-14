@@ -20,7 +20,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
-  cndtn = cndtn * ( log10 ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
+  //cndtn = cndtn * ( log10 ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -47,9 +47,9 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   {
     if ( spIndx == 0 )
     {
-      //intNsaFlx = IntegrateNsmax ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
@@ -63,9 +63,8 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     }
     if ( spIndx == 2 )
     {
-      //intNsaFlx = IntegrateNsmax ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
@@ -79,9 +78,9 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     }
     if ( spIndx == 4 )
     {
-      //intNsaFlx = IntegrateNsmax ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
       f = f * absrptn[t];
@@ -156,10 +155,10 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg = 0.4;
+  const float lwrNtcdEnrg = 0.3;
   const float hghrNtcdEnrg = 8.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( RNS ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.17 };
+  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1 / 1000. ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.17 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
