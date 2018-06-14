@@ -60,40 +60,22 @@ AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
 
-<<<<<<< HEAD
-bckIndx = [0.93, 1.09, 1.08, 0.88, 1.12, 1.13 ]
-bckNrm = [-4.98, -5.08, -5.07, -5.00, -5.08, -5.05]
-=======
-bckIndx = [0.91, 1.15, 1.17, 0.88, 1.12, 1.13 ]
-bckNrm = [-5.00, -5.08, -5.05, -5.00, -5.08, -5.05]
->>>>>>> sixspecpsrpwnbbody
+bckIndx = [0.91, 1.14, 1.16, 0.88, 1.12, 1.13 ]
+bckNrm = [-5.00, -5.08, -5.06, -5.00, -5.08, -5.05]
 
 Mns = 1.4
 Rns = 13.
 
-<<<<<<< HEAD
-nh = 0.090
-Teff = 5.72
+nh = 0.063
+Teff = 5.75
 logR = math.log10(Rns)
-logN = -3.016
+logN = -3.12
 mgfld = 123100
-logD = 2.86
-psrIndx = 1.095
-psrNrm = -5.399
-pwnIndx = 1.469
-pwnNrm = -4.752
-=======
-nh = 0.046
-Teff = 0.144
-logR = -3.3
-logN = 1.11 - logR
-mgfld = 123100
-logD = 2.77
-psrIndx = 1.50
-psrNrm = -5.15
-pwnIndx = 1.39
-pwnNrm = -4.78
->>>>>>> sixspecpsrpwnbbody
+logD = 2.83
+psrIndx = 1.03
+psrNrm = -5.42
+pwnIndx = 1.43
+pwnNrm = -4.77
 """
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
@@ -101,7 +83,6 @@ for i in range(int(nspec/2./2.)):
     AllModels(2*i+2).setPars((Teff, Mns, 10**logR, mgfld, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
     AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, mgfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
     AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, mgfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
-"""
 """
 AllModels += "(nsmaxg+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
@@ -116,7 +97,7 @@ for i in range(int(nspec/2./2.)):
     AllModels(2*i+2).setPars((Teff, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
     AllModels(2*i+1+int(nspec/2.)).setPars((Teff, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
     AllModels(2*i+2+int(nspec/2.)).setPars((Teff, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
-
+"""
 Fit.show()
 AllModels.show()
 print Fit.statistic
