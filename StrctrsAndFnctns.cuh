@@ -107,7 +107,10 @@ struct Model
   const int nmbrOfDistBins = 442;
   const int numRedCol = 4;
   float *RedData, *Dist, *EBV, *errDist, *errEBV;
-  //const char *nsaFl = "nsa_spec_B_1e12G.dat";
+  const char *rddnngFl1 = "Green15.dat";
+  const int nmbrOfDistBins1 = 1000;
+  const int numRedCol1 = 2;
+  float *RedData1, *Dist1, *EBV1;
   const char *nsaFl = "nsa_spec_B_1e12G.dat";
   int numNsaE = 1000;
   int numNsaT = 14;
@@ -149,6 +152,7 @@ __host__ void WriteChainToFile ( const char*, const int, const int, const int, c
 __host__ void SimpleReadNsaTable ( const char*, const int, const int, float*, float*, float*, float* );
 __host__ void SimpleReadNsmaxgTable ( const char*, const int, const int, float*, float*, float*, float* );
 __host__ void SimpleReadReddenningData ( const char*, const int, float*, float*, float*, float*, float* );
+__host__ void SimpleReadReddenningDataNoErrors ( const char*, const int, float*, float*, float* );
 __host__ void SimpleReadDataFloat ( const char*, float* );
 __host__ void SimpleReadDataInt ( const char*, int* );
 __host__ void SimpleWriteDataFloat ( const char*, const int, const float* );
@@ -201,5 +205,6 @@ __global__ void MakeMatrix ( const int, const float*, float* );
 __global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void BilinearInterpolationNsmax ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float*, float* );
+__global__ void LinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const Walker*, float*, float* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

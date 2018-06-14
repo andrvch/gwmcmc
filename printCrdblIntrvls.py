@@ -33,7 +33,7 @@ print samples.shape
 
 npars = len(samples)
 
-#pars[0] = gr * kb * 10**pars[0] / kev
+#samples[1] = samples[1] # + samples[2]
 #pars[1] = 10**pars[1]
 #pars[3] = 10**pars[3]
 
