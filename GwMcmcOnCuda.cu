@@ -20,7 +20,8 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
   cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
-  //cndtn = cndtn * ( log10 ( 8. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. ) );
+  cndtn = cndtn * ( log10 ( 8. / 13. / 20000. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. / 13. / 100. ) );
+  cndtn = cndtn * ( log10 ( 100. ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 20000. ) );
   cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
   return cndtn;
 }
@@ -159,7 +160,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg = 0.4;
   const float hghrNtcdEnrg = 7.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1 / 1000. ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.17 };
+  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];

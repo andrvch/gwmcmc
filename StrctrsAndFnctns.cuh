@@ -98,8 +98,8 @@ struct Chain
 struct Model
 {
   int sgFlg = 3; // Xset.xsect = "bcmc"
-  //const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
-  const char *abndncsFl = "WilmAbundances.dat"; // Xset.abund = "wilms"
+  const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
+  //const char *abndncsFl = "WilmAbundances.dat"; // Xset.abund = "wilms"
   const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
   int *atmcNmbrs;
   float *abndncs;
