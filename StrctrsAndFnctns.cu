@@ -225,6 +225,9 @@ __host__ void FreeModel ( const Model *mdl )
   cudaFree ( mdl[0].EBV );
   cudaFree ( mdl[0].errDist );
   cudaFree ( mdl[0].errEBV );
+  cudaFree ( mdl[0].RedData1 );
+  cudaFree ( mdl[0].Dist1 );
+  cudaFree ( mdl[0].EBV1 );
   cudaFree ( mdl[0].nsaDt );
   cudaFree ( mdl[0].nsaT );
   cudaFree ( mdl[0].nsaE );
@@ -280,6 +283,9 @@ __host__ int InitializeModel ( Model *mdl )
   cudaMallocManaged ( ( void ** ) &mdl[0].RedData, mdl[0].nmbrOfDistBins * mdl[0].numRedCol * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].Dist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].EBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].RedData1, mdl[0].nmbrOfDistBins1 * mdl[0].numRedCol1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].Dist1, mdl[0].nmbrOfDistBins1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].EBV1, mdl[0].nmbrOfDistBins1 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].errDist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].errEBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
@@ -293,6 +299,7 @@ __host__ int InitializeModel ( Model *mdl )
   for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
   SimpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
   SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
+  SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl1, mdl[0].nmbrOfDistBins1, mdl[0].RedData1, mdl[0].Dist1, mdl[0].EBV1 );
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
   return 0;
@@ -703,6 +710,25 @@ __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, fl
     EBV[j] = log10f ( data[5*j+1] );
     errDist[j] = log10f ( data[5*j+2] );
     errEBV[j] = log10f ( data[5*j+3] );
+  }
+  fclose ( flPntr );
+}
+
+__host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV )
+{
+  FILE *flPntr;
+  float value;
+  int i = 0;
+  flPntr = fopen ( flNm, "r" );
+  while ( fscanf (flPntr, "%e", &value ) == 1 )
+  {
+    data[i] = value;
+    i += 1;
+  }
+  for ( int j = 0; j < numDist; j++ )
+  {
+    Dist[j] = log10f ( data[2*j] * 1000. );
+    EBV[j] = log10f ( data[2*j+1] );
   }
   fclose ( flPntr );
 }
@@ -1132,6 +1158,25 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
     tmpSNh = powf ( 10, tmpSNh );
     mNh[w] = 0.8 * tmpMNh;
     sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) );
+  }
+}
+
+__global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const Walker *wlkrs, float *mNh, float *sNh )
+{
+  int w = threadIdx.x + blockDim.x * blockIdx.x;
+  float xxout, a, dmNh0, dmNh1, tmpMNh;
+  int v;
+  if ( w < nmbrOfWlkrs )
+  {
+    xxout = wlkrs[w].par[dIndx];
+    v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
+    a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
+    if ( v < nmbrOfDistBins ) dmNh0 = EBV[v]; else dmNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dmNh1 = EBV[v+1]; else dmNh1 = 0;
+    tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
+    tmpMNh = powf ( 10, tmpMNh );
+    mNh[w] = 0.8 * tmpMNh;
+    sNh[w] = 0.8 * tmpMNh * 0.3;
   }
 }
 

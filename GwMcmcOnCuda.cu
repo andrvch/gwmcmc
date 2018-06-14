@@ -136,7 +136,8 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
 
 __host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, float *nhMd, float *nhSg, float *prrs )
 {
-  LinearInterpolation <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, mdl[0].nmbrOfDistBins, DINDX1, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, wlkrs, nhMd, nhSg );
+  //LinearInterpolation <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, mdl[0].nmbrOfDistBins, DINDX1, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, wlkrs, nhMd, nhSg );
+  LinearInterpolationNoErrors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, wlkrs, nhMd, nhSg );
   AssembleArrayOfPriors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, wlkrs, nhMd, nhSg, prrs );
   return 0;
 }
