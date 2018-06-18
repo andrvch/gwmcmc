@@ -33,9 +33,19 @@ print samples.shape
 
 npars = len(samples)
 
+#samples[0] = gr * kb * 10**samples[0] / kev
+norm = np.copy(samples[1])
+dist = np.copy(samples[2])
+radi = np.copy(samples[1])
+#radi = dist + norm # + math.log10(Rns)
+#samples[12] = radi
+
 #samples[1] = samples[1] + samples[2]
 #pars[1] = 10**pars[1]
 #pars[3] = 10**pars[3]
+
+#for i in range(samples.shape[1]):
+#    print norm[i], dist[i], norm[i]+dist[i], radi[i]
 
 eqh_inter = np.empty([npars,len(quantiles)])
 
@@ -45,6 +55,13 @@ for i in range(npars):
     xi,zi = kde_gauss_cuda1d(samples[i],nbins)
     zin,eqh_inter[i,:] = prc(xi,zi,qqq)
     print eqh_inter[i,:]
+
+f = open(sys.argv[2]+"."+"%2.0f"%(float(sys.argv[1]))+"."+"credible", "w")
+for i in range(npars):
+    for j in range(3):
+        f.write(" %.15E "%(eqh_inter[i,j]))
+    f.write("\n")
+f.close()
 
 print "gpu:"
 print time.time()-sttime

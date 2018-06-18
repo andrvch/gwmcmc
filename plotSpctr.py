@@ -12,6 +12,7 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import LogFormatterSciNotation
 from matplotlib import ticker
 from xspec import *
+from cudakde import *
 
 psr = int(sys.argv[1])
 
@@ -62,22 +63,26 @@ AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
 
-bckIndx = [0.96, 1.19, 1.16, 0.88, 1.12, 1.13 ]
-bckNrm = [-4.97, -5.06, -5.06, -5.00, -5.08, -5.05]
+pars = read_data(sys.argv[2])
+print pars.shape
 
 Mns = 1.4
 Rns = 13.
 
-nh = 0.121
-Teff = 5.95
+nh = pars[1,13]
+Teff = pars[1,0]
 logR = math.log10(Rns)
-logN = -3.56
-mgfld = 1260
-logD = 2.85
-psrIndx = 1.10
-psrNrm = -5.35
-pwnIndx = 1.46
-pwnNrm = -4.73
+logN = pars[1,1]
+mgfld = float(sys.argv[3])
+logD = pars[1,2]
+psrIndx = pars[1,3]
+psrNrm = pars[1,4]
+pwnIndx = pars[1,5]
+pwnNrm = pars[1,6]
+
+bckIndx = [pars[1,7], pars[1,9], pars[1,11], 0.88, 1.12, 1.13 ]
+bckNrm = [pars[1,8], pars[1,10], pars[1,12], -5.00, -5.08, -5.05]
+
 """
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
@@ -88,10 +93,10 @@ for i in range(int(nspec/2./2.)):
 """
 AllModels += "(nsmaxg+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
-    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 10**(2*(logN+logD)), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
-    AllModels(2*i+2).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
-    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
-    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), mgfld, 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 10**(2*(logN+logD)), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
+    AllModels(2*i+2).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
+    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
 """
 AllModels += "(bbodyrad+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
@@ -190,5 +195,5 @@ setp([a.get_xticklabels() for a in ax[:3]], visible=False)
 ax[3].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
 #ax[3].set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
 
-plt.savefig(sys.argv[2])
+plt.savefig(sys.argv[4])
 #plt.show()
