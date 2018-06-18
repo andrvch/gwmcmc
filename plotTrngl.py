@@ -35,8 +35,8 @@ print samples.shape
 npars = len(samples)
 
 samples[0] = gr * kb * 10**samples[0] / kev
-samples[1] = 10**(samples[1] + samples[2] + math.log10(Rns))
-samples[2] = 10**samples[2]
+samples[1] = samples[1] + samples[2] + math.log10(Rns)
+samples[2] = samples[2]
 
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
