@@ -41,7 +41,7 @@ def ticks_format(value, index):
         return '${0:d}\\times10^{{{1:d}}}$'.format(int(base), int(exp))
 
 #Xset.chatter = 0
-Xset.abund = "wilm"
+Xset.abund = "angr"
 Xset.xsect = "bcmc"
 Fit.statMethod = "cstat"
 Fit.statTest = "chi"

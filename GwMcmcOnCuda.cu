@@ -160,7 +160,7 @@ int main ( int argc, char *argv[] )
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.4;
   const float hghrNtcdEnrg1 = 7.0;
-  const float lwrNtcdEnrg2 = 0.3;
+  const float lwrNtcdEnrg2 = 0.2;
   const float hghrNtcdEnrg2 = 7.0;
   const float dlt = 1.E-4;
   const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };

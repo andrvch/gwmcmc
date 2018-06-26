@@ -1175,8 +1175,8 @@ __global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int n
     if ( v+1 < nmbrOfDistBins ) dmNh1 = EBV[v+1]; else dmNh1 = 0;
     tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
     tmpMNh = powf ( 10, tmpMNh );
-    mNh[w] = 0.8 * tmpMNh;
-    sNh[w] = 0.8 * tmpMNh * 0.3;
+    mNh[w] = 0.7 * tmpMNh;
+    sNh[w] = 0.7 * tmpMNh * 0.1;
   }
 }
 
