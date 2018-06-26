@@ -16,9 +16,15 @@ print samples.shape
 samples = samples[np.r_[0:7, 13:samples.shape[0]-1],:]
 print samples.shape
 
+Mns = 1.4
+Rns = 13.
+kb = 1.38E-16
+kev = 1.6022E-9
+gr = math.sqrt(1 - 2.952 * Mns / Rns)
+
 samples[0] = gr * kb * 10**samples[0] / kev
-samples[1] = 10**(samples[1] + samples[2] + math.log10(Rns))
-samples[2] = 10**samples[2]
+samples[1] = samples[1] + samples[2] + math.log10(Rns)
+samples[2] = samples[2]
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
 samples = np.transpose(samples)

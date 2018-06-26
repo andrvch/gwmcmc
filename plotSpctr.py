@@ -46,7 +46,7 @@ Xset.xsect = "bcmc"
 Fit.statMethod = "cstat"
 Fit.statTest = "chi"
 
-erange = [0.4, 7.0]
+erange = [0.2, 10.0]
 
 SPECNAME = "1:1 PN_J0633_15asec_grp1.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp1.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp1.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp1.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp1.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp1.pi 12:12 M2_pwn_ex_bkg.pi"
 #SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
@@ -149,30 +149,92 @@ ax[0] = plt.subplot(gs[:5,0])
 ax[1] = plt.subplot(gs[5:10,0])
 ax[2] = plt.subplot(gs[10:12,0])
 ax[3] = plt.subplot(gs[12:14,0])
+axax = fig.add_subplot(gs[:10,0],frameon=False)
+axwx = fig.add_subplot(gs[10:14,0],frameon=False)
 
-setcolours = ['b','g','r','c','m','y']
+setcolours = ['b','g','r','b','g','r']
 
 if ( psr == 1 ):
     for i in range(int(nspec/2./2.)):
         ax[0].errorbar(spcx[2*i],spcy[2*i],xerr=spcrrx[2*i],yerr=spcrry[2*i],color=setcolours[i],fmt=' ',capsize=0)
         ax[0].step(np.append(spcx[2*i][0]-spcrrx[2*i][0],spcx[2*i]+spcrrx[2*i]),np.append(mod[2*i][0],mod[2*i]),color=setcolours[i])
-        ax[1].errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=setcolours[i],fmt=' ',capsize=0,alpha=0.5)
-        ax[1].step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=setcolours[i],alpha=0.5)
+        ax[1].errorbar(spcx[2*i+1],scl[i]*spcy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*spcrry[2*i+1],color=setcolours[i],fmt=' ',capsize=0)
+        ax[1].step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=setcolours[i])
         ax[2].errorbar(spcx[2*i],chiy[2*i],xerr=spcrrx[2*i],yerr=chirry[2*i],color=setcolours[i],fmt=' ',capsize=0)
         ax[3].errorbar(spcx[2*i+1],scl[i]*chiy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*chirry[2*i+1],color=setcolours[i],fmt=' ',capsize=0)
+    xqu1 = [0.1,0.4,0.4,0.1]
+    xqu2 = [7.,12.,12.,7.]
+    spcnum = 2
+    spcminy = spcy[2*spcnum]-spcrry[2*spcnum]
+    spcnum = 0
+    spcmaxy = spcy[2*spcnum]+spcrry[2*spcnum]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    ax[0].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[0].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[0].set_ylim(spcminy.min()+7.e-6,spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min()))
+    ax[0].text(2.2,5.e-2,'source+background')
+    spcnum = 2
+    spcminy = spcy[2*spcnum+1]-spcrry[2*spcnum+1]
+    spcnum = 0
+    spcmaxy = spcy[2*spcnum+1]+spcrry[2*spcnum+1]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+.1*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    ax[1].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[1].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[1].set_ylim(spcminy.min()+9.e-7,6.e-2)
+    ax[1].text(2.2,8.e-3,'background')
+    yqu = [-5.,-5.,5.,5.]
+    ax[2].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[2].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[2].set_ylim(-4.5,4.5)
+    yqu = [-.5,-.5,.5,.5]
+    ax[3].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[3].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[3].set_ylim(-.48,.48)
+    l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=(0.2,0.05))
+    l.set_zorder(5)
 else:
     for i in range(int(nspec/2./2.)):
         ax[0].errorbar(spcx[2*i+int(nspec/2.)],spcy[2*i+int(nspec/2.)],xerr=spcrrx[2*i+int(nspec/2.)],yerr=spcrry[2*i+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
         ax[0].step(np.append(spcx[2*i+int(nspec/2.)][0]-spcrrx[2*i+int(nspec/2.)][0],spcx[2*i+int(nspec/2.)]+spcrrx[2*i+int(nspec/2.)]),np.append(mod[2*i+int(nspec/2.)][0],mod[2*i+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)])
-        ax[1].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*spcy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*spcrry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0,alpha=0.5)
-        ax[1].step(np.append(spcx[2*i+1+int(nspec/2.)][0]-spcrrx[2*i+1+int(nspec/2.)][0],spcx[2*i+1+int(nspec/2.)]+spcrrx[2*i+1+int(nspec/2.)]),np.append(scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)][0],scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)],alpha=0.5)
+        ax[1].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*spcy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*spcrry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
+        ax[1].step(np.append(spcx[2*i+1+int(nspec/2.)][0]-spcrrx[2*i+1+int(nspec/2.)][0],spcx[2*i+1+int(nspec/2.)]+spcrrx[2*i+1+int(nspec/2.)]),np.append(scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)][0],scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)])
         ax[2].errorbar(spcx[2*i+int(nspec/2.)],chiy[2*i+int(nspec/2.)],xerr=spcrrx[2*i+int(nspec/2.)],yerr=chirry[2*i+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
         ax[3].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*chiy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*chirry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
+    xqu1 = [0.1,0.4,0.4,0.1]
+    xqu2 = [7.,12.,12.,7.]
+    spcnum = 2
+    spcminy = spcy[2*spcnum+int(nspec/2.)]-spcrry[2*spcnum+int(nspec/2.)]
+    spcnum = 0
+    spcmaxy = spcy[2*spcnum+int(nspec/2.)]+spcrry[2*spcnum+int(nspec/2.)]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    ax[0].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[0].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[0].set_ylim(spcminy.min()+1.e-5,2.e-1)
+    ax[0].text(2.2,5.e-2,'source+background')
+    spcnum = 2
+    spcminy = spcy[2*spcnum+1+int(nspec/2.)]-spcrry[2*spcnum+1+int(nspec/2.)]
+    spcnum = 0
+    spcmaxy = spcy[2*spcnum+1+int(nspec/2.)]+spcrry[2*spcnum+1+int(nspec/2.)]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+.1*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    ax[1].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[1].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[1].set_ylim(spcminy.min()+1.e-5,3.e-1)
+    ax[1].text(2.2,4.e-2,'background')
+    yqu = [-5.,-5.,5.,5.]
+    ax[2].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[2].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[2].set_ylim(-4.5,4.5)
+    yqu = [-5.,-5.,5.,5.]
+    ax[3].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[3].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
+    ax[3].set_ylim(-4.8,4.8)
+    l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=(0.35,0.05))
+    l.set_zorder(5)
 
 ax[2].plot(erange,[0.0,0.0],'--',color='k')
 ax[3].plot(erange,[0.0,0.0],'--',color='k')
 
-subs = [1.0, 2.0, 5.0]
+subs = [1.0, 2.0, 4.0, 7.0]
 
 for i in range(4):
     ax[i].set_xlim(erange[0],erange[1])
@@ -180,6 +242,8 @@ for i in range(4):
     #ax[i].xaxis.set_major_formatter(CustomTicker())
     ax[i].xaxis.set_minor_locator(ticker.LogLocator(subs=subs)) #set the ticks position
     ax[i].xaxis.set_major_formatter(ticker.NullFormatter())   # remove the major ticks
+    ax[i].tick_params(axis='both', which='major', labelsize=10)
+    ax[i].tick_params(axis='both', which='minor', labelsize=10)
 
 ax[3].xaxis.set_minor_formatter(ticker.FuncFormatter(ticks_format))  #add the custom ticks
 
@@ -189,10 +253,23 @@ for i in range(2):
     ax[i].set_yscale('log',nonposy='clip')
     #ax[i].yaxis.set_major_formatter(LogFormatterSciNotation())
 
-setp([a.get_xticklabels() for a in ax[:3]], visible=False)
+plt.setp([a.get_xticklabels() for a in ax[:3]], visible=False)
+plt.setp([a.get_xticklabels(minor=True) for a in ax[:3]], visible=False)
 
 #ax[i].set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
 ax[3].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
+axax.set_ylabel(r'$ \rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10,labelpad=35)
+axwx.set_ylabel(r'$ \chi $',fontsize=10,labelpad=35)
+#axax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+plt.setp(axax.get_xticklabels(), visible=False)
+plt.setp(axax.get_yticklabels(), visible=False)
+plt.setp(axwx.get_xticklabels(), visible=False)
+plt.setp(axwx.get_yticklabels(), visible=False)
+axax.set_xticks([])
+axax.set_yticks([])
+axwx.set_xticks([])
+axwx.set_yticks([])
+
 #ax[3].set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
 
 plt.savefig(sys.argv[4])

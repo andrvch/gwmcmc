@@ -1157,7 +1157,7 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
     tmpMNh = powf ( 10, tmpMNh );
     tmpSNh = powf ( 10, tmpSNh );
     mNh[w] = 0.8 * tmpMNh;
-    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) ); // + powf ( 0.3 / 0.8, 2 ) );
+    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) );
   }
 }
 
