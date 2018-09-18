@@ -95,6 +95,8 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc )
     cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].tmsSttstcs, spc[i].nmbrOfPhtns * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].arrTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
   }
   return 0;
 }
@@ -136,6 +138,14 @@ __host__ int Stat ( const int nmbrOfWlkrs, Spectrum spec )
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfChnnls, nmbrOfWlkrs );
   AssembleArrayOfChannelStatistics <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, spec.srcExptm, spec.bckgrndExptm, spec.backscal_src, spec.backscal_bkg, spec.srcCnts, spec.bckgrndCnts, spec.flddMdlFlxs, spec.chnnlSttstcs );
+  return 0;
+}
+
+__host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec )
+{
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 dimGrid = Grid ( spec.nmbrOfPhtns, nmbrOfWlkrs );
+  AssembleArrayOfTimesStatistic <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, spec.srcExptm, wlk, spec.arrTms, spec.tmsSttstcs );
   return 0;
 }
 
@@ -191,6 +201,8 @@ __host__ void FreeSpec ( const Spectrum *spc )
     cudaFree ( spc[i].flddMdlFlxs );
     cudaFree ( spc[i].chnnlSttstcs );
     cudaFree ( spc[i].ntcdChnnls );
+    cudaFree ( spc[i].tmsSttstcs );
+    cudaFree ( spc[i].arrTms );
   }
 }
 
@@ -994,6 +1006,17 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
   {
     //chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
     chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
+  }
+}
+
+__global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float srcExptm, const Walker *wlk, const float *arrTms, float *tmsSttstcs )
+{
+  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = a + w * nmbrOfPhtns;
+  if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
+  {
+    tmsSttstcs[t] = GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
   }
 }
 

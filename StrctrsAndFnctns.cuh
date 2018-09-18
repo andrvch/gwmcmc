@@ -89,6 +89,8 @@ struct Spectrum
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
+  float *tmsSttstcs, *arrTms;
+  int nmbrOfPhtns;
 };
 
 struct Chain
@@ -178,6 +180,7 @@ __host__ int InitializeChain ( Cuparam*, const float*, Chain* );
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*, char*, char*, char* );
 __host__ int ReadFitsData ( const int, const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 __host__ int Stat ( const int, Spectrum );
+__host__ int StatTimes ( const int, const Walker*, Spectrum );
 __host__ int SumUpStat ( Cuparam*, const float, const int, float*, const Spectrum );
 __host__ int FoldModel ( Cuparam*, const int, Spectrum );
 __host__ int ModelFluxes ( const Model*, const int, const Walker*, Spectrum );
@@ -201,6 +204,7 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const i
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float * );
+__global__ void AssembleArrayOfTimesStatistic ( const int, const int, const float, const Walker*, const float*, float* );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
 __global__ void UpdateWalkers ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float*, float* );
 __global__ void ComplexPointwiseMultiplyByConjugateAndScale ( const int, const int, const float, Complex* );
