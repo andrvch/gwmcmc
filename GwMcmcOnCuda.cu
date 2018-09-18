@@ -212,8 +212,6 @@ int main ( int argc, char *argv[] )
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg2;
   }
 
-
-
   InitializeCuda ( cdp );
   InitializeModel ( mdl );
   InitializeChain ( cdp, phbsPwrlwInt, chn );

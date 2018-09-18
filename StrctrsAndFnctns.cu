@@ -379,6 +379,16 @@ __host__ __device__ Walker AddWalkers ( Walker a, Walker b )
   return c;
 }
 
+__host__ __device__ float SumOfComponents ( const Walker wlkr )
+{
+  float mag = 0;
+  for ( int i = FIRSTBIN; i < NPRS; i++ )
+  {
+    mag += wlkr.par[i];
+  }
+  return mag;
+}
+
 __host__ __device__ Walker ScaleWalker ( Walker a, float s )
 {
   Walker c;
@@ -515,6 +525,20 @@ __host__ __device__ float Poisson ( const float scnts, const float mdl, const fl
   }
   sttstc = 2 * sttstc;
   return sttstc;
+}
+
+__host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, const float Ttot, const int N )
+{
+    float sttstc = 0, f, phi, jt, jtFr, jtInt, jtJt, A;
+    f = wlkr.par[0] * 1.E-6 + F0;
+    phi = wlkr.par[1];
+    jt = 1 + ( NTBINS / ( 2 * PI ) ) * fmodf ( 2 * PI * f * tms + phi, 2 * PI );
+    jtFr = modff( jt, &jtInt );
+    jtJt = jt - jtFr;
+    int jIndx = llroundf ( jtJt );
+    A = SumOfComponents ( wlkr ) / NTBINS;
+    sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx] / NTBINS / A );
+    return sttstc;
 }
 
 __host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )

@@ -2,6 +2,7 @@
 #define _STRCTRSANDFNCTNS_CUH_
 
 #define PIPI 3.14159265359
+#define PI 3.14159265359
 #define MNS 1.4e0f
 #define RNS 1.3e1f
 #define PCCM 3.08567802e18f
@@ -17,8 +18,10 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 14
-#define NHINDX NPRS-1
+#define NTBINS 12
+#define NPRS NTBINS+2
+#define FIRSTBIN 2
+#define NHINDX 0
 #define TINDX 0
 #define RINDX1 1
 #define GRINDX 1
@@ -30,6 +33,9 @@
 #define NSPCTR 12
 #define BACKIN 1
 #define NSTAT 3
+
+#define FINDX 0
+#define F0 3.36233
 
 /* Walker data type */
 typedef union wlk3u
@@ -133,6 +139,7 @@ __host__ dim3 Grid ( const int, const int );
 __host__ __device__ Walker AddWalkers ( Walker, Walker );
 __host__ __device__ Walker ScaleWalker ( Walker, float );
 __host__ __device__ Complex AddComplex ( Complex, Complex );
+__host__ __device__ float SumOfComponents ( const Walker );
 __host__ __device__ Complex ScaleComplex ( Complex, float );
 __host__ __device__ Complex MultiplyComplex ( Complex, Complex );
 __host__ __device__ Complex ConjugateComplex ( Complex );
@@ -144,6 +151,7 @@ __host__ __device__ float IntegrateNsa ( const float, const float, const float, 
 __host__ __device__ float IntegrateNsmax ( const float, const float, const float, const float );
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
+__host__ __device__ float GregoryLoredo ( const float, const Walker, const float, const int );
 __host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
 __host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, int, float*, int*, float* );
