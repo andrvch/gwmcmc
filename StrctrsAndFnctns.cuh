@@ -18,7 +18,7 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NTBINS 12
+#define NTBINS 5
 #define NPRS NTBINS+2
 #define FIRSTBIN 2
 #define NHINDX 0
@@ -30,7 +30,7 @@
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 2
+#define NSPCTR 1
 #define BACKIN 1
 #define NSTAT 3
 
@@ -146,7 +146,7 @@ __host__ __device__ Complex ScaleComplex ( Complex, float );
 __host__ __device__ Complex MultiplyComplex ( Complex, Complex );
 __host__ __device__ Complex ConjugateComplex ( Complex );
 __host__ __device__ int PriorCondition ( const Walker );
-__host__ __device__ float PriorStatistic ( const Walker, const int, const float, const float );
+__host__ __device__ float PriorStatistic ( const Walker, const int );
 __host__ __device__ float GaussianAbsorption ( const float, const float, const float, const float );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
@@ -186,7 +186,7 @@ __host__ int FoldModel ( Cuparam*, const int, Spectrum );
 __host__ int ModelFluxes ( const Model*, const int, const Walker*, const int, Spectrum );
 __host__ int InitAtRandom ( Cuparam*, Chain* );
 __host__ int InitFromLast ( Chain* );
-__host__ int Priors ( const Model*, const int, const Walker*, float*, float*, float* );
+__host__ int Priors ( const Model*, const int, const Walker*, float* );
 __host__ int Propose ( const int, const int, Chain* );
 __host__ int Update ( const int, const int, Chain* );
 __host__ int ToChain ( const int, Chain* );
@@ -199,7 +199,7 @@ __global__ void AssembleArrayOfRandomWalkers ( const int, const float*, Walker* 
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, Walker*, Walker*, float* );
 __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float*, float* );
 __global__ void WriteWalkersAndStatisticsToChain ( const int, const int, const Walker*, const float*, const float*, Walker*, float*, float* );
-__global__ void AssembleArrayOfPriors ( const int, const Walker*, const float*, const float*, float* );
+__global__ void AssembleArrayOfPriors ( const int, const Walker*, const float* );
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const Walker*, float* );
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );

@@ -141,22 +141,6 @@ __host__ int Stat ( const int nmbrOfWlkrs, Spectrum spec )
   return 0;
 }
 
-__host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec )
-{
-  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  dim3 dimGrid = Grid ( spec.nmbrOfPhtns, nmbrOfWlkrs );
-  AssembleArrayOfTimesStatistic <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, spec.srcExptm, wlk, spec.arrTms, spec.tmsSttstcs );
-  return 0;
-}
-
-__host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *sttstcs, const Spectrum spec )
-{
-  float alpha = ALPHA;
-  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec.chnnlSttstcs, spec.nmbrOfChnnls, spec.ntcdChnnls, INCXX, &beta, sttstcs, INCYY );
-  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
-  return 0;
-}
-
 __host__ int FoldModel ( Cuparam *cdp, const int nmbrOfWlkrs, Spectrum spec )
 {
   float alpha = ALPHA, beta = BETA;
@@ -539,7 +523,6 @@ __host__ __device__ float Poisson ( const float scnts, const float mdl, const fl
   return sttstc;
 }
 
-
 __host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )
 {
   float sttstc = 0, d, f;
@@ -892,24 +875,15 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int e = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
   int t = e + w * nmbrOfEnrgChnnls;
-  float f = 0, Norm, intNsaFlx;
+  float f = 0;
   float scl = backscal_src / backscal_bkg;
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
   {
     if ( spIndx == 0 )
     {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
-      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
-      f = f + Norm * intNsaFlx;
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f + PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 1 )
-    {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }

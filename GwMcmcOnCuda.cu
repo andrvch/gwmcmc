@@ -19,38 +19,33 @@
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
-  cndtn = cndtn * ( 5.5 < wlkr.par[TINDX] ) * ( wlkr.par[TINDX] < 6.5 );
-  cndtn = cndtn * ( log10 ( 8. / 13. / 6000. ) < wlkr.par[RINDX1] ) * ( wlkr.par[RINDX1] < log10f ( 20. / 13. / 100. ) );
-  cndtn = cndtn * ( log10 ( 100. ) < wlkr.par[DINDX1] ) * ( wlkr.par[DINDX1] < log10f ( 6000. ) );
-  cndtn = cndtn * ( 0. < wlkr.par[NHINDX] );
+  cndtn = cndtn * ( 3.0 < wlkr.par[0] ) * ( wlkr.par[0] < 4.0 );
+  for ( int i = 2; i <  NPRS; i++ )
+  {
+    cndtn = cndtn * ( 0. < wlkr.par[i] );
+  }
   return cndtn;
 }
 
-__host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, const float nhMd, const float nhSg )
+__host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn )
 {
   float prr = 0, sum = 0;
-  //float theta = powf ( nhSg, 2 ) / nhMd;
-  //float kk = nhMd / theta;
-  //sum = sum + ( kk - 1 ) * logf ( wlkr.par[NHINDX] ) - wlkr.par[NHINDX] / theta;
-  sum = sum + powf ( ( wlkr.par[NHINDX] - nhMd ) / nhSg, 2 );
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
 }
 
-__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, const float *nhMd, const float *nhSg, float *prrs )
+__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, float *prrs )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nmbrOfWlkrs )
   {
-    prrs[i] = PriorStatistic ( wlkrs[i], PriorCondition ( wlkrs[i] ), nhMd[i], nhSg[i] );
+    prrs[i] = PriorStatistic ( wlkrs[i], PriorCondition ( wlkrs[i] ) );
   }
 }
 
-__host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, float *nhMd, float *nhSg, float *prrs )
+__host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, float *prrs )
 {
-  //LinearInterpolation <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, mdl[0].nmbrOfDistBins, DINDX1, mdl[0].Dist, mdl[0].EBV, mdl[0].errEBV, wlkrs, nhMd, nhSg );
-  LinearInterpolationNoErrors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, wlkrs, nhMd, nhSg );
-  AssembleArrayOfPriors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, wlkrs, nhMd, nhSg, prrs );
+  AssembleArrayOfPriors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, wlkrs, prrs );
   return 0;
 }
 
@@ -75,8 +70,23 @@ __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int
   int t = a + w * nmbrOfPhtns;
   if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
   {
-    tmsSttstcs[t] = GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
+    tmsSttstcs[t] = 1; //GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
   }
+}
+__host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec )
+{
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 dimGrid = Grid ( spec.nmbrOfChnnls, nmbrOfWlkrs );
+  AssembleArrayOfTimesStatistic <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, spec.srcExptm, wlk, spec.srcCnts, spec.chnnlSttstcs );
+  return 0;
+}
+
+__host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *sttstcs, const Spectrum spec )
+{
+  float alpha = ALPHA;
+  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec.chnnlSttstcs, spec.nmbrOfChnnls, spec.ntcdChnnls, INCXX, &beta, sttstcs, INCYY );
+  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+  return 0;
 }
 
 /**
@@ -86,10 +96,10 @@ int main ( int argc, char *argv[] )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float lwrNtcdEnrg1 = 0.4;
-  const float hghrNtcdEnrg1 = 7.0;
+  const float lwrNtcdEnrg1 = 0.;
+  const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
+  const float phbsPwrlwInt[NPRS] = { 3.36, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -99,8 +109,7 @@ int main ( int argc, char *argv[] )
 
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
-  const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  const char *spcLst[NSPCTR] = { spcFl1 };
 
   chn[0].thrdNm = argv[NSPCTR+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NSPCTR+3] );
@@ -126,13 +135,11 @@ int main ( int argc, char *argv[] )
   if ( chn[0].thrdIndx == 0 )
   {
     InitAtRandom ( cdp, chn );
-    Priors ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].nhMd, chn[0].nhSg, chn[0].prrs );
+    Priors ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].prrs );
     for ( int i = 0; i < NSPCTR; i++ )
     {
-      ModelFluxes ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, i, spc[i] );
-      FoldModel ( cdp, chn[0].nmbrOfWlkrs, spc[i] );
-      Stat ( chn[0].nmbrOfWlkrs, spc[i] );
-      SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
+      //StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i] );
+      //SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
     }
   }
   else if ( chn[0].thrdIndx > 0 )
@@ -155,13 +162,11 @@ int main ( int argc, char *argv[] )
     while ( sbstIndx < 2 )
     {
       Propose ( stpIndx, sbstIndx, chn );
-      Priors ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].nhMd, chn[0].nhSg, chn[0].prpsdPrrs );
+      Priors ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
       for ( int i = 0; i < NSPCTR; i++ )
       {
-        ModelFluxes ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, i, spc[i] );
-        FoldModel ( cdp, chn[0].nmbrOfWlkrs / 2, spc[i] );
-        Stat ( chn[0].nmbrOfWlkrs / 2, spc[i] );
-        SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i] );
+        //StatTimes ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[i] );
+        //SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i] );
       }
       Update ( stpIndx, sbstIndx, chn );
       sbstIndx += 1;
