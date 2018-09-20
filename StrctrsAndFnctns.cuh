@@ -193,6 +193,8 @@ __host__ int ToChain ( const int, Chain* );
 __host__ int SpecInfo ( const char*[], const int, Spectrum* );
 __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int SpecData ( Cuparam*, const int, Model*, Spectrum* );
+__host__ int ReadTimesInfo ( const char*, int*, float* );
+__host__ int TimesInfo ( const char*[], const int, Spectrum* );
 
 /* Kernels */
 __global__ void AssembleArrayOfRandomWalkers ( const int, const float*, Walker* );

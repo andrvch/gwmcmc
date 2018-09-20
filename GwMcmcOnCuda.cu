@@ -89,6 +89,33 @@ __host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, 
   return 0;
 }
 
+__host__ int TimesInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc )
+{
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    ReadTimesInfo ( spcLst[i], &spc[i].nmbrOfPhtns, &spc[i].srcExptm );
+  }
+  return 0;
+}
+
+__host__ int ReadTimesInfo ( const char *spcFl, int *nmbrOfPhtns, float *srcExptm )
+{
+  fitsfile *fptr;      /* FITS file pointer, defined in fitsio.h */
+  int status = 0, hdutype;   /*  CFITSIO status value MUST be initialized to zero!  */
+  long nrows;
+  fits_open_file(&fptr, spcFl, READONLY, &status);
+  fits_movabs_hdu(fptr, 2, &hdutype, &status);
+  fits_get_num_rows(fptr, &nrows, &status);
+  printf ( "%i\n", status );
+  *nmbrOfPhtns = nrows;
+  printf ( "%i\n", *nmbrOfPhtns );
+  fits_read_key ( fptr, TFLOAT, "EXPOSURE", srcExptm, NULL, &status );
+  printf ( "%i\n", status );
+  printf ( "%.8E\n", *srcExptm );
+  return 0;
+}
+
+
 /**
  * Host main routine
  */
@@ -99,7 +126,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 3.36, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+  const float phbsPwrlwInt[NPRS] = { 3.36, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -110,6 +137,7 @@ int main ( int argc, char *argv[] )
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
   const char *spcLst[NSPCTR] = { spcFl1 };
+  const char *tmsLst[NSPCTR] = { "PNclean_bary1.fits" };
 
   chn[0].thrdNm = argv[NSPCTR+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NSPCTR+3] );
@@ -127,6 +155,8 @@ int main ( int argc, char *argv[] )
   InitializeModel ( mdl );
   InitializeChain ( cdp, phbsPwrlwInt, chn );
 
+  TimesInfo ( tmsLst, verbose, spc );
+
   SpecInfo ( spcLst, verbose, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, verbose, mdl, spc );
@@ -138,8 +168,8 @@ int main ( int argc, char *argv[] )
     Priors ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].prrs );
     for ( int i = 0; i < NSPCTR; i++ )
     {
-      //StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i] );
-      //SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
+      StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i] );
+      SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
     }
   }
   else if ( chn[0].thrdIndx > 0 )
@@ -165,8 +195,8 @@ int main ( int argc, char *argv[] )
       Priors ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
       for ( int i = 0; i < NSPCTR; i++ )
       {
-        //StatTimes ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[i] );
-        //SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i] );
+        StatTimes ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[i] );
+        SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i] );
       }
       Update ( stpIndx, sbstIndx, chn );
       sbstIndx += 1;
