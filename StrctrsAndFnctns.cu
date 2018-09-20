@@ -539,19 +539,6 @@ __host__ __device__ float Poisson ( const float scnts, const float mdl, const fl
   return sttstc;
 }
 
-__host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, const float Ttot, const int N )
-{
-    float sttstc = 0, f, phi, jt, jtFr, jtInt, jtJt, A;
-    f = wlkr.par[0] * 1.E-6 + F0;
-    phi = wlkr.par[1];
-    jt = 1 + ( NTBINS / ( 2 * PI ) ) * fmodf ( 2 * PI * f * tms + phi, 2 * PI );
-    jtFr = modff( jt, &jtInt );
-    jtJt = jt - jtFr;
-    int jIndx = llroundf ( jtJt );
-    A = SumOfComponents ( wlkr ) / NTBINS;
-    sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx] / NTBINS / A );
-    return sttstc;
-}
 
 __host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )
 {
@@ -598,6 +585,16 @@ __host__ __device__ int FindElementIndex ( const float *xx, const int n, const f
   if ( x == xx[0] ) jres = 0;
   if ( x >= xx[n-1] ) jres = n - 1;
   return jres;
+}
+
+__host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, const int indx, Spectrum spec )
+{
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  AssembleArrayOfAbsorptionFactors <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
+  BilinearInterpolationNsmax <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  //BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  AssembleArrayOfModelFluxes <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.mdlFlxs );
+  return 0;
 }
 
 __host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns )
@@ -890,6 +887,34 @@ __host__ int ChooseWindow ( const int nmbrOfStps, const float c, const float *cm
 }
 
 /* Kernels: */
+__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const Walker *wlk, const float *nsa1Flx, float *flx )
+{
+  int e = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = e + w * nmbrOfEnrgChnnls;
+  float f = 0, Norm, intNsaFlx;
+  float scl = backscal_src / backscal_bkg;
+  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
+  {
+    if ( spIndx == 0 )
+    {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
+      f = f + Norm * intNsaFlx;
+      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 1 )
+    {
+      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+  }
+}
+
 __global__ void AssembleArrayOfRandomWalkers ( const int nmbrOfWlkrs, const float *rndmVls, Walker *rndmWlkr )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -939,15 +964,6 @@ __global__ void WriteWalkersAndStatisticsToChain ( const int nmbrOfWlkrs, const 
     chnOfWlkrs[t] = wlkrs[w];
     chnOfSttstcs[t] = sttstcs[w];
     chnOfPrrs[t] = prrs[w];
-  }
-}
-
-__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, const float *nhMd, const float *nhSg, float *prrs )
-{
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < nmbrOfWlkrs )
-  {
-    prrs[i] = PriorStatistic ( wlkrs[i], PriorCondition ( wlkrs[i] ), nhMd[i], nhSg[i] );
   }
 }
 
@@ -1006,17 +1022,6 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const 
   {
     //chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
     chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
-  }
-}
-
-__global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float srcExptm, const Walker *wlk, const float *arrTms, float *tmsSttstcs )
-{
-  int a = threadIdx.x + blockDim.x * blockIdx.x;
-  int w = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = a + w * nmbrOfPhtns;
-  if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
-  {
-    tmsSttstcs[t] = GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
   }
 }
 

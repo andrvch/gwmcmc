@@ -30,7 +30,7 @@
 #define DINDX2 6
 #define NELMS 30
 #define ATNMR 18
-#define NSPCTR 12
+#define NSPCTR 2
 #define BACKIN 1
 #define NSTAT 3
 
@@ -183,7 +183,7 @@ __host__ int Stat ( const int, Spectrum );
 __host__ int StatTimes ( const int, const Walker*, Spectrum );
 __host__ int SumUpStat ( Cuparam*, const float, const int, float*, const Spectrum );
 __host__ int FoldModel ( Cuparam*, const int, Spectrum );
-__host__ int ModelFluxes ( const Model*, const int, const Walker*, Spectrum );
+__host__ int ModelFluxes ( const Model*, const int, const Walker*, const int, Spectrum );
 __host__ int InitAtRandom ( Cuparam*, Chain* );
 __host__ int InitFromLast ( Chain* );
 __host__ int Priors ( const Model*, const int, const Walker*, float*, float*, float* );

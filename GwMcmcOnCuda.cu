@@ -37,110 +37,13 @@ __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn, c
   return prr;
 }
 
-__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const Walker *wlk, const float *nsa1Flx, float *flx )
+__global__ void AssembleArrayOfPriors ( const int nmbrOfWlkrs, const Walker *wlkrs, const float *nhMd, const float *nhSg, float *prrs )
 {
-  int e = threadIdx.x + blockDim.x * blockIdx.x;
-  int w = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = e + w * nmbrOfEnrgChnnls;
-  float f = 0, Norm, intNsaFlx;
-  float scl = backscal_src / backscal_bkg;
-  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nmbrOfWlkrs )
   {
-    if ( spIndx == 0 )
-    {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
-      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
-      f = f + Norm * intNsaFlx;
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 1 )
-    {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 2 )
-    {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
-      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
-      f = f + Norm * intNsaFlx;
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 3 )
-    {
-      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 4 )
-    {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
-      Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] + KMCMPCCM ) );
-      f = f + Norm * intNsaFlx;
-      f = f + PowerLaw ( wlk[w].par[3], wlk[w].par[4], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 5 )
-    {
-      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 6 )
-    {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 7 )
-    {
-      f = f + PowerLaw ( wlk[w].par[7], wlk[w].par[8], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 8 )
-    {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 9 )
-    {
-      f = f + PowerLaw ( wlk[w].par[9], wlk[w].par[10], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 10 )
-    {
-      f = f + PowerLaw ( wlk[w].par[5], wlk[w].par[6], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 11 )
-    {
-      f = f + PowerLaw ( wlk[w].par[11], wlk[w].par[12], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
+    prrs[i] = PriorStatistic ( wlkrs[i], PriorCondition ( wlkrs[i] ), nhMd[i], nhSg[i] );
   }
-}
-
-__host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, const int indx, Spectrum spec )
-{
-  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  AssembleArrayOfAbsorptionFactors <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  BilinearInterpolationNsmax <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  //BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  AssembleArrayOfModelFluxes <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.mdlFlxs );
-  return 0;
 }
 
 __host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, float *nhMd, float *nhSg, float *prrs )
@@ -149,6 +52,31 @@ __host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlk
   LinearInterpolationNoErrors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, wlkrs, nhMd, nhSg );
   AssembleArrayOfPriors <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, wlkrs, nhMd, nhSg, prrs );
   return 0;
+}
+
+__host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, const float Ttot, const int N )
+{
+    float sttstc = 0, f, phi, jt, jtFr, jtInt, jtJt, A;
+    f = wlkr.par[0] * 1.E-6 + F0;
+    phi = wlkr.par[1];
+    jt = 1 + ( NTBINS / ( 2 * PI ) ) * fmodf ( 2 * PI * f * tms + phi, 2 * PI );
+    jtFr = modff( jt, &jtInt );
+    jtJt = jt - jtFr;
+    int jIndx = llroundf ( jtJt );
+    A = SumOfComponents ( wlkr ) / NTBINS;
+    sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx] / NTBINS / A );
+    return sttstc;
+}
+
+__global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float srcExptm, const Walker *wlk, const float *arrTms, float *tmsSttstcs )
+{
+  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = a + w * nmbrOfPhtns;
+  if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
+  {
+    tmsSttstcs[t] = GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
+  }
 }
 
 /**
@@ -160,8 +88,6 @@ int main ( int argc, char *argv[] )
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.4;
   const float hghrNtcdEnrg1 = 7.0;
-  const float lwrNtcdEnrg2 = 0.2;
-  const float hghrNtcdEnrg2 = 7.0;
   const float dlt = 1.E-4;
   const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
 
@@ -174,42 +100,18 @@ int main ( int argc, char *argv[] )
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  const char *spcFl3 = argv[4];
-  const char *spcFl4 = argv[5];
-  const char *spcFl5 = argv[6];
-  const char *spcFl6 = argv[7];
-  const char *spcFl7 = argv[8];
-  const char *spcFl8 = argv[9];
-  const char *spcFl9 = argv[10];
-  const char *spcFl10 = argv[11];
-  const char *spcFl11 = argv[12];
-  const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
-  int NNspec = 12;
-  chn[0].thrdNm = argv[NNspec+2];
-  chn[0].nmbrOfWlkrs = atoi ( argv[NNspec+3] );
-  chn[0].nmbrOfStps = atoi ( argv[NNspec+4] );
-  chn[0].thrdIndx = atoi ( argv[NNspec+5] );
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+
+  chn[0].thrdNm = argv[NSPCTR+2];
+  chn[0].nmbrOfWlkrs = atoi ( argv[NSPCTR+3] );
+  chn[0].nmbrOfStps = atoi ( argv[NSPCTR+4] );
+  chn[0].thrdIndx = atoi ( argv[NSPCTR+5] );
   chn[0].dlt = dlt;
-  for ( int i = 0; i < 2; i++ )
+
+  for ( int i = 0; i < NSPCTR; i++ )
   {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
-  }
-  for ( int i = 2; i < 6; i++ )
-  {
-    spc[i].lwrNtcdEnrg = lwrNtcdEnrg2;
-    spc[i].hghrNtcdEnrg = hghrNtcdEnrg2;
-  }
-  for ( int i = 6; i < 8; i++ )
-  {
-    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
-    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
-  }
-  for ( int i = 8; i < NSPCTR; i++ )
-  {
-    spc[i].lwrNtcdEnrg = lwrNtcdEnrg2;
-    spc[i].hghrNtcdEnrg = hghrNtcdEnrg2;
   }
 
   InitializeCuda ( cdp );
