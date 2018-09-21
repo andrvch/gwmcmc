@@ -89,7 +89,7 @@ struct Spectrum
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
-  float *tmsSttstcs, *arrTms;
+  float *tmsSttstcs, *arrTms, *ntcdTms;
   int nmbrOfPhtns;
 };
 
@@ -195,8 +195,12 @@ __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int SpecData ( Cuparam*, const int, Model*, Spectrum* );
 __host__ int ReadTimesInfo ( const char*, int*, float* );
 __host__ int TimesInfo ( const char*[], const int, Spectrum* );
+__host__ int TimesAlloc ( Chain*, Spectrum* );
+__host__ int ReadTimesData ( const int, const char*, const int, float* );
+__host__ int TimesData ( const char*[], Cuparam*, const int, Spectrum* );
 
 /* Kernels */
+__global__ void AssembleArrayOfNoticedTimes ( const int, float* );
 __global__ void AssembleArrayOfRandomWalkers ( const int, const float*, Walker* );
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, Walker*, Walker*, float* );
 __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float*, float* );

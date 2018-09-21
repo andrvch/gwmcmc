@@ -19,7 +19,8 @@
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
-  cndtn = cndtn * ( 3.0 < wlkr.par[0] ) * ( wlkr.par[0] < 4.0 );
+  float Fr = wlkr.par[0]*1.E-6 + F0;
+  cndtn = cndtn * ( 3.36230 < Fr ) * ( Fr < 3.36240 );
   for ( int i = 2; i <  NPRS; i++ )
   {
     cndtn = cndtn * ( 0. < wlkr.par[i] );
@@ -70,21 +71,21 @@ __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int
   int t = a + w * nmbrOfPhtns;
   if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
   {
-    tmsSttstcs[t] = 1; //GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
+    tmsSttstcs[t] = GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
   }
 }
 __host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  dim3 dimGrid = Grid ( spec.nmbrOfChnnls, nmbrOfWlkrs );
-  AssembleArrayOfTimesStatistic <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, spec.srcExptm, wlk, spec.srcCnts, spec.chnnlSttstcs );
+  dim3 dimGrid = Grid ( spec.nmbrOfPhtns, nmbrOfWlkrs );
+  AssembleArrayOfTimesStatistic <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, spec.srcExptm, wlk, spec.arrTms, spec.tmsSttstcs );
   return 0;
 }
 
 __host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *sttstcs, const Spectrum spec )
 {
   float alpha = ALPHA;
-  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec.chnnlSttstcs, spec.nmbrOfChnnls, spec.ntcdChnnls, INCXX, &beta, sttstcs, INCYY );
+  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfPhtns, nmbrOfWlkrs, &alpha, spec.tmsSttstcs, spec.nmbrOfPhtns, spec.ntcdTms, INCXX, &beta, sttstcs, INCYY );
   if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
   return 0;
 }
@@ -109,12 +110,68 @@ __host__ int ReadTimesInfo ( const char *spcFl, int *nmbrOfPhtns, float *srcExpt
   printf ( "%i\n", status );
   *nmbrOfPhtns = nrows;
   printf ( "%i\n", *nmbrOfPhtns );
-  fits_read_key ( fptr, TFLOAT, "EXPOSURE", srcExptm, NULL, &status );
+  //snprintf ( card, sizeof ( card ), "%s%s", spcFl, "[EVENTS]" );
+  //fits_open_file ( &fptr, card, READONLY, &status );
+  fits_read_key ( fptr, TFLOAT, "DURATION", srcExptm, NULL, &status );
   printf ( "%i\n", status );
   printf ( "%.8E\n", *srcExptm );
   return 0;
 }
 
+__host__ int TimesAlloc ( Chain *chn, Spectrum *spc )
+{
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcdTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].tmsSttstcs, spc[i].nmbrOfPhtns * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].arrTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
+  }
+  return 0;
+}
+
+__host__ int TimesData ( const char *spcFl[NSPCTR], Cuparam *cdp, const int verbose, Spectrum *spc )
+{
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    ReadTimesData ( verbose, spcFl[i], spc[i].nmbrOfPhtns, spc[i].arrTms );
+    AssembleArrayOfNoticedTimes <<< Blocks ( spc[i].nmbrOfPhtns ), THRDSPERBLCK >>> ( spc[i].nmbrOfPhtns, spc[i].ntcdTms );
+  }
+  return 0;
+}
+
+__global__ void AssembleArrayOfNoticedTimes ( const int nmbrOfPhtns, float *ntcdTms )
+{
+  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( a < nmbrOfPhtns )
+  {
+    ntcdTms[a] = 1.;
+  }
+}
+
+__host__ int ReadTimesData ( const int verbose, const char *spcFl, const int nmbrOfPhtns, float *arrTms )
+{
+  fitsfile *fptr;      /* FITS file pointer, defined in fitsio.h */
+  int status = 0, hdutype;   /*  CFITSIO status value MUST be initialized to zero!  */
+  long nrows;
+  long  firstrow=1, firstelem=1;
+  int colnum = 1, anynul;
+  float enullval=0.0;
+  fits_open_file(&fptr, spcFl, READONLY, &status);
+  fits_movabs_hdu(fptr, 2, &hdutype, &status);
+  fits_get_num_rows(fptr, &nrows, &status);
+  int numData = nrows;
+  double *tms0;
+  cudaMallocManaged( (void **)&tms0, numData*sizeof(double) );
+  fits_read_col_dbl(fptr, colnum, firstrow, firstelem, nrows, enullval, tms0, &anynul, &status);
+  fits_close_file(fptr, &status);
+  for (int i = 0; i < nrows; i++)
+  {
+    arrTms[i] = tms0[i] - tms0[0];
+    //printf( " %.10E ", tms[i] );
+  }
+  cudaFree ( tms0 );
+  return 0;
+}
 
 /**
  * Host main routine
@@ -126,7 +183,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 3.36, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1 };
+  const float phbsPwrlwInt[NPRS] = { 0.0, 0.5, 0.1, 0.1, 0.1, 0.1, 0.1 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -156,10 +213,12 @@ int main ( int argc, char *argv[] )
   InitializeChain ( cdp, phbsPwrlwInt, chn );
 
   TimesInfo ( tmsLst, verbose, spc );
+  TimesAlloc ( chn, spc );
+  TimesData ( tmsLst, cdp, verbose, spc );
 
-  SpecInfo ( spcLst, verbose, spc );
-  SpecAlloc ( chn, spc );
-  SpecData ( cdp, verbose, mdl, spc );
+  //SpecInfo ( spcLst, verbose, spc );
+  //SpecAlloc ( chn, spc );
+  //SpecData ( cdp, verbose, mdl, spc );
 
   /* Initialize walkers */
   if ( chn[0].thrdIndx == 0 )
@@ -240,6 +299,7 @@ int main ( int argc, char *argv[] )
   printf ( "\n" );
 
   /* Write results to a file */
+  SimpleWriteDataFloat ( "ArrTms.out", spc[0].nmbrOfPhtns, spc[0].arrTms );
   SimpleWriteDataFloat ( "Autocor.out", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
   SimpleWriteDataFloat ( "AutocorCM.out", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
   WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs, chn[0].chnOfPrrs );

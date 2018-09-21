@@ -15,7 +15,7 @@ B = -0.93
 ifscale = True
 
 #marshall = mwdust.Marshall06(sf10=True)
-#drimmel = mwdust.Drimmel03(sf10=ifscale)
+drimmel = mwdust.Drimmel03(sf10=ifscale)
 green = mwdust.Green15(sf10=ifscale)
 #sale = mwdust.Sale14(sf10=ifscale)
 #zero = mwdust.Zero(sf10=ifscale)
@@ -32,7 +32,7 @@ for i in range(Ndist):
 f.close()
 
 #plt.plot(D,marshall(L,B,D),'k-',label=r'$\rm Marshall \, et \, al. \, (2006)$',linewidth=2.0)
-#plt.plot(D,drimmel(L,B,D),'y-',label=r'$\rm Drimmel \, et \, al. \, (2003)$',linewidth=2.0)
+plt.plot(D,drimmel(L,B,D),'y-',label=r'$\rm Drimmel \, et \, al. \, (2003)$',linewidth=2.0)
 plt.plot(D,green(L,B,D),'g-',label=r'$\rm Green \, et \, al. \, (2015)$',linewidth=2.0)
 #plt.plot(D,sale(L,B,D),'b-',label=r'$\rm Sale \, et \, al. \, (2014)$',linewidth=2.0)
 #plt.plot(D,zero(L,B,D),'k--',label='-)')

@@ -27,16 +27,12 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[np.r_[0:7, 13:samples.shape[0]-1],:]
+samples = samples[:samples.shape[0]-1,:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
 
 npars = len(samples)
-
-samples[0] = gr * kb * 10**samples[0] / kev
-samples[1] = samples[1] + samples[2] + math.log10(Rns)
-samples[2] = samples[2]
 
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
@@ -96,4 +92,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[3])
+plt.savefig(sys.argv[1]+"trngl"+".pdf")

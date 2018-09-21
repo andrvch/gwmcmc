@@ -95,8 +95,6 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc )
     cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spc[i].tmsSttstcs, spc[i].nmbrOfPhtns * chn[0].nmbrOfWlkrs * sizeof ( float ) );
-    cudaMallocManaged ( ( void ** ) &spc[i].arrTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
   }
   return 0;
 }
@@ -187,6 +185,7 @@ __host__ void FreeSpec ( const Spectrum *spc )
     cudaFree ( spc[i].ntcdChnnls );
     cudaFree ( spc[i].tmsSttstcs );
     cudaFree ( spc[i].arrTms );
+    cudaFree ( spc[i].ntcdTms );
   }
 }
 
