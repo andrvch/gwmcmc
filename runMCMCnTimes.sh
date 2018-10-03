@@ -1,6 +1,6 @@
 #!/bin/bash
 CUDAID=0
-SPECFILE1="PN_J0633_15asec_grp15.pi"
+SPECFILE1="PNclean_bary1.fits"
 CHAINFILE=$1
 LOGFILE="Log"
 NWALK=1024

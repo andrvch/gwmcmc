@@ -74,6 +74,7 @@ __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int
     tmsSttstcs[t] = GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
   }
 }
+
 __host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
@@ -193,8 +194,7 @@ int main ( int argc, char *argv[] )
 
   cdp[0].dev = atoi( argv[1] );
   const char *spcFl1 = argv[2];
-  const char *spcLst[NSPCTR] = { spcFl1 };
-  const char *tmsLst[NSPCTR] = { "PNclean_bary1.fits" };
+  const char *tmsLst[NSPCTR] = { spcFl1 };
 
   chn[0].thrdNm = argv[NSPCTR+2];
   chn[0].nmbrOfWlkrs = atoi ( argv[NSPCTR+3] );
@@ -215,10 +215,6 @@ int main ( int argc, char *argv[] )
   TimesInfo ( tmsLst, verbose, spc );
   TimesAlloc ( chn, spc );
   TimesData ( tmsLst, cdp, verbose, spc );
-
-  //SpecInfo ( spcLst, verbose, spc );
-  //SpecAlloc ( chn, spc );
-  //SpecData ( cdp, verbose, mdl, spc );
 
   /* Initialize walkers */
   if ( chn[0].thrdIndx == 0 )
