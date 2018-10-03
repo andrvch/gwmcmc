@@ -1,10 +1,10 @@
 #!/bin/bash
 CUDAID=0
-SPECFILE1="PNclean_bary1.fits"
+SPECFILE1="j1741_1-8kev-bar-20arcsec.fits"
 CHAINFILE=$1
 LOGFILE="Log"
-NWALK=1024
-LSTEP=1024
+NWALK=2
+LSTEP=1
 i=$2
 NCHAINS=$3
 let NCHAINS=NCHAINS+i

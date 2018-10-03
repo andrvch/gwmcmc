@@ -35,7 +35,7 @@
 #define NSTAT 3
 
 #define FINDX 0
-#define F0 3.36233
+#define F0 2.4213
 
 /* Walker data type */
 typedef union wlk3u

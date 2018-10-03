@@ -19,8 +19,8 @@
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
-  float Fr = wlkr.par[0]*1.E-6 + F0;
-  cndtn = cndtn * ( 3.36230 < Fr ) * ( Fr < 3.36240 );
+  float Fr = wlkr.par[0];
+  cndtn = cndtn * ( 2.3 < Fr ) * ( Fr < 2.6 );
   for ( int i = 2; i <  NPRS; i++ )
   {
     cndtn = cndtn * ( 0. < wlkr.par[i] );
@@ -53,14 +53,14 @@ __host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlk
 __host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, const float Ttot, const int N )
 {
     float sttstc = 0, f, phi, jt, jtFr, jtInt, jtJt, A;
-    f = wlkr.par[0] * 1.E-6 + F0;
+    f = wlkr.par[0]; // * 1.E-6 + F0;
     phi = wlkr.par[1];
     jt = 1 + ( NTBINS / ( 2 * PI ) ) * fmodf ( 2 * PI * f * tms + phi, 2 * PI );
     jtFr = modff( jt, &jtInt );
     jtJt = jt - jtFr;
     int jIndx = llroundf ( jtJt );
     A = SumOfComponents ( wlkr ) / NTBINS;
-    sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx] / NTBINS / A );
+    sttstc = A; //wlkr.par[jIndx+2]; //logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx+1] );
     return sttstc;
 }
 
@@ -183,8 +183,8 @@ int main ( int argc, char *argv[] )
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
-  const float dlt = 1.E-4;
-  const float phbsPwrlwInt[NPRS] = { 0.0, 0.5, 0.1, 0.1, 0.1, 0.1, 0.1 };
+  const float dlt = 1.E-9;
+  const float phbsPwrlwInt[NPRS] = { 2.4, 0.5, 1., 1., 1., 1., 1. };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -224,6 +224,10 @@ int main ( int argc, char *argv[] )
     for ( int i = 0; i < NSPCTR; i++ )
     {
       StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i] );
+      for (int j = 0; j < chn[0].nmbrOfWlkrs * spc[i].nmbrOfPhtns; j++ )
+      {
+        printf ( "%.8E\n", spc[i].tmsSttstcs[j] );
+      }
       SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
     }
   }

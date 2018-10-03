@@ -21,3 +21,4 @@ GwMcmcStructuresFunctionsAndKernels.cu
 *.eps
 *.pdf
 ._Log
+.Log*
