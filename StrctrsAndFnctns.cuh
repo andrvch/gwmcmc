@@ -16,7 +16,7 @@
 #define BETA  0e0f
 #define INCXX 1
 #define INCYY 1
-#define THRDSPERBLCK 32
+#define THRDSPERBLCK 16
 #define RANK 1
 #define NTBINS 5
 #define NPRS NTBINS+2
@@ -200,6 +200,7 @@ __host__ int ReadTimesData ( const int, const char*, const int, float* );
 __host__ int TimesData ( const char*[], Cuparam*, const int, Spectrum* );
 
 /* Kernels */
+__global__ void AssembleArrayOfTimesStatistic ( const int, const int, const float, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedTimes ( const int, float* );
 __global__ void AssembleArrayOfRandomWalkers ( const int, const float*, Walker* );
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, Walker*, Walker*, float* );

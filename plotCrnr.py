@@ -13,22 +13,12 @@ import corner
 #samples = cudakde.read_data_nsmpl(sys.argv[1],nsm)
 samples = cudakde.read_data(sys.argv[1])
 print samples.shape
-samples = samples[np.r_[0:7, 13:samples.shape[0]-1],:]
+#samples = samples[np.r_[0:7, 13:samples.shape[0]-1],:]
+samples = samples[:-1,:]
 print samples.shape
 
-Mns = 1.4
-Rns = 13.
-kb = 1.38E-16
-kev = 1.6022E-9
-gr = math.sqrt(1 - 2.952 * Mns / Rns)
-
-samples[0] = gr * kb * 10**samples[0] / kev
-samples[1] = samples[1] + samples[2] + math.log10(Rns)
-samples[2] = samples[2]
-#samples = samples[:,np.where(samples[-1,:]<14000)[0]]
-#print samples.shape
 samples = np.transpose(samples)
 print samples.shape
 
 fig = corner.corner(samples, no_fill_contours=False, draw_datapoints=True)
-fig.savefig(sys.argv[2])
+fig.savefig(sys.argv[1]+"crnrs"+".pdf")

@@ -20,7 +20,9 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
   int cndtn = 1;
   float Fr = wlkr.par[0];
-  cndtn = cndtn * ( 2.3 < Fr ) * ( Fr < 2.6 );
+  float phase = wlkr.par[1];
+  cndtn = cndtn * ( 2.4168 < Fr ) * ( Fr < 2.4176 );
+  cndtn = cndtn * ( 0.0 < phase ) * ( phase < 2 * PI );
   for ( int i = 2; i <  NPRS; i++ )
   {
     cndtn = cndtn * ( 0. < wlkr.par[i] );
@@ -30,7 +32,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn )
 {
-  float prr = 0, sum = 0;
+  float prr = 0, sum = 2 * logf ( 2 * wlkr.par[0]);
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
 }
@@ -60,7 +62,7 @@ __host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, co
     jtJt = jt - jtFr;
     int jIndx = llroundf ( jtJt );
     A = SumOfComponents ( wlkr ) / NTBINS;
-    sttstc = A; //wlkr.par[jIndx+2]; //logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx+1] );
+    sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx+1] / A / NTBINS );
     return sttstc;
 }
 
@@ -71,7 +73,7 @@ __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int
   int t = a + w * nmbrOfPhtns;
   if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
   {
-    tmsSttstcs[t] = GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
+    tmsSttstcs[t] = - 2. * GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
   }
 }
 
@@ -88,15 +90,6 @@ __host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, 
   float alpha = ALPHA;
   cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfPhtns, nmbrOfWlkrs, &alpha, spec.tmsSttstcs, spec.nmbrOfPhtns, spec.ntcdTms, INCXX, &beta, sttstcs, INCYY );
   if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
-  return 0;
-}
-
-__host__ int TimesInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc )
-{
-  for ( int i = 0; i < NSPCTR; i++ )
-  {
-    ReadTimesInfo ( spcLst[i], &spc[i].nmbrOfPhtns, &spc[i].srcExptm );
-  }
   return 0;
 }
 
@@ -119,6 +112,15 @@ __host__ int ReadTimesInfo ( const char *spcFl, int *nmbrOfPhtns, float *srcExpt
   return 0;
 }
 
+__host__ int TimesInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc )
+{
+  for ( int i = 0; i < NSPCTR; i++ )
+  {
+    ReadTimesInfo ( spcLst[i], &spc[i].nmbrOfPhtns, &spc[i].srcExptm );
+  }
+  return 0;
+}
+
 __host__ int TimesAlloc ( Chain *chn, Spectrum *spc )
 {
   for ( int i = 0; i < NSPCTR; i++ )
@@ -130,6 +132,15 @@ __host__ int TimesAlloc ( Chain *chn, Spectrum *spc )
   return 0;
 }
 
+__global__ void AssembleArrayOfNoticedTimes ( const int nmbrOfPhtns, float *ntcdTms )
+{
+  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( a < nmbrOfPhtns )
+  {
+    ntcdTms[a] = 1.;
+  }
+}
+
 __host__ int TimesData ( const char *spcFl[NSPCTR], Cuparam *cdp, const int verbose, Spectrum *spc )
 {
   for ( int i = 0; i < NSPCTR; i++ )
@@ -138,15 +149,6 @@ __host__ int TimesData ( const char *spcFl[NSPCTR], Cuparam *cdp, const int verb
     AssembleArrayOfNoticedTimes <<< Blocks ( spc[i].nmbrOfPhtns ), THRDSPERBLCK >>> ( spc[i].nmbrOfPhtns, spc[i].ntcdTms );
   }
   return 0;
-}
-
-__global__ void AssembleArrayOfNoticedTimes ( const int nmbrOfPhtns, float *ntcdTms )
-{
-  int a = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( a < nmbrOfPhtns )
-  {
-    ntcdTms[a] = 1.;
-  }
 }
 
 __host__ int ReadTimesData ( const int verbose, const char *spcFl, const int nmbrOfPhtns, float *arrTms )
@@ -183,8 +185,8 @@ int main ( int argc, char *argv[] )
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
-  const float dlt = 1.E-9;
-  const float phbsPwrlwInt[NPRS] = { 2.4, 0.5, 1., 1., 1., 1., 1. };
+  const float dlt = 1.E-6;
+  const float phbsPwrlwInt[NPRS] = { 2.417, 0.5, 1.5, 1.2, 1.1, 1.3, 1.4 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -224,10 +226,6 @@ int main ( int argc, char *argv[] )
     for ( int i = 0; i < NSPCTR; i++ )
     {
       StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i] );
-      for (int j = 0; j < chn[0].nmbrOfWlkrs * spc[i].nmbrOfPhtns; j++ )
-      {
-        printf ( "%.8E\n", spc[i].tmsSttstcs[j] );
-      }
       SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
     }
   }
