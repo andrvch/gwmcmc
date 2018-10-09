@@ -18,12 +18,13 @@
 /* Functions and Kernels: */
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
-  int cndtn = 1;
-  float Fr = wlkr.par[0];
-  float phase = wlkr.par[1];
-  cndtn = cndtn * ( 2.4168 < Fr ) * ( Fr < 2.4176 );
-  cndtn = cndtn * ( 0.0 < phase ) * ( phase < 2 * PI );
-  for ( int i = 2; i <  NPRS; i++ )
+  int cndtn = 1, frq, phs;
+  frq = wlkr.par[0];
+  cndtn = cndtn * ( 3.358 < frq ) * ( frq < 3.366 );
+  //cndtn = cndtn * ( 2.40 < Fr ) * ( Fr < 2.43 );
+  phs = wlkr.par[1];
+  cndtn = cndtn * ( 0.0 < phs ) * ( phs < 1. / NTBINS );
+  for ( int i = FIRSTBIN; i <  NPRS; i++ )
   {
     cndtn = cndtn * ( 0. < wlkr.par[i] );
   }
@@ -32,7 +33,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
 
 __host__ __device__ float PriorStatistic ( const Walker wlkr, const int cndtn )
 {
-  float prr = 0, sum = 2 * logf ( 2 * wlkr.par[0]);
+  float prr = 0, sum = 2. * logf ( 2 * wlkr.par[0]);
   if ( cndtn ) { prr = sum; } else { prr = INF; }
   return prr;
 }
@@ -54,16 +55,16 @@ __host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlk
 
 __host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, const float Ttot, const int N )
 {
-    float sttstc = 0, f, phi, jt, jtFr, jtInt, jtJt, A;
-    f = wlkr.par[0]; // * 1.E-6 + F0;
-    phi = wlkr.par[1];
-    jt = 1 + ( NTBINS / ( 2 * PI ) ) * fmodf ( 2 * PI * f * tms + phi, 2 * PI );
-    jtFr = modff( jt, &jtInt );
-    jtJt = jt - jtFr;
-    int jIndx = llroundf ( jtJt );
-    A = SumOfComponents ( wlkr ) / NTBINS;
-    sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx+1] / A / NTBINS );
-    return sttstc;
+  float sttstc = 0, frq, phs, jt, jtFr, jtInt, A;
+  int jIndx;
+  frq = wlkr.par[0]; // * 1.E-6 + F0;
+  phs = wlkr.par[1];
+  jt = NTBINS * modff ( frq * tms + phs, &jtInt );
+  jtFr = modff( jt, &jtInt );
+  jIndx = llroundf ( jtInt );
+  A = SumOfComponents ( wlkr ) / NTBINS;
+  sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx+FIRSTBIN] / A / NTBINS );
+  return sttstc;
 }
 
 __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float srcExptm, const Walker *wlk, const float *arrTms, float *tmsSttstcs )
@@ -98,9 +99,9 @@ __host__ int ReadTimesInfo ( const char *spcFl, int *nmbrOfPhtns, float *srcExpt
   fitsfile *fptr;      /* FITS file pointer, defined in fitsio.h */
   int status = 0, hdutype;   /*  CFITSIO status value MUST be initialized to zero!  */
   long nrows;
-  fits_open_file(&fptr, spcFl, READONLY, &status);
-  fits_movabs_hdu(fptr, 2, &hdutype, &status);
-  fits_get_num_rows(fptr, &nrows, &status);
+  fits_open_file ( &fptr, spcFl, READONLY, &status );
+  fits_movabs_hdu ( fptr, 2, &hdutype, &status );
+  fits_get_num_rows ( fptr, &nrows, &status );
   printf ( "%i\n", status );
   *nmbrOfPhtns = nrows;
   printf ( "%i\n", *nmbrOfPhtns );
@@ -156,21 +157,20 @@ __host__ int ReadTimesData ( const int verbose, const char *spcFl, const int nmb
   fitsfile *fptr;      /* FITS file pointer, defined in fitsio.h */
   int status = 0, hdutype;   /*  CFITSIO status value MUST be initialized to zero!  */
   long nrows;
-  long  firstrow=1, firstelem=1;
+  long  firstrow=1, firstelem = 1;
   int colnum = 1, anynul;
-  float enullval=0.0;
-  fits_open_file(&fptr, spcFl, READONLY, &status);
-  fits_movabs_hdu(fptr, 2, &hdutype, &status);
-  fits_get_num_rows(fptr, &nrows, &status);
+  float enullval = 0.0;
+  fits_open_file ( &fptr, spcFl, READONLY, &status );
+  fits_movabs_hdu ( fptr, 2, &hdutype, &status );
+  fits_get_num_rows ( fptr, &nrows, &status );
   int numData = nrows;
   double *tms0;
-  cudaMallocManaged( (void **)&tms0, numData*sizeof(double) );
-  fits_read_col_dbl(fptr, colnum, firstrow, firstelem, nrows, enullval, tms0, &anynul, &status);
-  fits_close_file(fptr, &status);
-  for (int i = 0; i < nrows; i++)
+  cudaMallocManaged ( ( void ** ) &tms0, numData * sizeof ( double ) );
+  fits_read_col_dbl ( fptr, colnum, firstrow, firstelem, nrows, enullval, tms0, &anynul, &status );
+  fits_close_file( fptr, &status );
+  for ( int i = 0; i < nrows; i++ )
   {
     arrTms[i] = tms0[i] - tms0[0];
-    //printf( " %.10E ", tms[i] );
   }
   cudaFree ( tms0 );
   return 0;
@@ -186,7 +186,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-6;
-  const float phbsPwrlwInt[NPRS] = { 2.417, 0.5, 1.5, 1.2, 1.1, 1.3, 1.4 };
+  const float phbsPwrlwInt[NPRS] = { 3.36, 0.5 / NTBINS,  1., 1., 1., 1. };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
