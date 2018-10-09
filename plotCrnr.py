@@ -5,7 +5,8 @@ import os, sys
 import math
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+#matplotlib.use('Agg')
 import cudakde
 import corner
 
@@ -22,4 +23,5 @@ samples = np.transpose(samples)
 print samples.shape
 
 fig = corner.corner(samples, no_fill_contours=False, draw_datapoints=True)
-fig.savefig(sys.argv[1]+"crnrs"+".pdf")
+#fig.savefig(sys.argv[1]+"crnrs"+".pdf")
+plt.show()

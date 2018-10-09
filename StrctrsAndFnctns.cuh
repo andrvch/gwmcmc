@@ -18,7 +18,7 @@
 #define INCYY 1
 #define THRDSPERBLCK 16
 #define RANK 1
-#define NTBINS 4
+#define NTBINS 5
 #define FIRSTBIN 2
 #define NPRS NTBINS+FIRSTBIN
 #define NHINDX 0

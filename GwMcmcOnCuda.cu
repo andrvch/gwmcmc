@@ -18,10 +18,11 @@
 /* Functions and Kernels: */
 __host__ __device__ int PriorCondition ( const Walker wlkr )
 {
-  int cndtn = 1, frq, phs;
+  int cndtn = 1;
+  float frq, phs;
   frq = wlkr.par[0];
-  cndtn = cndtn * ( 3.358 < frq ) * ( frq < 3.366 );
-  //cndtn = cndtn * ( 2.40 < Fr ) * ( Fr < 2.43 );
+  cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
+  //cndtn = cndtn * ( 2.40 < frq ) * ( frq < 2.43 );
   phs = wlkr.par[1];
   cndtn = cndtn * ( 0.0 < phs ) * ( phs < 1. / NTBINS );
   for ( int i = FIRSTBIN; i <  NPRS; i++ )
@@ -55,15 +56,16 @@ __host__ int Priors ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlk
 
 __host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, const float Ttot, const int N )
 {
-  float sttstc = 0, frq, phs, jt, jtFr, jtInt, A;
+  float sttstc = 0, frq, phs, jt, jtFr, jtJt, jtInt, A;
   int jIndx;
   frq = wlkr.par[0]; // * 1.E-6 + F0;
   phs = wlkr.par[1];
-  jt = NTBINS * modff ( frq * tms + phs, &jtInt );
+  jt = 1 + NTBINS * fmodf ( 2 * PI * ( frq * tms + phs ), 2 * PI ) / 2 / PI;
   jtFr = modff( jt, &jtInt );
-  jIndx = llroundf ( jtInt );
+  jtJt = jt - jtFr;
+  jIndx = llroundf ( jtJt );
   A = SumOfComponents ( wlkr ) / NTBINS;
-  sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx+FIRSTBIN] / A / NTBINS );
+  sttstc = logf ( NTBINS * A ) - A * Ttot / N + logf ( wlkr.par[jIndx+FIRSTBIN-1] / A / NTBINS );
   return sttstc;
 }
 
@@ -186,7 +188,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-6;
-  const float phbsPwrlwInt[NPRS] = { 3.36, 0.5 / NTBINS,  1., 1., 1., 1. };
+  const float phbsPwrlwInt[NPRS] = { 3.36, 0.5 / NTBINS,  1., 1., 1., 1., 1. };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
