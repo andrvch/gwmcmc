@@ -21,8 +21,8 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   int cndtn = 1;
   float frq, phs;
   frq = wlkr.par[0];
-  cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
-  //cndtn = cndtn * ( 2.40 < frq ) * ( frq < 2.43 );
+  //cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
+  cndtn = cndtn * ( 2.39 < frq ) * ( frq < 2.44 );
   phs = wlkr.par[1];
   cndtn = cndtn * ( 0.0 < phs ) * ( phs < 1. / NTBINS );
   for ( int i = FIRSTBIN; i <  NPRS; i++ )
@@ -69,6 +69,19 @@ __host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, co
   return sttstc;
 }
 
+__host__ __device__ int BinNumber ( const float tms, const Walker wlkr )
+{
+  float frq, phs, jt, jtFr, jtJt, jtInt;
+  int jIndx;
+  frq = wlkr.par[0]; // * 1.E-6 + F0;
+  phs = wlkr.par[1];
+  jt = 1 + NTBINS * fmodf ( 2 * PI * ( frq * tms + phs ), 2 * PI ) / 2 / PI;
+  jtFr = modff( jt, &jtInt );
+  jtJt = jt - jtFr;
+  jIndx = llroundf ( jtJt );
+  return jIndx;
+}
+
 __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float srcExptm, const Walker *wlk, const float *arrTms, float *tmsSttstcs )
 {
   int a = threadIdx.x + blockDim.x * blockIdx.x;
@@ -77,6 +90,21 @@ __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int
   if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
   {
     tmsSttstcs[t] = - 2. * GregoryLoredo ( arrTms[a], wlk[w], srcExptm, nmbrOfPhtns );
+  }
+}
+
+__global__ void AssembleArrayOfBinTimes ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const Walker *wlk, const float *arrTms, float *nntms )
+{
+  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t;
+  if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
+  {
+    for ( int j; j < NTBINS; j++ )
+    {
+      t = a + j * nmbrOfPhtns + w * nmbrOfPhtns * NTBINS;
+      nntms[t] = ( j + 1 - BinNumber ( arrTms[a], wlk[w] ) ) * 1.;
+    }
   }
 }
 
@@ -131,6 +159,9 @@ __host__ int TimesAlloc ( Chain *chn, Spectrum *spc )
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].tmsSttstcs, spc[i].nmbrOfPhtns * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].arrTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcdBns, spc[i].nmbrOfPhtns * NTBINS * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nnTms, spc[i].nmbrOfPhtns * chn[0].nmbrOfWlkrs * NTBINS * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nTms, chn[0].nmbrOfWlkrs * NTBINS * sizeof ( float ) );
   }
   return 0;
 }
@@ -149,7 +180,7 @@ __host__ int TimesData ( const char *spcFl[NSPCTR], Cuparam *cdp, const int verb
   for ( int i = 0; i < NSPCTR; i++ )
   {
     ReadTimesData ( verbose, spcFl[i], spc[i].nmbrOfPhtns, spc[i].arrTms );
-    AssembleArrayOfNoticedTimes <<< Blocks ( spc[i].nmbrOfPhtns ), THRDSPERBLCK >>> ( spc[i].nmbrOfPhtns, spc[i].ntcdTms );
+    AssembleArrayOfNoticedTimes <<< Blocks ( spc[i].nmbrOfPhtns * NTBINS ), THRDSPERBLCK >>> ( spc[i].nmbrOfPhtns * NTBINS, spc[i].ntcdBns );
   }
   return 0;
 }
@@ -188,7 +219,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-6;
-  const float phbsPwrlwInt[NPRS] = { 3.36, 0.5 / NTBINS,  1., 1., 1., 1., 1. };
+  const float phbsPwrlwInt[NPRS] = { 2.41, 0.5 / NTBINS,  1., 1., 1., 1., 1. };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];

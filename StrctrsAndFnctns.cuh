@@ -90,6 +90,8 @@ struct Spectrum
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
   float *tmsSttstcs, *arrTms, *ntcdTms;
+  float *nnNmbrs;
+  float *nNmbrs;
   int nmbrOfPhtns;
 };
 
@@ -154,6 +156,7 @@ __host__ __device__ float IntegrateNsmax ( const float, const float, const float
 __host__ __device__ float BlackBody ( const float, const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
 __host__ __device__ float GregoryLoredo ( const float, const Walker, const float, const int );
+__host__ __device__ int BinNumber ( const float, const Walker );
 __host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
 __host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, int, float*, int*, float* );
@@ -201,7 +204,9 @@ __host__ int TimesData ( const char*[], Cuparam*, const int, Spectrum* );
 
 /* Kernels */
 __global__ void AssembleArrayOfTimesStatistic ( const int, const int, const float, const Walker*, const float*, float* );
+__global__ void AssembleArrayOfBinTimes ( const int, const int, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedTimes ( const int, float* );
+__global__ void AssembleArrayOfNoticedBins ( const int, float* );
 __global__ void AssembleArrayOfRandomWalkers ( const int, const float*, Walker* );
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, Walker*, Walker*, float* );
 __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float*, float* );
