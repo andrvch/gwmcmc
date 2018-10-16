@@ -16,11 +16,11 @@
 #define BETA  0e0f
 #define INCXX 1
 #define INCYY 1
-#define THRDSPERBLCK 16
+#define THRDSPERBLCK 32
 #define RANK 1
-#define NTBINS 5
+#define NTBINS 3
 #define FIRSTBIN 2
-#define NPRS NTBINS+FIRSTBIN
+#define NPRS 2
 #define NHINDX 0
 #define TINDX 0
 #define RINDX1 1
@@ -90,8 +90,7 @@ struct Spectrum
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
   float *tmsSttstcs, *arrTms, *ntcdTms;
-  float *nnNmbrs;
-  float *nNmbrs;
+  float *nnTms;
   int nmbrOfPhtns;
 };
 
@@ -103,6 +102,7 @@ struct Chain
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr, *rndmWlkr;
   float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *nhMd, *nhSg, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
   float elapsedTime, cufftElapsedTime;
+  float *nTms;
 };
 
 struct Model
@@ -184,7 +184,7 @@ __host__ int ReadFitsInfo ( const char*, int*, int*, int*, float*, float*, char*
 __host__ int ReadFitsData ( const int, const char*, const char*, const char*, const char*, const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float* );
 __host__ int Stat ( const int, Spectrum );
 __host__ int StatTimes ( const int, const Walker*, Spectrum );
-__host__ int SumUpStat ( Cuparam*, const float, const int, float*, const Spectrum );
+__host__ int SumUpStat ( Cuparam*, const float, const int, float*, float*, const Spectrum );
 __host__ int FoldModel ( Cuparam*, const int, Spectrum );
 __host__ int ModelFluxes ( const Model*, const int, const Walker*, const int, Spectrum );
 __host__ int InitAtRandom ( Cuparam*, Chain* );
@@ -203,10 +203,10 @@ __host__ int ReadTimesData ( const int, const char*, const int, float* );
 __host__ int TimesData ( const char*[], Cuparam*, const int, Spectrum* );
 
 /* Kernels */
+__global__ void AssembleArrayOfMultiplicity ( const int, const int, const float*, float* );
 __global__ void AssembleArrayOfTimesStatistic ( const int, const int, const float, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfBinTimes ( const int, const int, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedTimes ( const int, float* );
-__global__ void AssembleArrayOfNoticedBins ( const int, float* );
 __global__ void AssembleArrayOfRandomWalkers ( const int, const float*, Walker* );
 __global__ void InitializeWalkersAtRandom ( const int, const float, Walker, Walker*, Walker*, float* );
 __global__ void InitializeWalkersAndStatisticsFromLastChain ( const int, const float*, Walker*, float*, float* );
