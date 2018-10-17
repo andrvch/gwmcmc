@@ -186,6 +186,7 @@ __host__ void FreeSpec ( const Spectrum *spc )
     cudaFree ( spc[i].tmsSttstcs );
     cudaFree ( spc[i].arrTms );
     cudaFree ( spc[i].ntcdTms );
+    cudaFree ( spc[i].nnTms );
   }
 }
 
@@ -195,6 +196,7 @@ __host__ void FreeChain ( const Chain *chn )
   cudaFree ( chn[0].prpsdWlkrs );
   cudaFree ( chn[0].chnOfWlkrs );
   cudaFree ( chn[0].sttstcs );
+  cudaFree ( chn[0].nTms );
   cudaFree ( chn[0].prrs );
   cudaFree ( chn[0].prpsdSttstcs );
   cudaFree ( chn[0].prpsdPrrs );
@@ -308,6 +310,7 @@ __host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *c
   cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfWlkrs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sttstcs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].nTms, chn[0].nmbrOfWlkrs * NTBINS * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prrs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prpsdSttstcs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prpsdPrrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
@@ -882,8 +885,6 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
     {
       f = f + PowerLaw ( wlk[w].par[0], wlk[w].par[1], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[w].par[2], wlk[w].par[3], en[e], en[e+1] );
-      flx[t] = f * arf[e];
     }
   }
 }

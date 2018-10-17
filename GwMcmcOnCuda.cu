@@ -21,14 +21,14 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   int cndtn = 1;
   float frq, phs;
   frq = wlkr.par[0];
-  cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
-  //cndtn = cndtn * ( 2.40 < frq ) * ( frq < 2.43 );
+  //cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
+  cndtn = cndtn * ( 2.39 < frq ) * ( frq < 2.44 );
   phs = wlkr.par[1];
-  cndtn = cndtn * ( 0.0 < phs ) * ( phs < 1. / NTBINS );
-  for ( int i = FIRSTBIN; i <  NPRS; i++ )
+  cndtn = cndtn * ( 0.0 < phs ) * ( phs < 1. );
+  /*for ( int i = FIRSTBIN; i <  NPRS; i++ )
   {
     cndtn = cndtn * ( 0. < wlkr.par[i] );
-  }
+  }*/
   return cndtn;
 }
 
@@ -69,6 +69,19 @@ __host__ __device__ float GregoryLoredo ( const float tms, const Walker wlkr, co
   return sttstc;
 }
 
+__host__ __device__ int BinNumber ( const float tms, const Walker wlkr )
+{
+  float frq, phs, jt, jtFr, jtJt, jtInt;
+  int jIndx;
+  frq = wlkr.par[0]; // * 1.E-6 + F0;
+  phs = wlkr.par[1];
+  jt = 1 + NTBINS * fmodf ( 2 * PI * ( frq * tms + phs ), 2 * PI ) / 2 / PI;
+  jtFr = modff( jt, &jtInt );
+  jtJt = jt - jtFr;
+  jIndx = llroundf ( jtJt );
+  return jIndx;
+}
+
 __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float srcExptm, const Walker *wlk, const float *arrTms, float *tmsSttstcs )
 {
   int a = threadIdx.x + blockDim.x * blockIdx.x;
@@ -80,19 +93,60 @@ __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int
   }
 }
 
+__global__ void AssembleArrayOfBinTimes ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const Walker *wlk, const float *arrTms, float *nntms )
+{
+  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t;
+  if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
+  {
+    for ( int j = 0; j < NTBINS; j++ )
+    {
+      t = a + j * nmbrOfPhtns + w * nmbrOfPhtns * NTBINS ;
+      if ( j+1 == BinNumber ( arrTms[a], wlk[w] ) )
+      {
+        nntms[t] = 1.;
+      }
+      else
+      {
+        nntms[t] = 0.;
+      }
+    }
+  }
+}
+
 __host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec )
 {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   dim3 dimGrid = Grid ( spec.nmbrOfPhtns, nmbrOfWlkrs );
-  AssembleArrayOfTimesStatistic <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, spec.srcExptm, wlk, spec.arrTms, spec.tmsSttstcs );
+  //AssembleArrayOfTimesStatistic <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, spec.srcExptm, wlk, spec.arrTms, spec.tmsSttstcs );
+  AssembleArrayOfBinTimes <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, wlk, spec.arrTms, spec.nnTms );
   return 0;
 }
 
-__host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *sttstcs, const Spectrum spec )
+__global__ void AssembleArrayOfMultiplicity ( const int nmbrOfWlkrs, const int N, const float *nTms, float *sttstcs )
+{
+  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  float sum;
+  int tBindx;
+  if ( a < nmbrOfWlkrs )
+  {
+    sum = 0;
+    for ( int i = 0; i < NTBINS; i++ )
+    {
+      tBindx = i+a*NTBINS;
+      sum += 0.5 * logf ( nTms[tBindx] ) + nTms[tBindx] * logf ( nTms[tBindx] / N );
+    }
+    sttstcs[a] = - 2. * sum;
+  }
+}
+
+__host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *nTms, float *sttstcs, const Spectrum spec )
 {
   float alpha = ALPHA;
-  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfPhtns, nmbrOfWlkrs, &alpha, spec.tmsSttstcs, spec.nmbrOfPhtns, spec.ntcdTms, INCXX, &beta, sttstcs, INCYY );
+  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfPhtns, nmbrOfWlkrs * NTBINS, &alpha, spec.nnTms, spec.nmbrOfPhtns, spec.ntcdTms, INCXX, &beta, nTms, INCYY );
   if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+  AssembleArrayOfMultiplicity <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, nTms, sttstcs );
   return 0;
 }
 
@@ -131,6 +185,7 @@ __host__ int TimesAlloc ( Chain *chn, Spectrum *spc )
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].tmsSttstcs, spc[i].nmbrOfPhtns * chn[0].nmbrOfWlkrs * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].arrTms, spc[i].nmbrOfPhtns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nnTms, spc[i].nmbrOfPhtns * chn[0].nmbrOfWlkrs * NTBINS * sizeof ( float ) );
   }
   return 0;
 }
@@ -187,8 +242,8 @@ int main ( int argc, char *argv[] )
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
-  const float dlt = 1.E-6;
-  const float phbsPwrlwInt[NPRS] = { 3.36, 0.5 / NTBINS,  1., 1., 1., 1., 1. };
+  const float dlt = 1.E-3;
+  const float phbsPwrlwInt[NPRS] = { 2.410, 0.5 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -228,7 +283,16 @@ int main ( int argc, char *argv[] )
     for ( int i = 0; i < NSPCTR; i++ )
     {
       StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i] );
-      SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].sttstcs, spc[i] );
+      SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].nTms, chn[0].sttstcs, spc[i] );
+      cudaDeviceSynchronize ();
+      for ( int k = 0; k < chn[0].nmbrOfWlkrs; k++ )
+      {
+        for ( int j = 0; j < NTBINS; j++ )
+        {
+          printf ( " %3.3f ", chn[0].nTms[j+k*NTBINS] );
+        }
+        printf ( "\n" );
+      }
     }
   }
   else if ( chn[0].thrdIndx > 0 )
@@ -255,7 +319,7 @@ int main ( int argc, char *argv[] )
       for ( int i = 0; i < NSPCTR; i++ )
       {
         StatTimes ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[i] );
-        SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdSttstcs, spc[i] );
+        SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].nTms, chn[0].prpsdSttstcs, spc[i] );
       }
       Update ( stpIndx, sbstIndx, chn );
       sbstIndx += 1;
