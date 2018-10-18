@@ -18,7 +18,7 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NTBINS 3
+#define NTBINS 5
 #define FIRSTBIN 2
 #define NPRS 2
 #define NHINDX 0
@@ -33,6 +33,7 @@
 #define NSPCTR 1
 #define BACKIN 1
 #define NSTAT 3
+#define ACONST 2.0f
 
 #define FINDX 0
 #define F0 2.4213
@@ -203,7 +204,7 @@ __host__ int ReadTimesData ( const int, const char*, const int, float* );
 __host__ int TimesData ( const char*[], Cuparam*, const int, Spectrum* );
 
 /* Kernels */
-__global__ void AssembleArrayOfMultiplicity ( const int, const int, const float*, float* );
+__global__ void AssembleArrayOfMultiplicity ( const int, const int, const float*, const float*, float* );
 __global__ void AssembleArrayOfTimesStatistic ( const int, const int, const float, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfBinTimes ( const int, const int, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedTimes ( const int, float* );

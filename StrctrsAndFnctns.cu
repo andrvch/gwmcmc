@@ -896,7 +896,7 @@ __global__ void AssembleArrayOfRandomWalkers ( const int nmbrOfWlkrs, const floa
   {
     for ( int p = 0; p < NPRS; p++ )
     {
-      rndmWlkr[i].par[p] = rndmVls[p+i*nmbrOfWlkrs];
+      rndmWlkr[i].par[p] = rndmVls[p+i*NPRS];
     }
   }
 }
@@ -1010,7 +1010,7 @@ __global__ void GenerateProposal ( const int nmbrOfHlfTheWlkrs, const int stpInd
   {
     rnIndx = 0;
     ttRnIndx = wlIndx + rnIndx * nmbrOfHlfTheWlkrs + stpIndx * 3 * nmbrOfHlfTheWlkrs;
-    zz = 0.5 * powf ( rndmVls[ttRnIndx] + 1, 2. );
+    zz = 1. / ACONST * powf ( rndmVls[ttRnIndx] * ( ACONST - 1 ) + 1, 2. );
     zRndmVls[wlIndx] = zz;
     rnIndx = 1;
     ttRnIndx = wlIndx + rnIndx * nmbrOfHlfTheWlkrs + stpIndx * 3 * nmbrOfHlfTheWlkrs;

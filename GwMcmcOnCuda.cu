@@ -124,7 +124,7 @@ __host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec
   return 0;
 }
 
-__global__ void AssembleArrayOfMultiplicity ( const int nmbrOfWlkrs, const int N, const float *nTms, float *sttstcs )
+__global__ void AssembleArrayOfMultiplicity ( const int nmbrOfWlkrs, const int N, const float Ttot, const float *nTms, float *sttstcs )
 {
   int a = threadIdx.x + blockDim.x * blockIdx.x;
   float sum;
@@ -135,7 +135,7 @@ __global__ void AssembleArrayOfMultiplicity ( const int nmbrOfWlkrs, const int N
     for ( int i = 0; i < NTBINS; i++ )
     {
       tBindx = i+a*NTBINS;
-      sum += 0.5 * logf ( nTms[tBindx] ) + nTms[tBindx] * logf ( nTms[tBindx] / N );
+      sum += nTms[tBindx] * logf ( nTms[tBindx] / N / Ttot ) - nTms[tBindx] + 0.5 * logf ( nTms[tBindx] / Ttot );
     }
     sttstcs[a] = - 2. * sum;
   }
@@ -146,7 +146,7 @@ __host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, 
   float alpha = ALPHA;
   cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfPhtns, nmbrOfWlkrs * NTBINS, &alpha, spec.nnTms, spec.nmbrOfPhtns, spec.ntcdTms, INCXX, &beta, nTms, INCYY );
   if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
-  AssembleArrayOfMultiplicity <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, nTms, sttstcs );
+  AssembleArrayOfMultiplicity <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, spec.srcExptm, nTms, sttstcs );
   return 0;
 }
 
@@ -242,8 +242,8 @@ int main ( int argc, char *argv[] )
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
-  const float dlt = 1.E-3;
-  const float phbsPwrlwInt[NPRS] = { 2.410, 0.5 };
+  const float dlt = 1.E-5;
+  const float phbsPwrlwInt[NPRS] = { 2.41720983, 0.5 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -287,10 +287,17 @@ int main ( int argc, char *argv[] )
       cudaDeviceSynchronize ();
       for ( int k = 0; k < chn[0].nmbrOfWlkrs; k++ )
       {
+        printf ( " %3.9f ", chn[0].rndmVls[2*k] );
+        printf ( " %3.9f ", chn[0].rndmVls[2*k+1] );
+        printf ( " %3.9f ", chn[0].rndmWlkr[k].par[0] );
+        printf ( " %3.9f ", chn[0].rndmWlkr[k].par[1] );
+        printf ( " %3.9f ", chn[0].wlkrs[k].par[0] );
+        printf ( " %3.9f ", chn[0].wlkrs[k].par[1] );
         for ( int j = 0; j < NTBINS; j++ )
         {
           printf ( " %3.3f ", chn[0].nTms[j+k*NTBINS] );
         }
+        printf ( " %3.9f ", chn[0].sttstcs[k] );
         printf ( "\n" );
       }
     }
