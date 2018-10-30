@@ -219,7 +219,9 @@ __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const f
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float * );
 __global__ void AssembleArrayOfTimesStatistic ( const int, const int, const float, const Walker*, const float*, float* );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
+__global__ void GenerateMetropolis ( const int, const int, const int, const Walker*, const Walker*, Walker*, float* );
 __global__ void UpdateWalkers ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float*, float* );
+__global__ void MetropolisUpdateOfWalkers ( const int, const int, const Walker*, const float*, const float*, const float*, Walker*, float*, float* );
 __global__ void ComplexPointwiseMultiplyByConjugateAndScale ( const int, const int, const float, Complex* );
 __global__ void ReturnConstantArray ( const int, const float, float* );
 __global__ void ReturnChainFunctionTest ( const int, const int, const int, float*, Complex* );

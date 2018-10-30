@@ -879,7 +879,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int t = e + w * nmbrOfEnrgChnnls;
   float f = 0;
   float scl = backscal_src / backscal_bkg;
-  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
+  if ( e < nmbrOfEnrgChnnls && w < nmbrOfWlkrs )
   {
     if ( spIndx == 0 )
     {
@@ -1022,6 +1022,18 @@ __global__ void GenerateProposal ( const int nmbrOfHlfTheWlkrs, const int stpInd
   }
 }
 
+__global__ void GenerateMetropolis ( const int nmbrOfWlkrs, const int stpIndx, const int prmtrIndx, const Walker *wlkrs, const Walker *rndmWlkrs, Walker *prpsdWlkrs, float *prpsdSttstcs )
+{
+  int indx = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( indx < nmbrOfWlkrs )
+  {
+    prpsdWlkrs[indx] = wlkrs[indx];
+    prpsdWlkrs[indx].par[prmtrIndx] = wlkrs[indx].par[prmtrIndx] + rndmWlkrs[indx+nmbrOfWlkrs*stpIndx].par[prmtrIndx];
+    prpsdSttstcs[indx] = 0;
+  }
+}
+
+
 __global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, const int sbstIndx, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prpsdPrrs, const float *zRndmVls, const float *rndmVls, Walker *wlkrs, float *sttstcs, float *prrs )
 {
   int wlIndx = threadIdx.x + blockDim.x * blockIdx.x;
@@ -1038,6 +1050,23 @@ __global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, 
       wlkrs[ttSbIndx] = prpsdWlkrs[wlIndx];
       sttstcs[ttSbIndx] = prpsdSttstcs[wlIndx];
       prrs[ttSbIndx] = prpsdPrrs[wlIndx];
+     }
+  }
+}
+
+__global__ void MetropolisUpdateOfWalkers ( const int nmbrOfWlkrs, const int stpIndx, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prpsdPrrs, const float *rndmVls, Walker *wlkrs, float *sttstcs, float *prrs )
+{
+  int indx = threadIdx.x + blockDim.x * blockIdx.x;
+  float q;
+  if ( indx < nmbrOfWlkrs )
+  {
+    q = - 0.5 * ( prpsdSttstcs[indx] + prpsdPrrs[indx] - sttstcs[indx] - prrs[indx] );
+    q = expf ( q );
+    if ( q > rndmVls[indx+nmbrOfWlkrs*stpIndx] )
+    {
+      wlkrs[indx] = prpsdWlkrs[indx];
+      sttstcs[indx] = prpsdSttstcs[indx];
+      prrs[indx] = prpsdPrrs[indx];
      }
   }
 }
@@ -1097,7 +1126,7 @@ __global__ void ReturnCentralChainFunction ( const int nmbrOfStps, const int nmb
 __global__ void NormalizeChain ( const int nmbrOfStps, float *chn )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < nmbrOfStps ) { chn[i] = chn[i] / chn[0]; }
+if ( i < nmbrOfStps ) { chn[i] = chn[i] / chn[0]; }
 }
 
 __global__ void MakeMatrix ( const int nmbrOfStps, const float *chn, float *cmSmMtrx )
