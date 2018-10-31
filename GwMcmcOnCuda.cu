@@ -124,20 +124,18 @@ __host__ int StatTimes ( const int nmbrOfWlkrs, const Walker *wlk, Spectrum spec
   return 0;
 }
 
-__global__ void AssembleArrayOfMultiplicity ( const int nmbrOfWlkrs, const int N, const float Ttot, const float *nTms, float *sttstcs )
+__global__ void AssembleArrayOfMultiplicity ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float Ttot, const float *nTms, float *sttstcs )
 {
-  int a = threadIdx.x + blockDim.x * blockIdx.x;
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
   float sum;
-  int tBindx;
-  if ( a < nmbrOfWlkrs )
+  if ( i < nmbrOfWlkrs )
   {
     sum = 0;
-    for ( int i = 0; i < NTBINS; i++ )
+    for ( int b = 0; b < NTBINS; b++ )
     {
-      tBindx = i+a*NTBINS;
-      sum += nTms[tBindx] * logf ( nTms[tBindx] / N / Ttot ) - nTms[tBindx] + 0.5 * logf ( nTms[tBindx] / Ttot );
+      sum += nTms[b+i*NTBINS] * logf ( nTms[b+i*NTBINS] / nmbrOfPhtns / Ttot ) - nTms[b+i*NTBINS] + 0.5 * logf ( nTms[b+i*NTBINS] / Ttot );
     }
-    sttstcs[a] = - 2. * sum;
+    sttstcs[i] = - 2. * sum;
   }
 }
 
@@ -314,6 +312,10 @@ int main ( int argc, char *argv[] )
   printf ( " Start ...                                                  \n" );
 
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.1 );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls2, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.1 );
+
+  AssembleArrayOfRandom2DWalkersFromTwoRandomArrays <<< Blocks ( spc[0].nmbrOfPhtns ), THRDSPERBLCK >>> ( const int n, const float *a, const float *b, Walker *w )
 
   int stpIndx = 0, sbstIndx;
   while ( stpIndx < chn[0].nmbrOfStps )

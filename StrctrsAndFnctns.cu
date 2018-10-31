@@ -878,7 +878,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int w = threadIdx.y + blockDim.y * blockIdx.y;
   int t = e + w * nmbrOfEnrgChnnls;
   float f = 0;
-  float scl = backscal_src / backscal_bkg;
+  //float scl = backscal_src / backscal_bkg;
   if ( e < nmbrOfEnrgChnnls && w < nmbrOfWlkrs )
   {
     if ( spIndx == 0 )
@@ -898,6 +898,16 @@ __global__ void AssembleArrayOfRandomWalkers ( const int nmbrOfWlkrs, const floa
     {
       rndmWlkr[i].par[p] = rndmVls[p+i*NPRS];
     }
+  }
+}
+
+__global__ void AssembleArrayOfRandom2DWalkersFromTwoRandomArrays ( const int n, const float *a, const float *b, Walker *w )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n )
+  {
+    w[i].par[0] = a[i];
+    w[i].par[1] = b[i];
   }
 }
 
