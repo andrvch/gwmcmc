@@ -104,6 +104,8 @@ struct Chain
   float *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *nhMd, *nhSg, *rndmVls, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
   float elapsedTime, cufftElapsedTime;
   float *nTms;
+  float *rndmVls1, *rndmVls2;
+  Walker *rndmWlkrs1;
 };
 
 struct Model
@@ -191,8 +193,10 @@ __host__ int ModelFluxes ( const Model*, const int, const Walker*, const int, Sp
 __host__ int InitAtRandom ( Cuparam*, Chain* );
 __host__ int InitFromLast ( Chain* );
 __host__ int Priors ( const Model*, const int, const Walker*, float* );
+__host__ int MetropolisPropose ( const int, const int, Chain* );
 __host__ int Propose ( const int, const int, Chain* );
 __host__ int Update ( const int, const int, Chain* );
+__host__ int MetropolisUpdate ( const int, Chain* );
 __host__ int ToChain ( const int, Chain* );
 __host__ int SpecInfo ( const char*[], const int, Spectrum* );
 __host__ int SpecAlloc ( Chain*, Spectrum* );

@@ -111,9 +111,21 @@ __host__ int Update ( const int stpIndx, const int sbstIndx, Chain *chn )
   return 0;
 }
 
+__host__ int MetropolisUpdate ( const int stpIndx, Chain *chn )
+{
+  MetropolisUpdateOfWalkers <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, stpIndx, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs, chn[0].prpsdPrrs, chn[0].rndmVls, chn[0].wlkrs, chn[0].sttstcs, chn[0].prrs );
+  return 0;
+}
+
 __host__ int Propose ( const int stpIndx, const int sbstIndx, Chain *chn )
 {
   GenerateProposal <<< Blocks ( chn[0].nmbrOfWlkrs / 2 ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs / 2, stpIndx, sbstIndx, chn[0].wlkrs, chn[0].rndmVls, chn[0].zRndmVls, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
+  return 0;
+}
+
+__host__ int MetropolisPropose ( const int stpIndx, const int prmtrIndx, Chain *chn )
+{
+  GenerateMetropolis <<< Blocks ( chn[0].nmbrOfWlkrs ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs, stpIndx, prmtrIndx, chn[0].wlkrs, chn[0].rndmWlkrs1, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
   return 0;
 }
 
@@ -206,7 +218,10 @@ __host__ void FreeChain ( const Chain *chn )
   cudaFree ( chn[0].nhMd );
   cudaFree ( chn[0].nhSg );
   cudaFree ( chn[0].rndmVls );
+  cudaFree ( chn[0].rndmVls1 );
+  cudaFree ( chn[0].rndmVls2 );
   cudaFree ( chn[0].rndmWlkr );
+  cudaFree ( chn[0].rndmWlkrs1 );
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atCrrFnctn );
   cudaFree ( chn[0].cmSmAtCrrFnctn );
@@ -307,20 +322,23 @@ __host__ int InitializeChain ( Cuparam *cdp, const float *phbsPwrlwInt, Chain *c
   int prmtrIndx = 0;
   chn[0].nmbrOfRndmVls = 3 * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfStps;
   cudaMallocManaged ( ( void ** ) &chn[0].wlkrs, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfWlkrs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sttstcs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nTms, chn[0].nmbrOfWlkrs * NTBINS * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prrs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prpsdSttstcs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prpsdPrrs, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdSttstcs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prpsdPrrs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfSttstcs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfPrrs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].zRndmVls, chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nhMd, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nhSg, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].rndmVls, chn[0].nmbrOfRndmVls * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].rndmVls1, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].rndmVls2, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].rndmWlkr, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].rndmWlkrs1, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
@@ -1077,7 +1095,7 @@ __global__ void MetropolisUpdateOfWalkers ( const int nmbrOfWlkrs, const int stp
       wlkrs[indx] = prpsdWlkrs[indx];
       sttstcs[indx] = prpsdSttstcs[indx];
       prrs[indx] = prpsdPrrs[indx];
-     }
+    }
   }
 }
 

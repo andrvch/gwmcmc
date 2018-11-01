@@ -22,7 +22,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   float frq, phs;
   frq = wlkr.par[0];
   //cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
-  cndtn = cndtn * ( 2.39 < frq ) * ( frq < 2.44 );
+  cndtn = cndtn * ( 2.35 < frq ) * ( frq < 2.45 );
   phs = wlkr.par[1];
   cndtn = cndtn * ( 0.0 < phs ) * ( phs < 1. );
   /*for ( int i = FIRSTBIN; i <  NPRS; i++ )
@@ -93,24 +93,17 @@ __global__ void AssembleArrayOfTimesStatistic ( const int nmbrOfWlkrs, const int
   }
 }
 
-__global__ void AssembleArrayOfBinTimes ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const Walker *wlk, const float *arrTms, float *nntms )
+__global__ void AssembleArrayOfBinTimes ( const int nWlk, const int nPht, const Walker *wlk, const float *aTms, float *nTms )
 {
-  int a = threadIdx.x + blockDim.x * blockIdx.x;
-  int w = threadIdx.y + blockDim.y * blockIdx.y;
-  int t;
-  if ( ( a < nmbrOfPhtns ) && ( w < nmbrOfWlkrs ) )
+  int ix = threadIdx.x + blockDim.x * blockIdx.x;
+  int iy = threadIdx.y + blockDim.y * blockIdx.y;
+  int it;
+  if ( ix < nPht && iy < nWlk )
   {
-    for ( int j = 0; j < NTBINS; j++ )
+    for ( int b = 0; b < NTBINS; b++ )
     {
-      t = a + j * nmbrOfPhtns + w * nmbrOfPhtns * NTBINS ;
-      if ( j+1 == BinNumber ( arrTms[a], wlk[w] ) )
-      {
-        nntms[t] = 1.;
-      }
-      else
-      {
-        nntms[t] = 0.;
-      }
+      it = ix + b * nPht + iy * nPht * NTBINS;
+      nTms[it] = ( b+1 == BinNumber ( aTms[ix], wlk[iy] ) ) * 1.;
     }
   }
 }
@@ -241,7 +234,7 @@ int main ( int argc, char *argv[] )
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-5;
-  const float phbsPwrlwInt[NPRS] = { 2.41720983, 0.5 };
+  const float phbsPwrlwInt[NPRS] = { 2.40, 0.5 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -278,27 +271,21 @@ int main ( int argc, char *argv[] )
   {
     InitAtRandom ( cdp, chn );
     Priors ( mdl, chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].prrs );
-    for ( int i = 0; i < NSPCTR; i++ )
+    //for ( int i = 0; i < NSPCTR; i++ )
+    //{
+    StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[0] );
+    SumUpStat ( cdp, 0, chn[0].nmbrOfWlkrs, chn[0].nTms, chn[0].sttstcs, spc[0] );
+    cudaDeviceSynchronize ();
+    for ( int k = 0; k < chn[0].nmbrOfWlkrs; k++ )
     {
-      StatTimes ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, spc[i] );
-      SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs, chn[0].nTms, chn[0].sttstcs, spc[i] );
-      cudaDeviceSynchronize ();
-      for ( int k = 0; k < chn[0].nmbrOfWlkrs; k++ )
+      for ( int j = 0; j < NTBINS; j++ )
       {
-        printf ( " %3.9f ", chn[0].rndmVls[2*k] );
-        printf ( " %3.9f ", chn[0].rndmVls[2*k+1] );
-        printf ( " %3.9f ", chn[0].rndmWlkr[k].par[0] );
-        printf ( " %3.9f ", chn[0].rndmWlkr[k].par[1] );
-        printf ( " %3.9f ", chn[0].wlkrs[k].par[0] );
-        printf ( " %3.9f ", chn[0].wlkrs[k].par[1] );
-        for ( int j = 0; j < NTBINS; j++ )
-        {
-          printf ( " %3.3f ", chn[0].nTms[j+k*NTBINS] );
-        }
-        printf ( " %3.9f ", chn[0].sttstcs[k] );
-        printf ( "\n" );
+        printf ( " %3.3f ", chn[0].nTms[j+k*NTBINS] );
       }
+      printf ( " %3.9f ", chn[0].sttstcs[k] );
+      printf ( "\n" );
     }
+    //}
   }
   else if ( chn[0].thrdIndx > 0 )
   {
@@ -311,26 +298,26 @@ int main ( int argc, char *argv[] )
   printf ( ".................................................................\n" );
   printf ( " Start ...                                                  \n" );
 
-  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
-  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.1 );
+  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.0001 );
   curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls2, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.1 );
 
-  AssembleArrayOfRandom2DWalkersFromTwoRandomArrays <<< Blocks ( spc[0].nmbrOfPhtns ), THRDSPERBLCK >>> ( const int n, const float *a, const float *b, Walker *w )
+  AssembleArrayOfRandom2DWalkersFromTwoRandomArrays <<< Blocks ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps, chn[0].rndmVls1, chn[0].rndmVls2, chn[0].rndmWlkrs1 );
 
   int stpIndx = 0, sbstIndx;
   while ( stpIndx < chn[0].nmbrOfStps )
   {
     sbstIndx = 0;
-    while ( sbstIndx < 2 )
+    while ( sbstIndx < NPRS )
     {
-      Propose ( stpIndx, sbstIndx, chn );
-      Priors ( mdl, chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
-      for ( int i = 0; i < NSPCTR; i++ )
-      {
-        StatTimes ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, spc[i] );
-        SumUpStat ( cdp, 1, chn[0].nmbrOfWlkrs / 2, chn[0].nTms, chn[0].prpsdSttstcs, spc[i] );
-      }
-      Update ( stpIndx, sbstIndx, chn );
+      MetropolisPropose ( stpIndx, sbstIndx, chn );
+      Priors ( mdl, chn[0].nmbrOfWlkrs, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
+      //for ( int i = 0; i < NSPCTR; i++ )
+      //{
+      StatTimes ( chn[0].nmbrOfWlkrs, chn[0].prpsdWlkrs, spc[0] );
+      SumUpStat ( cdp, 0, chn[0].nmbrOfWlkrs, chn[0].nTms, chn[0].prpsdSttstcs, spc[0] );
+      //}
+      MetropolisUpdate ( stpIndx, chn );
       sbstIndx += 1;
     }
     ToChain ( stpIndx, chn );
