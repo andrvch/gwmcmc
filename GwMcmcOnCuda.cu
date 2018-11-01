@@ -22,9 +22,9 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   float frq, phs;
   frq = wlkr.par[0];
   //cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
-  cndtn = cndtn * ( 2.35 < frq ) * ( frq < 2.45 );
+  cndtn = cndtn * ( 2.0 < frq ) * ( frq < 3.0 );
   phs = wlkr.par[1];
-  cndtn = cndtn * ( 0.0 < phs ) * ( phs < 1. );
+  cndtn = cndtn * ( 0.0 < phs ) * ( phs < 0.2 );
   /*for ( int i = FIRSTBIN; i <  NPRS; i++ )
   {
     cndtn = cndtn * ( 0. < wlkr.par[i] );
@@ -233,8 +233,8 @@ int main ( int argc, char *argv[] )
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
-  const float dlt = 1.E-5;
-  const float phbsPwrlwInt[NPRS] = { 2.40, 0.5 };
+  const float dlt = 1.E-6;
+  const float phbsPwrlwInt[NPRS] = { 2.416, 0.15 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];
@@ -299,7 +299,7 @@ int main ( int argc, char *argv[] )
   printf ( " Start ...                                                  \n" );
 
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs );
-  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.0001 );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 1.E-6  );
   curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls2, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.1 );
 
   AssembleArrayOfRandom2DWalkersFromTwoRandomArrays <<< Blocks ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps, chn[0].rndmVls1, chn[0].rndmVls2, chn[0].rndmWlkrs1 );
