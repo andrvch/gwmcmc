@@ -67,8 +67,7 @@ __host__ int InitializeChain ( const int verbose, Cuparam *cdp, const float *str
   cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 2 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   if ( chn[0].thrdIndx > 0 ) {
     ReadLastPositionOfWalkersFromFile ( chn[0].thrdNm, chn[0].thrdIndx-1, chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs );
-  }
-  else {
+  } else {
     for ( int i = 0; i < NPRS; i++ ) { chn[0].strtngWlkr.par[i] = strtng[i]; }
     if ( not PriorCondition ( chn[0].strtngWlkr ) ) { printf ( " !!!Initial walker doesn't satisfy prior conditions!!!\n" ); }
     if ( verbose == 1 ) {
@@ -161,19 +160,25 @@ __host__ dim3 Grid ( const int n, const int m ) {
 
 __host__ __device__ Walker AddWalkers ( Walker a, Walker b ) {
   Walker c;
-  for ( int i = 0; i < NPRS; i++ ) { c.par[i] = a.par[i] + b.par[i]; }
+  for ( int i = 0; i < NPRS; i++ ) {
+    c.par[i] = a.par[i] + b.par[i];
+  }
   return c;
 }
 
 __host__ __device__ float SumOfComponents ( const Walker wlkr ) {
   float sum = 0;
-  for ( int i = 0; i < NPRS; i++ ) { sum += wlkr.par[i]; }
+  for ( int i = 0; i < NPRS; i++ ) {
+    sum += wlkr.par[i];
+  }
   return sum;
 }
 
 __host__ __device__ Walker ScaleWalker ( Walker a, float s ) {
   Walker c;
-  for ( int i = 0; i < NPRS; i++ ) { c.par[i] = s * a.par[i]; }
+  for ( int i = 0; i < NPRS; i++ ) {
+    c.par[i] = s * a.par[i];
+  }
   return c;
 }
 
@@ -224,25 +229,25 @@ __host__ __device__ int FindElementIndex ( const float *a, const int n, const fl
 }
 
 __host__ void ReadLastPositionOfWalkersFromFile ( const char *thrdNm, const int indx, const int nmbrOfWlkrs, float *lstChn ) {
-  FILE *flPntr;
-  char flNm[FLEN_CARD];
+  FILE *fptr;
+  char fl[FLEN_CARD];
   float value;
   int i = 0, k = 0, j;
-  snprintf ( flNm, sizeof ( flNm ), "%s%i%s", thrdNm, indx, ".chain" );
-  flPntr = fopen ( flNm, "r" );
-  while ( fscanf ( flPntr, "%e", &value ) == 1 ) {
+  snprintf ( fl, sizeof ( fl ), "%s%i%s", thrdNm, indx, ".chain" );
+  fptr = fopen ( fl, "r" );
+  while ( fscanf ( fptr, "%e", &value ) == 1 ) {
     i += 1;
   }
-  fclose ( flPntr );
-  flPntr = fopen ( flNm, "r" );
-  while ( fscanf ( flPntr, "%e", &value ) == 1 ) {
+  fclose ( fptr );
+  fptr = fopen ( fl, "r" );
+  while ( fscanf ( fptr, "%e", &value ) == 1 ) {
     if ( k >= i - nmbrOfWlkrs * ( NPRS + 2 ) ) {
       j = k - ( i - nmbrOfWlkrs * ( NPRS + 2 ) );
       lstChn[j] = value;
     }
     k += 1;
   }
-  fclose ( flPntr );
+  fclose ( fptr );
 }
 
 __host__ void WriteChainToFile ( const char *thrdNm, const int indx, const int nmbrOfWlkrs, const int nmbrOfStps, const Walker *chnOfWlkrs, const float *chnOfSttstcs, const float *chnOfPrrs ) {
@@ -457,33 +462,33 @@ __global__ void GenerateMetropolis ( const int n, const int ist, const int ipr, 
   }
 }
 
-__global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, const int sbstIndx, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prpsdPrrs, const float *zRndmVls, const float *rndmVls, Walker *wlkrs, float *sttstcs, float *prrs ) {
-  int wlIndx = threadIdx.x + blockDim.x * blockIdx.x;
-  int ttSbIndx = wlIndx + sbstIndx * nmbrOfHlfTheWlkrs;
+__global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, const int sbstIndx, const Walker *pwlk, const float *pstt, const float *pprr, const float *zRndmVls, const float *rndmVls, Walker *wlk, float *stt, float *prr ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int t = i + sbstIndx * nmbrOfHlfTheWlkrs;
   int rnIndx = 2;
-  int ttRnIndx = wlIndx + rnIndx * nmbrOfHlfTheWlkrs + stpIndx * 3 * nmbrOfHlfTheWlkrs;
+  int r = i + rnIndx * nmbrOfHlfTheWlkrs + stpIndx * 3 * nmbrOfHlfTheWlkrs;
   float q;
-  if ( wlIndx < nmbrOfHlfTheWlkrs ) {
-    q = - 0.5 * ( prpsdSttstcs[wlIndx] + prpsdPrrs[wlIndx] - sttstcs[ttSbIndx] - prrs[ttSbIndx] );
-    q = expf ( q ) * powf ( zRndmVls[wlIndx], NPRS - 1 );
-    if ( q > rndmVls[ttRnIndx] ) {
-      wlkrs[ttSbIndx] = prpsdWlkrs[wlIndx];
-      sttstcs[ttSbIndx] = prpsdSttstcs[wlIndx];
-      prrs[ttSbIndx] = prpsdPrrs[wlIndx];
+  if ( i < nmbrOfHlfTheWlkrs ) {
+    q = - 0.5 * ( pstt[i] + pprr[i] - stt[t] - prr[t] );
+    q = expf ( q ) * powf ( zRndmVls[i], NPRS - 1 );
+    if ( q > rndmVls[r] ) {
+      wlk[t] = pwlk[i];
+      stt[t] = pstt[i];
+      prr[t] = pprr[i];
     }
   }
 }
 
-__global__ void MetropolisUpdateOfWalkers ( const int nmbrOfWlkrs, const int stpIndx, const Walker *prpsdWlkrs, const float *prpsdSttstcs, const float *prpsdPrrs, const float *rndmVls, Walker *wlkrs, float *sttstcs, float *prrs ) {
-  int indx = threadIdx.x + blockDim.x * blockIdx.x;
+__global__ void MetropolisUpdateOfWalkers ( const int n, const int stpIndx, const Walker *pwlk, const float *pstt, const float *pprr, const float *rndmVls, Walker *wlk, float *stt, float *prr ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
   float q;
-  if ( indx < nmbrOfWlkrs ) {
-    q = - 0.5 * ( prpsdSttstcs[indx] + prpsdPrrs[indx] - sttstcs[indx] - prrs[indx] );
+  if ( i < n ) {
+    q = - 0.5 * ( pstt[i] + pprr[i] - stt[i] - prr[i] );
     q = expf ( q );
-    if ( q > rndmVls[indx+nmbrOfWlkrs*stpIndx] ) {
-      wlkrs[indx] = prpsdWlkrs[indx];
-      sttstcs[indx] = prpsdSttstcs[indx];
-      prrs[indx] = prpsdPrrs[indx];
+    if ( q > rndmVls[i+n*stpIndx] ) {
+      wlk[i] = pwlk[i];
+      stt[i] = pstt[i];
+      prr[i] = pprr[i];
     }
   }
 }
@@ -522,7 +527,9 @@ __global__ void ReturnChainFunction ( const int ns, const int nw, const int ipr,
 
 __global__ void ReturnConstantArray ( const int n, const float c, float *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < n ) { a[i] = c; }
+  if ( i < n ) {
+    a[i] = c;
+  }
 }
 
 __global__ void ReturnCentralChainFunction ( const int ns, const int nw, const float *scf, const float *cf, float *ccf ) {

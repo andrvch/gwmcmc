@@ -25,7 +25,11 @@ __host__ __device__ int PriorCondition ( const Walker w ) {
 
 __host__ __device__ float PriorStatistic ( const Walker w, const int cnd ) {
   float p = 0, sum = 0;
-  if ( cnd ) { p = sum; } else { p = INF; }
+  if ( cnd ) {
+    p = sum;
+  } else {
+    p = INF;
+  }
   return p;
 }
 
@@ -53,7 +57,6 @@ __host__ int Statistics ( const int n, const Walker *wlk, float *stt ) {
   return 0;
 }
 
-
 /**
  * Host main routine
  */
@@ -67,7 +70,6 @@ int main ( int argc, char *argv[] ) {
   Chain chn[1];
 
   cdp[0].dev = atoi( argv[1] );
-
   chn[0].thrdNm = argv[2];
   chn[0].nmbrOfWlkrs = atoi ( argv[3] );
   chn[0].nmbrOfStps = atoi ( argv[4] );
@@ -83,8 +85,7 @@ int main ( int argc, char *argv[] ) {
     InitAtRandom ( chn );
     Priors ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].prrs );
     Statistics ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].sttstcs );
-  }
-  else {
+  } else {
     InitFromLast ( chn );
   }
 
@@ -95,18 +96,18 @@ int main ( int argc, char *argv[] ) {
 
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
 
-  int stpIndx = 0, sbstIndx;
-  while ( stpIndx < chn[0].nmbrOfStps ) {
-    sbstIndx = 0;
-    while ( sbstIndx < 2 ) {
-      Propose ( stpIndx, sbstIndx, chn );
+  int sti = 0, sbi;
+  while ( sti < chn[0].nmbrOfStps ) {
+    sbi = 0;
+    while ( sbi < 2 ) {
+      Propose ( sti, sbi, chn );
       Priors ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
       Statistics ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
-      Update ( stpIndx, sbstIndx, chn );
-      sbstIndx += 1;
+      Update ( sti, sbi, chn );
+      sbi += 1;
     }
-    ToChain ( stpIndx, chn );
-    stpIndx += 1;
+    ToChain ( sti, chn );
+    sti += 1;
   }
   printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
 
@@ -156,9 +157,8 @@ int main ( int argc, char *argv[] ) {
   // profiled. Calling cudaDeviceReset causes all profile data to be
   // flushed before the application exits
 
-  cdp[0].err = cudaDeviceReset ( );
-  if ( cdp[0].err != cudaSuccess )
-  {
+  cdp[0].err = cudaDeviceReset ();
+  if ( cdp[0].err != cudaSuccess ) {
     fprintf ( stderr, "Failed to deinitialize the device! error=%s\n", cudaGetErrorString ( cdp[0].err ) );
     exit ( EXIT_FAILURE );
   }
