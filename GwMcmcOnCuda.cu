@@ -22,7 +22,7 @@ __host__ __device__ int PriorCondition ( const Walker wlkr )
   float frq, phs;
   frq = wlkr.par[0];
   //cndtn = cndtn * ( 3.32 < frq ) * ( frq < 3.40 );
-  cndtn = cndtn * ( 2.0 < frq ) * ( frq < 3.0 );
+  cndtn = cndtn * ( 3.0 < frq ) * ( frq < 4.0 );
   phs = wlkr.par[1];
   cndtn = cndtn * ( 0.0 < phs ) * ( phs < 0.2 );
   /*for ( int i = FIRSTBIN; i <  NPRS; i++ )
@@ -229,12 +229,13 @@ __host__ int ReadTimesData ( const int verbose, const char *spcFl, const int nmb
  */
 int main ( int argc, char *argv[] )
 {
+  printf ( "%ld\n", sizeof ( float ) );
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
   const float lwrNtcdEnrg1 = 0.;
   const float hghrNtcdEnrg1 = 12.0;
   const float dlt = 1.E-6;
-  const float phbsPwrlwInt[NPRS] = { 2.416, 0.15 };
+  const float phbsPwrlwInt[NPRS] = { 3.3625, 0.15 };
 
   /* Initialize */
   Cuparam cdp[NSPCTR];

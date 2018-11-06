@@ -5,7 +5,7 @@ import os, sys
 import math
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -91,5 +91,5 @@ for j in range(npars):
         elif i > j:
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
-#plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".pdf")
+plt.show()
+#plt.savefig(sys.argv[1]+"trngl"+".pdf")
