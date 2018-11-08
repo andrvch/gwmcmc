@@ -16,6 +16,27 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__global__ void divideWalkers ( const int nWlk, const int dimWlk, const int sbIdx, const float *wlk, float *wlk0, float *wlkC ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  if ( i < nWlk/2 && j < dimWlk ) {
+    wlk0[i+j*nWlk/2] = wlk[i+sbIdx*nWlk/2+j*nWlk];
+    wlkC[i+j*nWlk/2] = wlk[i+(1-sbIdx)*nWlk/2+j*nWlk];
+  }
+}
+
+__host__ void proposeWalkMove ( const Cuparam *cdp,  ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  dim3 block ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 grid ( ( nWlk/2 + block.x - 1 ) / block.x, ( dimWlk + block.y - 1 ) / block.y );
+  divideWalkers << grid, block >> ( chn[0].nWlk, chn[0].dimWlk, chn[0].sbIdx, chn[0].wlk, chn[0].wlk0, chn[0].wlkC );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nWlk / 2, chn[0].dimWlk, &alpha, chn[0].wlkC, chn[0].nWlk / 2, chn[0].ons, incxx, &beta, chn[0].mwlk, incyy );
+  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stnrm, chn[0].nWlk / 2 * chn[0].nWlk / 2, 0, 1 );
+  cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_T, CUBLAS_OP_T, chn[0].dimWlk, chn[0].nWlk / 2, chn[0].dimWlk, &alpha,
+  chn[0].stnrm, chn[0].nWlk / 2, chn[0].wlkC, &beta, chn[0].wlnrm, chn[0].dimWlk );
+}
+
 __host__ int InitializeCuda ( const int verbose, Cuparam *cdp ) {
   cudaRuntimeGetVersion ( cdp[0].runtimeVersion );
   cudaDriverGetVersion ( cdp[0].driverVersion );
@@ -433,15 +454,6 @@ __global__ void WriteWalkersAndStatisticsToChain ( const int n, const int ist, c
     wchn[i+ist*n] = wlk[i];
     schn[i+ist*n] = stt[i];
     pchn[i+ist*n] = prr[i];
-  }
-}
-
-__global__ void DivideWalkers ( const int nWlk, const int dimWlk, const int sbIdx, const float *wlk, float *wlk0, float *wlkC ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  if ( i < nWlk/2 && j < dimWlk ) {
-    wlk0[i+j*nWlk/2] = wlk[i+sbIdx*nWlk/2+j*nWlk];
-    wlkC[i+j*nWlk/2] = wlk[i+(1-sbIdx)*nWlk/2+j*nWlk];
   }
 }
 
