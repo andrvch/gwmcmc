@@ -41,6 +41,8 @@ typedef union wlk3u {
 } Walker;
 
 struct Chain {
+  int dimWlk;
+  float *wlkc, *wlkp;
   char *thrdNm;
   int nmbrOfWlkrs, nmbrOfStps, thrdIndx, nmbrOfRndmVls;
   float dlt, elapsedTime, cufftElapsedTime, *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *rndmVls, *rndmVls1, *rndmVls2, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
@@ -100,6 +102,7 @@ __global__ void AssembleArrayOfPriors ( const int, const Walker*, const float* )
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 
+__global__ void DivideWalkers ( const int, const int, const int, const float*, float*, float* );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
 __global__ void GenerateMetropolis ( const int, const int, const int, const Walker*, const Walker*, Walker*, float* );
 __global__ void UpdateWalkers ( const int, const int, const int, const Walker*, const float*, const float*, const float*, const float*, Walker*, float*, float* );

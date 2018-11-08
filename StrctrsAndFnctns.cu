@@ -47,7 +47,9 @@ __host__ int InitializeCuda ( const int verbose, Cuparam *cdp ) {
 __host__ int InitializeChain ( const int verbose, Cuparam *cdp, const float *strtng, Chain *chn ) {
   chn[0].nmbrOfRndmVls = 3 * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfStps;
   cudaMallocManaged ( ( void ** ) &chn[0].wlkrs, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].wlkc, chn[0].dimWlk * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].wlkp, chn[0].dimWlk * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chnOfWlkrs, chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sttstcs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prrs, chn[0].nmbrOfWlkrs * sizeof ( float ) );
@@ -127,6 +129,8 @@ __host__ void DestroyAllTheCudaStaff ( const Cuparam *cdp ) {
 }
 
 __host__ void FreeChain ( const Chain *chn ) {
+  cudaFree ( chn[0].wlkc );
+  cudaFree ( chn[0].wlkp );
   cudaFree ( chn[0].wlkrs );
   cudaFree ( chn[0].prpsdWlkrs );
   cudaFree ( chn[0].chnOfWlkrs );
@@ -429,6 +433,15 @@ __global__ void WriteWalkersAndStatisticsToChain ( const int n, const int ist, c
     wchn[i+ist*n] = wlk[i];
     schn[i+ist*n] = stt[i];
     pchn[i+ist*n] = prr[i];
+  }
+}
+
+__global__ void DivideWalkers ( const int nWlk, const int dimWlk, const int sbIdx, const float *wlk, float *wlk0, float *wlkC ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  if ( i < nWlk/2 && j < dimWlk ) {
+    wlk0[i+j*nWlk/2] = wlk[i+sbIdx*nWlk/2+j*nWlk];
+    wlkC[i+j*nWlk/2] = wlk[i+(1-sbIdx)*nWlk/2+j*nWlk];
   }
 }
 

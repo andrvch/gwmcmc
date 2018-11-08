@@ -75,6 +75,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nmbrOfStps = atoi ( argv[4] );
   chn[0].thrdIndx = atoi ( argv[5] );
   chn[0].dlt = dlt;
+  chn[0].dimWlk = NPRS;
 
   InitializeCuda ( verbose, cdp );
   InitializeChain ( verbose, cdp, p0, chn );
