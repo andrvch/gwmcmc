@@ -26,11 +26,21 @@ for i in range(nstps):
         for k in range(nprmtrs):
             wlkrs[k,j,i] = smpls[k,j+nwlkrs*i]
 
+quont = [0.999,0.99,0.90,0.68,0.40]
+nbins2D = 100
+xi,yi = np.mgrid[-2.:2.:nbins2D*1j,-2.:2.:nbins2D*1j]
+def gauss(x,y):
+    return np.exp(-(x-y)**2/0.1 - (x+y)**2)
+zi = gauss(xi,yi)
+lev,zin = comp_lev(zi.flatten(),quont)
+
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure()
 ax = plt.axes(xlim=(-2., 2.), ylim=(-2., 2.))
 line1, = ax.plot([], [], 'o')
-line2, = ax.plot([], [], 'o')
+#line2, = ax.contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
+ax.contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
+ax.contour(xi,yi,zin.reshape(xi.shape), lev, colors='black', linewidth=.5)
 pi_text = ax.text(0.70, 0.90, '', transform=ax.transAxes, fontsize=16)
 n_text = ax.text(0.70, 0.80, '', transform=ax.transAxes, fontsize=16)
 plt.tick_params(labelsize=14)
@@ -67,9 +77,9 @@ def animate(i):
     return line1, #line2,
 
 
-anim = animation.FuncAnimation(fig, animate, init_func=init, frames=512, interval=32, blit=True)
+anim = animation.FuncAnimation(fig, animate, init_func=init, frames=128, interval=1, blit=True)
 #anim.save('basic_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
-anim.save('gauss2D.gif', dpi=80, writer='imagemagick')
+anim.save('gauss2Dmetro.gif', dpi=80, writer='imagemagick')
 
 #plt.show()
 #plt.savefig(sys.argv[1]+".pdf")

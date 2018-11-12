@@ -48,7 +48,7 @@ __host__ int Priors ( const int n, const Walker *wlk, float *prr ) {
 __global__ void AssembleArrayOfStatistic ( const int n, const Walker *wlk, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    stt[i] = pow ( wlk[i].par[0] - wlk[i].par[1], 2. ) / 0.1 + pow ( wlk[i].par[0] + wlk[i].par[1], 2. );
+    stt[i] = pow ( wlk[i].par[0] - wlk[i].par[1], 2. ) + pow ( wlk[i].par[0] + wlk[i].par[1], 2. );
   }
 }
 
@@ -94,20 +94,26 @@ int main ( int argc, char *argv[] ) {
   printf ( ".................................................................\n" );
   printf ( " Start ...                                                  \n" );
 
-  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
+  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.01 );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls2, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.01 );
 
-  int sti = 0, sbi;
-  while ( sti < chn[0].nmbrOfStps ) {
-    sbi = 0;
-    while ( sbi < 2 ) {
-      Propose ( sti, sbi, chn );
-      Priors ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
+  AssembleArrayOfRandom2DWalkersFromTwoRandomArrays <<< Blocks ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps, chn[0].rndmVls1, chn[0].rndmVls2, chn[0].rndmWlkrs1 );
+
+  int stpIndx = 0, sbstIndx;
+  while ( stpIndx < chn[0].nmbrOfStps )
+  {
+    sbstIndx = 0;
+    while ( sbstIndx < NPRS )
+    {
+      MetropolisPropose ( stpIndx, sbstIndx, chn );
+      Priors ( chn[0].nmbrOfWlkrs, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
       Statistics ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
-      Update ( sti, sbi, chn );
-      sbi += 1;
+      MetropolisUpdate ( stpIndx, chn );
+      sbstIndx += 1;
     }
-    ToChain ( sti, chn );
-    sti += 1;
+    ToChain ( stpIndx, chn );
+    stpIndx += 1;
   }
   printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
 
