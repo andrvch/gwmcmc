@@ -64,7 +64,7 @@ int main ( int argc, char *argv[] ) {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
   const float dlt = 1.E-6;
-  const float p0[NPRS] = { 0.1, 0.1 };
+  const float p0[NPRS] = { 0.7, 1.2 };
 
   Cuparam cdp[1];
   Chain chn[1];
