@@ -41,8 +41,8 @@ line1, = ax.plot([], [], 'o')
 #line2, = ax.contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
 ax.contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
 ax.contour(xi,yi,zin.reshape(xi.shape), lev, colors='black', linewidth=.5)
-pi_text = ax.text(0.70, 0.90, '', transform=ax.transAxes, fontsize=16)
-n_text = ax.text(0.70, 0.80, '', transform=ax.transAxes, fontsize=16)
+pi_text = ax.text(0.2, 0.90, '', transform=ax.transAxes, fontsize=16)
+n_text = ax.text(0.2, 0.90, '', transform=ax.transAxes, fontsize=16)
 plt.tick_params(labelsize=14)
 plt.legend(fontsize=16)
 plt.xlabel("x",fontsize=16)
@@ -77,9 +77,9 @@ def animate(i):
     return line1, #line2,
 
 
-anim = animation.FuncAnimation(fig, animate, init_func=init, frames=128, interval=1, blit=True)
+anim = animation.FuncAnimation(fig, animate, init_func=init, frames=512, interval=1, blit=True)
 #anim.save('basic_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
-anim.save('gauss2Dmetro.gif', dpi=80, writer='imagemagick')
+anim.save('gauss2DmetroOk.gif', dpi=80, writer='imagemagick')
 
 #plt.show()
 #plt.savefig(sys.argv[1]+".pdf")

@@ -48,7 +48,7 @@ __host__ int Priors ( const int n, const Walker *wlk, float *prr ) {
 __global__ void AssembleArrayOfStatistic ( const int n, const Walker *wlk, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    stt[i] = pow ( wlk[i].par[0] - wlk[i].par[1], 2. ) + pow ( wlk[i].par[0] + wlk[i].par[1], 2. );
+    stt[i] = pow ( wlk[i].par[0] - wlk[i].par[1], 2. ) / 0.1 + pow ( wlk[i].par[0] + wlk[i].par[1], 2. );
   }
 }
 
@@ -64,7 +64,7 @@ int main ( int argc, char *argv[] ) {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
   const float dlt = 1.E-6;
-  const float p0[NPRS] = { 0.1, 0.1 };
+  const float p0[NPRS] = { 0.7, 1.2 };
 
   Cuparam cdp[1];
   Chain chn[1];
@@ -95,8 +95,8 @@ int main ( int argc, char *argv[] ) {
   printf ( " Start ...                                                  \n" );
 
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs );
-  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.01 );
-  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls2, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.01 );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls1, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.1 );
+  curandGenerateNormal ( cdp[0].curandGnrtr,  chn[0].rndmVls2, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs, 0., 0.1 );
 
   AssembleArrayOfRandom2DWalkersFromTwoRandomArrays <<< Blocks ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps ), THRDSPERBLCK >>> ( chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps, chn[0].rndmVls1, chn[0].rndmVls2, chn[0].rndmWlkrs1 );
 
