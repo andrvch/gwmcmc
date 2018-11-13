@@ -65,6 +65,18 @@ __host__ int InitializeChain ( const int verbose, Cuparam *cdp, const float *str
   cudaMallocManaged ( ( void ** ) &chn[0].atCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 2 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stnrm, 2 * chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xx, chn[0].dimWlk * chn[0].nmbrOfWlkrs * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xx0, chn[0].dimWlk * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxC, chn[0].dimWlk * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xx1, chn[0].dimWlk * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxCM, chn[0].dimWlk * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xCM, chn[0].dimWlk * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].x1,  chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxW, chn[0].dimWlk * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  dim3 block ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 grid ( ( chn[0].nmbrOfWlkrs / 2 + block.x - 1 ) / block.x );
+  ReturnConstantArray <<< grid, block >>> ( chn[0].nmbrOfWlkrs / 2, 1., chn[0].x1 );
   if ( chn[0].thrdIndx > 0 ) {
     ReadLastPositionOfWalkersFromFile ( chn[0].thrdNm, chn[0].thrdIndx-1, chn[0].nmbrOfWlkrs, chn[0].lstWlkrsAndSttstcs );
   } else {
@@ -127,6 +139,15 @@ __host__ void DestroyAllTheCudaStaff ( const Cuparam *cdp ) {
 }
 
 __host__ void FreeChain ( const Chain *chn ) {
+  cudaFree ( chn[0].stnrm );
+  cudaFree ( chn[0].xx );
+  cudaFree ( chn[0].xx0 );
+  cudaFree ( chn[0].xxC );
+  cudaFree ( chn[0].xx1 );
+  cudaFree ( chn[0].x1 );
+  cudaFree ( chn[0].xxCM );
+  cudaFree ( chn[0].xCM );
+  cudaFree ( chn[0].xxW );
   cudaFree ( chn[0].wlkrs );
   cudaFree ( chn[0].prpsdWlkrs );
   cudaFree ( chn[0].chnOfWlkrs );

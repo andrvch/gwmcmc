@@ -45,6 +45,8 @@ struct Chain {
   int nmbrOfWlkrs, nmbrOfStps, thrdIndx, nmbrOfRndmVls;
   float dlt, elapsedTime, cufftElapsedTime, *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *rndmVls, *rndmVls1, *rndmVls2, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr, *rndmWlkr, *rndmWlkrs1;
+  int dimWlk;
+  float *stnrm, *xx, *xx0, *xxC, *xx1, *x1, *xxCM, *xCM, *xxW;
 };
 
 __host__ int InitializeCuda ( const int, Cuparam* );
@@ -88,6 +90,7 @@ __host__ int Statistics ( const int, const Walker*, float* );
 __host__ int Update ( const int, const int, Chain* );
 __host__ int MetropolisUpdate ( const int, Chain* );
 __host__ int ToChain ( const int, Chain* );
+__host__ void proposeWalkMove ( const int, const int, const Cuparam*, Chain* );
 
 __global__ void AssembleArrayOfStatistic ( const int, const Walker*, float* );
 __global__ void AssembleArrayOfRandom2DWalkersFromTwoRandomArrays ( const int, const float*, const float*, Walker* );
@@ -100,6 +103,7 @@ __global__ void AssembleArrayOfPriors ( const int, const Walker*, const float* )
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const Walker*, const float*, float* );
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 
+__global__ void centrilazeWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void divideWalkers ( const int, const int, const int, const float*, float*, float* );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
 __global__ void GenerateMetropolis ( const int, const int, const int, const Walker*, const Walker*, Walker*, float* );

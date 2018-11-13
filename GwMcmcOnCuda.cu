@@ -69,7 +69,26 @@ __global__ void divideWalkers ( const int dimWlk, const int nWlk, const int sbId
   }
 }
 
+__global__ void centrilazeWalkers ( const int dimWlk, const int nWlk, const float *xxC, const float *xCM, float *xxCM ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i+j*dimWlk;
+  if ( i < dimWlk && j < nWlk/2 ) {
+    xxCM[t] = xxC[t] - xCM[i];
+  }
+}
 
+__host__ void proposeWalkMove ( const int stpIndx, const int sbstIndx, const Cuparam *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  dim3 block ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 grid ( ( chn[0].dimWlk + block.x - 1 ) / block.x, ( chn[0].nmbrOfWlkrs / 2 + block.y - 1 ) / block.y );
+  divideWalkers <<< grid, block >>> ( chn[0].dimWlk, chn[0].nmbrOfWlkrs, sbstIndx, chn[0].xx, chn[0].xx0, chn[0].xxC );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].dimWlk, chn[0].nmbrOfWlkrs / 2, &alpha, chn[0].xxC, chn[0].dimWlk, chn[0].x1, incxx, &beta, chn[0].xCM, incyy );
+  centrilazeWalkers <<< grid, block >>> ( chn[0].dimWlk, chn[0].nmbrOfWlkrs / 2, chn[0].xxC, chn[0].xCM, chn[0].xxCM );
+  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stnrm, chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2, 0, 1 );
+  cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, chn[0].dimWlk, chn[0].nmbrOfWlkrs / 2 , chn[0].dimWlk, &alpha, chn[0].xxCM, chn[0].dimWlk, chn[0].stnrm, chn[0].nmbrOfWlkrs / 2, &beta, chn[0].xxW, chn[0].dimWlk );
+}
 
 /**
  * Host main routine
@@ -89,6 +108,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nmbrOfStps = atoi ( argv[4] );
   chn[0].thrdIndx = atoi ( argv[5] );
   chn[0].dlt = dlt;
+  chn[0].dimWlk = 2;
 
   InitializeCuda ( verbose, cdp );
   InitializeChain ( verbose, cdp, p0, chn );
@@ -109,6 +129,7 @@ int main ( int argc, char *argv[] ) {
   printf ( " Start ...                                                  \n" );
 
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
+  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stnrm, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2, 0, 1 );
 
   int sti = 0, sbi;
   while ( sti < chn[0].nmbrOfStps ) {
