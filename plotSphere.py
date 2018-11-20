@@ -9,7 +9,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 def sphvol(x,N):
-    return x**N
+    return 1 - (1-x)**N
 
 x = np.linspace(0.,1.,1000)
 
@@ -18,8 +18,8 @@ for i in (3,10,100,1000):
 #plt.set_xticklabels
 plt.tick_params(labelsize=14)
 plt.legend(fontsize=16)
-plt.xlabel(r"$r$",fontsize=16)
-plt.ylabel(r"$r^{N}$",fontsize=16)
+plt.xlabel(r"$\epsilon$",fontsize=16)
+plt.ylabel(r"$1-(1-\epsilon)^{N}$",fontsize=16)
 plt.savefig("sphere.pdf")
 
 #plt.show()
