@@ -60,9 +60,9 @@ __host__ int Statistics ( const int n, const Walker *wlk, float *stt ) {
 __global__ void divideWalkers ( const int dimWlk, const int nWlk, const int sbIdx, const float *xx, float *xx0, float *xxC ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i+j*dimWlk;
-  int t0 = t + sbIdx*dimWlk;
-  int tC = t + (1-sbIdx)*dimWlk;
+  int t = i + j * dimWlk;
+  int t0 = t + sbIdx * dimWlk;
+  int tC = t + ( 1 - sbIdx ) * dimWlk;
   if ( i < dimWlk && j < nWlk/2 ) {
     xx0[t] = xx[t0];
     xxC[t] = xx[tC];
@@ -72,7 +72,7 @@ __global__ void divideWalkers ( const int dimWlk, const int nWlk, const int sbId
 __global__ void centrilazeWalkers ( const int dimWlk, const int nWlk, const float *xxC, const float *xCM, float *xxCM ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i+j*dimWlk;
+  int t = i + j * dimWlk;
   if ( i < dimWlk && j < nWlk/2 ) {
     xxCM[t] = xxC[t] - xCM[i];
   }
