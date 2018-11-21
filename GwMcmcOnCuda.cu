@@ -15,6 +15,54 @@
 #include <cufft.h>
 #include "StrctrsAndFnctns.cuh"
 
+__global__ void shiftWalkers ( const int dim, const int nwl, const float *xx, const float *x, float *yy ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    yy[t] = xx[t] - x[i];
+  }
+}
+
+__global__ void addWalkers ( const int dim, const int nwl, const float *xx0, const float *xxW, float *xx1 ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    xx1[t] = xx0[t] + xxW[t];
+  }
+}
+
+__global__ void sliceArray ( const int n, const int indx, const float *ss, float *zz ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    zz[i] = ss[i+indx];
+  }
+}
+
+__host__ void proposeWalkMove ( const Cuparam *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  int n, indx;
+  n = chn[0].dim * chn[0].nwl / 2
+  dim3 bl ( THRDSPERBLCK );
+  dim3 gr ( ( n + bl.x - 1 ) / bl.x );
+  indx = chn[0].isb * chn[0].nwl / 2 * chn[0].dim;
+  sliceArray <<< gr, bl >>> ( n, indx, chn[0].xx, chn[0].xx0 );
+  indx = ( 1 - chn[0].isb ) * chn[0].nwl / 2 * chn[0].dim;
+  sliceArray <<< gr, bl >>> ( n, indx, chn[0].xx, chn[0].xxC );
+  n = chn[0].nwl / 2 * chn[0].nwl / 2;
+  indx = chn[0].ist * 2 * n + chn[0].isb * n;
+  gr.x = ( n + bl.x - 1 ) / bl.x;
+  sliceArray <<< gr, bl >>> ( n, indx, chn[0].stn, chn[0].zz );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].xxC, chn[0].dim, chn[0].x1, incxx, &beta, chn[0].xCM, incyy );
+  dim3 bl1 ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 gr1 ( ( chn[0].dim + bl1.x - 1 ) / bl1.x, ( chn[0].nwl/2 + bl1.y - 1 ) / bl1.y );
+  shiftWalkers <<< gr1, bl1 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xxC, chn[0].xCM, chn[0].xxCM );
+  cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2 , chn[0].nwl/2, &alpha, chn[0].xxCM, chn[0].dim, chn[0].zz, chn[0].nwl/2, &beta, chn[0].xxW, chn[0].dim );
+  addWalkers <<< gr1, bl1 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx0, chn[0].xxW, chn[0].xx1 );
+}
+
 __host__ __device__ int PriorCondition ( const Walker w ) {
   int cnd = 1;
   //for ( int i = 0; i <  NPRS; i++ ) {
@@ -33,6 +81,18 @@ __host__ __device__ float PriorStatistic ( const Walker w, const int cnd ) {
   return p;
 }
 
+__global__ void AssembleArrayOfStatistic ( const int dim, const int n, const float *xx, float *s ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    s[i] = pow ( xx[i*dim] - xx[1+i*dim], 2. ) / 0.1 + pow ( xx[i*dim] + xx[1+i*dim], 2. );
+  }
+}
+
+__host__ int Statistics ( const int n, const float *xx, float *s ) {
+  AssembleArrayOfStatistic <<< Blocks ( n ), THRDSPERBLCK >>> ( n, xx, s );
+  return 0;
+}
+
 __global__ void AssembleArrayOfPriors ( const int n, const Walker *w, float *p ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
@@ -43,51 +103,6 @@ __global__ void AssembleArrayOfPriors ( const int n, const Walker *w, float *p )
 __host__ int Priors ( const int n, const Walker *wlk, float *prr ) {
   AssembleArrayOfPriors <<< Blocks ( n ), THRDSPERBLCK >>> ( n, wlk, prr );
   return 0;
-}
-
-__global__ void AssembleArrayOfStatistic ( const int n, const Walker *wlk, float *stt ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < n ) {
-    stt[i] = pow ( wlk[i].par[0] - wlk[i].par[1], 2. ) / 0.1 + pow ( wlk[i].par[0] + wlk[i].par[1], 2. );
-  }
-}
-
-__host__ int Statistics ( const int n, const Walker *wlk, float *stt ) {
-  AssembleArrayOfStatistic <<< Blocks ( n ), THRDSPERBLCK >>> ( n, wlk, stt );
-  return 0;
-}
-
-__global__ void divideWalkers ( const int dimWlk, const int nWlk, const int sbIdx, const float *xx, float *xx0, float *xxC ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i + j * dimWlk;
-  int t0 = t + sbIdx * dimWlk;
-  int tC = t + ( 1 - sbIdx ) * dimWlk;
-  if ( i < dimWlk && j < nWlk/2 ) {
-    xx0[t] = xx[t0];
-    xxC[t] = xx[tC];
-  }
-}
-
-__global__ void centrilazeWalkers ( const int dimWlk, const int nWlk, const float *xxC, const float *xCM, float *xxCM ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i + j * dimWlk;
-  if ( i < dimWlk && j < nWlk/2 ) {
-    xxCM[t] = xxC[t] - xCM[i];
-  }
-}
-
-__host__ void proposeWalkMove ( const int stpIndx, const int sbstIndx, const Cuparam *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  dim3 block ( THRDSPERBLCK, THRDSPERBLCK );
-  dim3 grid ( ( chn[0].dimWlk + block.x - 1 ) / block.x, ( chn[0].nmbrOfWlkrs / 2 + block.y - 1 ) / block.y );
-  divideWalkers <<< grid, block >>> ( chn[0].dimWlk, chn[0].nmbrOfWlkrs, sbstIndx, chn[0].xx, chn[0].xx0, chn[0].xxC );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].dimWlk, chn[0].nmbrOfWlkrs / 2, &alpha, chn[0].xxC, chn[0].dimWlk, chn[0].x1, incxx, &beta, chn[0].xCM, incyy );
-  centrilazeWalkers <<< grid, block >>> ( chn[0].dimWlk, chn[0].nmbrOfWlkrs / 2, chn[0].xxC, chn[0].xCM, chn[0].xxCM );
-  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stnrm, chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2, 0, 1 );
-  cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, chn[0].dimWlk, chn[0].nmbrOfWlkrs / 2 , chn[0].dimWlk, &alpha, chn[0].xxCM, chn[0].dimWlk, chn[0].stnrm, chn[0].nmbrOfWlkrs / 2, &beta, chn[0].xxW, chn[0].dimWlk );
 }
 
 /**
@@ -105,6 +120,7 @@ int main ( int argc, char *argv[] ) {
   cdp[0].dev = atoi( argv[1] );
   chn[0].thrdNm = argv[2];
   chn[0].nmbrOfWlkrs = atoi ( argv[3] );
+  chn[0].nWlk = chn[0].nmbrOfWlkrs;
   chn[0].nmbrOfStps = atoi ( argv[4] );
   chn[0].thrdIndx = atoi ( argv[5] );
   chn[0].dlt = dlt;
@@ -128,8 +144,8 @@ int main ( int argc, char *argv[] ) {
   printf ( ".................................................................\n" );
   printf ( " Start ...                                                  \n" );
 
-  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
-  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stnrm, chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2, 0, 1 );
+  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfStps * 2 * chn[0].nmbrOfWlkrs / 2 );
+  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stnrm, chn[0].nmbrOfStps * 2 * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2, 0, 1 );
 
   int sti = 0, sbi;
   while ( sti < chn[0].nmbrOfStps ) {

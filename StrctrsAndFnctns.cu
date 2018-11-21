@@ -66,6 +66,7 @@ __host__ int InitializeChain ( const int verbose, Cuparam *cdp, const float *str
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nmbrOfStps * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].lstWlkrsAndSttstcs, ( NPRS + 2 ) * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stnrm, 2 * chn[0].nmbrOfStps * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].zz, chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx, chn[0].dimWlk * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx0, chn[0].dimWlk * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xxC, chn[0].dimWlk * chn[0].nmbrOfWlkrs / 2 * sizeof ( float ) );
@@ -148,6 +149,7 @@ __host__ void FreeChain ( const Chain *chn ) {
   cudaFree ( chn[0].xxCM );
   cudaFree ( chn[0].xCM );
   cudaFree ( chn[0].xxW );
+  cudaFree ( chn[0].zz );
   cudaFree ( chn[0].wlkrs );
   cudaFree ( chn[0].prpsdWlkrs );
   cudaFree ( chn[0].chnOfWlkrs );

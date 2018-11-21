@@ -46,7 +46,7 @@ struct Chain {
   float dlt, elapsedTime, cufftElapsedTime, *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *rndmVls, *rndmVls1, *rndmVls2, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
   Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr, *rndmWlkr, *rndmWlkrs1;
   int dimWlk;
-  float *stnrm, *xx, *xx0, *xxC, *xx1, *x1, *xxCM, *xCM, *xxW;
+  float *stnrm, *xx, *xx0, *xxC, *xx1, *x1, *xxCM, *xCM, *xxW, *zz;
 };
 
 __host__ int InitializeCuda ( const int, Cuparam* );
@@ -104,6 +104,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, co
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 
 __global__ void centrilazeWalkers ( const int, const int, const float*, const float*, float* );
+__global__ void sumWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void divideWalkers ( const int, const int, const int, const float*, float*, float* );
 __global__ void GenerateProposal ( const int, const int, const int, const Walker*, const float*, float*, Walker*, float* );
 __global__ void GenerateMetropolis ( const int, const int, const int, const Walker*, const Walker*, Walker*, float* );
