@@ -15,7 +15,9 @@
 #define NPRS 2 // Number of parameters
 #define ACONST 2.0f // Goodman-Weare "a" constant
 
-struct Cuparam {
+typedef float2 Complex;
+
+struct Cupar {
   int dev;
   cudaError_t err = cudaSuccess;
   int runtimeVersion[4], driverVersion[4];
@@ -31,29 +33,21 @@ struct Cuparam {
   cudaEvent_t start, stop;
 };
 
-typedef float2 Complex;
-
-typedef union wlk3u {
-  struct wlk3s {
-    float a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17;
-  } wlk3s;
-  float par[NPRS];
-} Walker;
-
 struct Chain {
-  char *thrdNm;
-  int nmbrOfWlkrs, nmbrOfStps, thrdIndx, nmbrOfRndmVls;
-  float dlt, elapsedTime, cufftElapsedTime, *sttstcs, *prpsdSttstcs, *chnOfSttstcs, *rndmVls, *rndmVls1, *rndmVls2, *zRndmVls, *prrs, *prpsdPrrs, *chnOfPrrs, *chnFnctn, *atCrrFnctn, *cmSmAtCrrFnctn, *lstWlkrsAndSttstcs, atcTime;
-  Walker *wlkrs, *prpsdWlkrs, *chnOfWlkrs, strtngWlkr, *rndmWlkr, *rndmWlkrs1;
-  int dimWlk;
-  float *stnrm, *xx, *xx0, *xxC, *xx1, *x1, *xxCM, *xCM, *xxW, *zz;
+  char *name;
+  int indx, dim, nwl, nst, ist, isb;
+  float dlt, time;
+  float *lst, *stn, *uni, *x0, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst;
 };
 
-__host__ int InitializeCuda ( const int, Cuparam* );
-__host__ int InitializeChain ( const int, Cuparam*, const float*, Chain* );
+__host__ int initializeCuda ( Cupar* );
+__host__ int destroyCuda ( const Cupar* );
 
-__host__ int Blocks ( const int );
-__host__ dim3 Grid ( const int, const int );
+__host__ int initializeChain ( Cupar*, Chain* );
+__host__ int grid1D ( const int );
+__host__ dim3 grid2D ( const int, const int );
+__global__ void constantArray ( const int, const float, float* );
+__host__ void freeChain ( const Chain* );
 
 __host__ __device__ Walker AddWalkers ( Walker, Walker );
 __host__ __device__ Walker ScaleWalker ( Walker, float );
