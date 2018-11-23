@@ -126,7 +126,7 @@ __global__ void AssembleArrayOfMultiplicity ( const int nmbrOfWlkrs, const int n
     sum = 0;
     for ( int b = 0; b < NTBINS; b++ )
     {
-      sum += nTms[b+i*NTBINS] * logf ( nTms[b+i*NTBINS] / nmbrOfPhtns / Ttot ) - nTms[b+i*NTBINS] + 0.5 * logf ( nTms[b+i*NTBINS] / Ttot );
+      sum += nTms[b+i*NTBINS] * logf ( nTms[b+i*NTBINS] / nmbrOfPhtns ) + 0.5 * logf ( nTms[b+i*NTBINS] );
     }
     sttstcs[i] = - 2. * sum;
   }
@@ -180,6 +180,15 @@ __host__ int TimesAlloc ( Chain *chn, Spectrum *spc )
   }
   return 0;
 }
+
+__host__ void FreeTimes ( const Spectrum *spc )
+{
+  cudaFree ( spc[0].ntcdTms );
+  cudaFree ( spc[0].tmsSttstcs );
+  cudaFree ( spc[0].arrTms );
+  cudaFree ( spc[0].nnTms );
+}
+
 
 __global__ void AssembleArrayOfNoticedTimes ( const int nmbrOfPhtns, float *ntcdTms )
 {
@@ -369,7 +378,7 @@ int main ( int argc, char *argv[] )
   DestroyAllTheCudaStaff ( cdp );
 
   /* Free memory: */
-  FreeSpec ( spc );
+  FreeTimes ( spc );
   FreeChain ( chn );
   FreeModel ( mdl );
 

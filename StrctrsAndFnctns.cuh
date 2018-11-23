@@ -206,6 +206,7 @@ __host__ int TimesInfo ( const char*[], const int, Spectrum* );
 __host__ int TimesAlloc ( Chain*, Spectrum* );
 __host__ int ReadTimesData ( const int, const char*, const int, float* );
 __host__ int TimesData ( const char*[], Cuparam*, const int, Spectrum* );
+__host__ void FreeTimes ( const Spectrum *spc );
 
 /* Kernels */
 __global__ void AssembleArrayOfRandom2DWalkersFromTwoRandomArrays ( const int, const float*, const float*, Walker* );
