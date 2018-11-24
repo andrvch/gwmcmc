@@ -26,7 +26,7 @@ __host__ dim3 grid2D ( const int n, const int m ) {
   return grid;
 }
 
-__host__ dim3 block2D ( ) {
+__host__ dim3 block2D () {
   dim3 block ( THRDSPERBLCK, THRDSPERBLCK );
   return block;
 }
@@ -45,6 +45,13 @@ __global__ void sliceArray ( const int n, const int indx, const float *ss, float
   }
 }
 
+__global__ void insertArray ( const int n, const int indx, const float *ss, float *zz ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    zz[indx+i] = ss[i];
+  }
+}
+
 __global__ void initializeAtRandom ( const int dim, const int nwl, const float dlt, const float *x0, const float *stn, float *xx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -54,7 +61,7 @@ __global__ void initializeAtRandom ( const int dim, const int nwl, const float d
   }
 }
 
-__global__ void returnStatistic ( const int n, const float *xx, float *s ) {
+__global__ void returnStatistic ( const int dim, const int n, const float *xx, float *s ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
     s[i] = pow ( xx[i*dim] - xx[1+i*dim], 2. ) / 0.1 + pow ( xx[i*dim] + xx[1+i*dim], 2. );
@@ -95,7 +102,7 @@ __global__ void addWalkers ( const int dim, const int nwl, const float *xx0, con
   }
 }
 
-__global__ void returnQ ( const int n, const float *s1, const float *s0, const float *q ) {
+__global__ void returnQ ( const int n, const float *s1, const float *s0, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
     q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
@@ -123,7 +130,7 @@ __global__ void saveWalkers ( const int dim, const int nwl, const int ist, const
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    smpls[t+ist*dim*nwl] = wlk[t];
+    smpls[t+ist*dim*nwl] = xx[t];
   }
 }
 
@@ -154,12 +161,17 @@ __host__ int initializeCuda ( Cupar *cdp ) {
   return 0;
 }
 
-__host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
+__host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].stn, chn[0].nst * 2 * chn[0].nwl / 2 * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].uni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].lst, ( chn[0].dim + 1 ) * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].x0, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].zz, chn[0].nwl / 2 * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ru, chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stt, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stt1, chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stt0, chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].q, chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx0, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xxC, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
@@ -169,14 +181,20 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].xxW, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].wcnst, chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].dcnst, chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smpls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stat, chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  return 0;
+}
+
+__host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
   constantArray <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, 1., chn[0].wcnst );
   constantArray <<< grid1D ( chn[0].dim ), THRDSPERBLCK >>> ( chn[0].dim, 1., chn[0].dcnst );
   if ( chn[0].indx == 0 ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
-    returnStatistic <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, chn[0].xx, chn[0].stt );
+    returnStatistic <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl, chn[0].xx, chn[0].stt );
   } else {
-    readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].nwl, chn[0].lst );
+    readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
     setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDSPERBLCK  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
   }
@@ -188,23 +206,30 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
 __host__ int walkMove ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
-  int nxx = chn[0].dim * chn[0].nwl / 2
-  int indx0 = chn[0].isb * nxx;
-  int indxC = ( 1 - chn[0].isb ) * nxx;
+  int nxx = chn[0].dim * chn[0].nwl / 2;
+  int indxX0 = chn[0].isb * nxx;
+  int indxXC = ( 1 - chn[0].isb ) * nxx;
+  int nss = chn[0].nwl / 2;
+  int indxS0 = chn[0].isb * nss;
   int nrn = chn[0].nwl / 2 * chn[0].nwl / 2;
   int indxRn = chn[0].ist * 2 * nrn + chn[0].isb * nrn;
   int nru = chn[0].nwl / 2;
   int indxRu = chn[0].ist * 2 * nru;
-  sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indx0, chn[0].xx, chn[0].xx0 );
-  sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxC, chn[0].xx, chn[0].xxC );
+  sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx, chn[0].xx0 );
+  sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxXC, chn[0].xx, chn[0].xxC );
+  sliceArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].stt, chn[0].stt0 );
   sliceArray <<< grid1D ( nrn ), THRDSPERBLCK >>> ( nrn, indxRn, chn[0].stn, chn[0].zz );
   sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].uni, chn[0].ru );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].xxC, chn[0].dim, chn[0].wcnst, incxx, &beta, chn[0].xCM, incyy );
   shiftWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xxC, chn[0].xCM, chn[0].xxCM );
   cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2 , chn[0].nwl/2, &alpha, chn[0].xxCM, chn[0].dim, chn[0].zz, chn[0].nwl/2, &beta, chn[0].xxW, chn[0].dim );
   addWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx0, chn[0].xxW, chn[0].xx1 );
-  returnStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].xx1, chn[0].stt1 );
+  returnStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].stt1 );
   returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].q );
+  updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
+  updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt0 );
+  insertArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx0, chn[0].xx );
+  insertArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].stt0, chn[0].stt );
   return 0;
 }
 
@@ -227,7 +252,8 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   fclose ( fptr );
   int n = i;
   fptr = fopen ( fl, "r" );
-  i = 0
+  i = 0;
+  int j;
   while ( fscanf ( fptr, "%e", &value ) == 1 ) {
     if ( i >= n - ( dim + 1 ) * nwl ) {
       j = i - ( n - ( dim + 1 ) * nwl );
@@ -238,25 +264,23 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   fclose ( fptr );
 }
 
-__host__ void writeChainToFile ( const char *name, const int indx, const int nwl, const int nst, const float *smpls, const float *stat ) {
+__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const float *smpls, const float *stat ) {
   FILE *flPntr;
   char flNm[FLEN_CARD];
   int ttlChnIndx, stpIndx, wlkrIndx, prmtrIndx;
-  snprintf ( flNm, sizeof ( flNm ), "%s%i%s", thrdNm, indx, ".chain" );
+  snprintf ( flNm, sizeof ( flNm ), "%s%i%s", name, indx, ".chain" );
   flPntr = fopen ( flNm, "w" );
   stpIndx = 0;
-  while ( stpIndx < nmbrOfStps ) {
+  while ( stpIndx < nst ) {
     wlkrIndx = 0;
-    while ( wlkrIndx < nmbrOfWlkrs ) {
-      ttlChnIndx = wlkrIndx + stpIndx * nmbrOfWlkrs;
+    while ( wlkrIndx < nwl ) {
+      ttlChnIndx = wlkrIndx + stpIndx * nwl;
       prmtrIndx = 0;
       while ( prmtrIndx < NPRS ) {
-        fprintf ( flPntr, " %.8E ", chnOfWlkrs[ttlChnIndx].par[prmtrIndx] );
+        fprintf ( flPntr, " %.8E ", smpls[prmtrIndx+ttlChnIndx] );
         prmtrIndx += 1;
       }
-      fprintf ( flPntr, " %.8E ", chnOfSttstcs[ttlChnIndx] );
-      prmtrIndx += 1;
-      fprintf ( flPntr, " %.8E\n", chnOfPrrs[ttlChnIndx] );
+      fprintf ( flPntr, " %.8E\n", stat[ttlChnIndx] );
       wlkrIndx += 1;
     }
     stpIndx += 1;
@@ -279,6 +303,7 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].stn );
   cudaFree ( chn[0].uni );
   cudaFree ( chn[0].zz );
+  cudaFree ( chn[0].stt );
   cudaFree ( chn[0].xx );
   cudaFree ( chn[0].xx0 );
   cudaFree ( chn[0].xxC );
@@ -289,9 +314,15 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].wcnst );
   cudaFree ( chn[0].dcnst );
   cudaFree ( chn[0].x0 );
+  cudaFree ( chn[0].smpls );
+  cudaFree ( chn[0].stat );
+  cudaFree ( chn[0].stt1 );
+  cudaFree ( chn[0].ru );
+  cudaFree ( chn[0].q );
+  cudaFree ( chn[0].stt0 );
 }
 
-__host__ void SimpleReadDataFloat ( const char *fl, float *data ) {
+__host__ void simpleReadDataFloat ( const char *fl, float *data ) {
   FILE *fptr;
   fptr = fopen ( fl, "r" );
   float value;
@@ -303,7 +334,7 @@ __host__ void SimpleReadDataFloat ( const char *fl, float *data ) {
   fclose ( fptr );
 }
 
-__host__ void SimpleReadDataInt ( const char *fl, int *data ) {
+__host__ void simpleReadDataInt ( const char *fl, int *data ) {
   FILE *fptr;
   fptr = fopen ( fl, "r" );
   int value;
@@ -315,7 +346,7 @@ __host__ void SimpleReadDataInt ( const char *fl, int *data ) {
   fclose ( fptr );
 }
 
-__host__ void SimpleWriteDataFloat ( const char *fl, const int n, const float *x ) {
+__host__ void simpleWriteDataFloat ( const char *fl, const int n, const float *x ) {
   FILE *fptr;
   fptr = fopen ( fl, "w" );
   for ( int i = 0; i < n; i++ ) {
@@ -324,9 +355,8 @@ __host__ void SimpleWriteDataFloat ( const char *fl, const int n, const float *x
   fclose ( fptr );
 }
 
-__host__ void SimpleWriteDataFloat2D ( const char *fl, const int ns, const int nw, const float *x ) {
-  FILE *fptr;
-  fptr = fopen ( fl, "w" );
+__host__ void simpleWriteDataFloat2D ( const char *fl, const int ns, const int nw, const float *x ) {
+  FILE *fptr = fopen ( fl, "w" );
   for ( int j = 0; j < ns; j++ ) {
     for ( int i = 0; i < nw; i++ ) {
       fprintf ( fptr, " %.8E ", x[i+j*nw] );

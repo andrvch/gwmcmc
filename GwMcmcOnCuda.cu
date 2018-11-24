@@ -23,7 +23,7 @@ int main ( int argc, char *argv[] ) {
 
   initializeCuda ( cdp );
 
-  if ( vrb == 1 ) {
+  if ( vrb ) {
     printf ( "\n" );
     printf ( ".................................................................\n" );
     printf ( " CUDA device ID: %d\n", cdp[0].dev );
@@ -37,11 +37,16 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dlt = 1.E-6;
-  chn[0].x0 = { 0.7, 1.2 };
   chn[0].dim = 2;
+  chn[0].dlt = 1.E-6;
 
-  if ( vrb == 1 ) {
+  allocateChain ( chn );
+
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    chn[0].x0[i] = 1.;
+  }
+
+  if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
   }
@@ -61,7 +66,7 @@ int main ( int argc, char *argv[] ) {
     chn[0].ist += 1;
   }
 
-  if ( vrb == 1 ) {
+  if ( vrb ) {
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
   }
 
@@ -69,14 +74,14 @@ int main ( int argc, char *argv[] ) {
   cudaEventSynchronize ( cdp[0].stop );
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
-  if ( vrb == 1 ) {
+  if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
   }
 
   /* Write results to a file */
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
 
   destroyCuda ( cdp );
   freeChain ( chn );
