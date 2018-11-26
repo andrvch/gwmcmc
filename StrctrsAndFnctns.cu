@@ -84,6 +84,13 @@ __global__ void setStatisticAtLast ( const int dim, const int nwl, const float *
   }
 }
 
+__global__ void scaleArray ( const int n, const float c, float *a ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    a[i] = c * a[i];
+  }
+}
+
 __global__ void shiftWalkers ( const int dim, const int nwl, const float *xx, const float *x, float *yy ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -221,6 +228,7 @@ __host__ int walkMove ( const Cupar *cdp, Chain *chn ) {
   sliceArray <<< grid1D ( nrn ), THRDSPERBLCK >>> ( nrn, indxRn, chn[0].stn, chn[0].zz );
   sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].uni, chn[0].ru );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].xxC, chn[0].dim, chn[0].wcnst, incxx, &beta, chn[0].xCM, incyy );
+  scaleArray <<< grid1D ( chn[0].dim ), THRDSPERBLCK >>> ( chn[0].dim, 2./chn[0].nwl, chn[0].xCM );
   shiftWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xxC, chn[0].xCM, chn[0].xxCM );
   cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2 , chn[0].nwl/2, &alpha, chn[0].xxCM, chn[0].dim, chn[0].zz, chn[0].nwl/2, &beta, chn[0].xxW, chn[0].dim );
   addWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx0, chn[0].xxW, chn[0].xx1 );

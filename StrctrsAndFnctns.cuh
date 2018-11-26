@@ -44,6 +44,7 @@ __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
 __host__ dim3 block2D ();
 
+__global__ void scaleArray ( const int, const float, float* );
 __global__ void constantArray ( const int, const float, float* );
 __global__ void sliceArray ( const int, const int, const float*, float* );
 __global__ void insertArray ( const int, const int, const float*, float* );

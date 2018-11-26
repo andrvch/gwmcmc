@@ -38,7 +38,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
   chn[0].dim = 2;
-  chn[0].dlt = 1.E-6;
+  chn[0].dlt = 1.E-2;
 
   allocateChain ( chn );
 

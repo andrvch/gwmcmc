@@ -71,14 +71,14 @@ def read_data(FileName):
         for line in iter(fp.readline, ''):
             lines.append(str(line))
     npars = len(lines[1].split())
-    print npars
+    #print npars
     nsmpl = len(lines)
     pars = np.empty([npars,nsmpl])
     for i in range(nsmpl):
         for j in range(npars):
-            print i, j
+            #print i, j
             pars[j,i] = lines[i].split()[j]
-            print pars[j,i]
+            #print pars[j,i]
     return pars
 
 def read_data_nsmpl(FileName,nsm):
