@@ -45,6 +45,13 @@ __global__ void sliceArray ( const int n, const int indx, const float *ss, float
   }
 }
 
+__global__ void sliceIntArray ( const int n, const int indx, const int *ss, int *zz ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    zz[i] = ss[i+indx];
+  }
+}
+
 __global__ void insertArray ( const int n, const int indx, const float *ss, float *zz ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
@@ -64,7 +71,7 @@ __global__ void initializeAtRandom ( const int dim, const int nwl, const float d
 __global__ void returnStatistic ( const int dim, const int n, const float *xx, float *s ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    s[i] = pow ( xx[i*dim] - xx[1+i*dim], 2. ) / 0.1 + pow ( xx[i*dim] + xx[1+i*dim], 2. );
+    s[i] = powf ( xx[i*dim], 2. ) + powf ( xx[1+i*dim], 2. ) ;
   }
 }
 
@@ -121,7 +128,9 @@ __global__ void updateWalkers ( const int dim, const int nwl, const float *xx1, 
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    xx0[t] = ( q[j] > r[j] ) * xx1[t] + ( q[j] < r[j] ) * xx0[t];
+    if ( q[j] > r[j] ) {
+      xx0[t] = xx1[t]; // + ( q[j] < r[j] ) * xx0[t];
+    }
   }
 }
 
@@ -146,6 +155,170 @@ __global__ void saveStatistic ( const int nwl, const int ist, const float *stt, 
   if ( i < nwl ) {
     stat[i+ist*nwl] = stt[i];
   }
+}
+
+__global__ void mapRandomNumbers ( const int n, const int nwl, const float *r, float *zr, int *kr, float *ru ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    zr[i] = 1. / ACONST * powf ( r[i*3] * ( ACONST - 1 ) + 1, 2. );
+    kr[i] = ( int ) truncf ( r[1+i*3] * ( nwl - 1 + 0.999999 ) );
+    ru[i] = r[2+i*3];
+  }
+}
+
+__global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    xxCP[t] = xxC[t];
+  }
+}
+
+
+__global__ void permuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  int p = i + kr[j] * dim;
+  if ( i < dim && j < nwl ) {
+    xxCP[t] = xxC[p];
+  }
+}
+
+__global__ void substractWalkers ( const int dim, const int nwl, const float *xx0, const float *xxCP, float *xx1 ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    xx1[t] = xx0[t] - xxCP[t];
+  }
+}
+
+__global__ void scale2DArray ( const int dim, const int nwl, const float *zr, float *xx1 ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    xx1[t] = zr[j] * xx1[t];
+  }
+}
+
+
+__host__ int printMove ( const Chain *chn ) {
+  printf ( "=========================================\n" );
+  printf ( " step - %i ", chn[0].ist );
+  printf ( " subset - %i: ", chn[0].isb );
+  printf ( "\n" );
+  printf ( "=========================================\n" );
+  printf ( " xx -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl; j++ ) {
+      printf ( " %2.4f ", chn[0].xx[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].stt[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xx0[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].stt0[i] );
+  }
+  printf ( "\n" );
+  printf ( " xxC -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xxC[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " kr -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %i ", chn[0].kr[i] );
+  }
+  printf ( "\n" );
+  printf ( " xxCP -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xxCP[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " zr -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].zr[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xx1[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  return 0;
+}
+
+__host__ int printUpdate ( const Chain *chn ) {
+  printf ( "------------------------------------------\n" );
+  printf ( " stt1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].stt1[i] );
+  }
+  printf ( "\n" );
+  printf ( " q -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].q[i] );
+  }
+  printf ( "\n" );
+  printf ( " ru -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].ru[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xx0[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].stt0[i] );
+  }
+  printf ( "\n" );
+  return 0;
 }
 
 __host__ int initializeCuda ( Cupar *cdp ) {
@@ -190,6 +363,12 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].dcnst, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].smpls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stat, chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxCP, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].zr, chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].zuni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kr, chn[0].nwl / 2 * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kuni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].runi, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
   return 0;
 }
 
@@ -205,8 +384,20 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
     setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDSPERBLCK  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
   }
+  return 0;
+}
+
+__host__ int initializeRandomForWalk ( Cupar *cdp, Chain *chn ) {
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].uni, chn[0].nst * 2 * chn[0].nwl / 2 );
   curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].nst * 2 * chn[0].nwl / 2 * chn[0].nwl / 2, 0, 1 );
+  return 0;
+}
+
+__host__ int initializeRandomForStreach ( Cupar *cdp, Chain *chn ) {
+  int n = chn[0].nst * 2 * 3 * chn[0].nwl / 2;
+  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].uni, n );
+  int m = chn[0].nst * 2 * chn[0].nwl / 2;
+  mapRandomNumbers <<< grid1D ( m ), THRDSPERBLCK >>> ( m, chn[0].nwl/2, chn[0].uni, chn[0].zuni, chn[0].kuni, chn[0].runi );
   return 0;
 }
 
@@ -221,7 +412,7 @@ __host__ int walkMove ( const Cupar *cdp, Chain *chn ) {
   int nrn = chn[0].nwl / 2 * chn[0].nwl / 2;
   int indxRn = chn[0].ist * 2 * nrn + chn[0].isb * nrn;
   int nru = chn[0].nwl / 2;
-  int indxRu = chn[0].ist * 2 * nru;
+  int indxRu = chn[0].ist * 2 * nru + chn[0].isb * nru;
   sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx, chn[0].xx0 );
   sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxXC, chn[0].xx, chn[0].xxC );
   sliceArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].stt, chn[0].stt0 );
@@ -232,6 +423,41 @@ __host__ int walkMove ( const Cupar *cdp, Chain *chn ) {
   shiftWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xxC, chn[0].xCM, chn[0].xxCM );
   cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2 , chn[0].nwl/2, &alpha, chn[0].xxCM, chn[0].dim, chn[0].zz, chn[0].nwl/2, &beta, chn[0].xxW, chn[0].dim );
   addWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx0, chn[0].xxW, chn[0].xx1 );
+  returnStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].stt1 );
+  returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].q );
+  updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
+  updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt0 );
+  insertArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx0, chn[0].xx );
+  insertArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].stt0, chn[0].stt );
+  return 0;
+}
+
+__host__ int streachMove ( const Cupar *cdp, Chain *chn ) {
+  int nxx = chn[0].dim * chn[0].nwl / 2;
+  int indxX0 = chn[0].isb * nxx;
+  int indxXC = ( 1 - chn[0].isb ) * nxx;
+  int nss = chn[0].nwl / 2;
+  int indxS0 = chn[0].isb * nss;
+  int nru = chn[0].nwl / 2;
+  int indxRu = chn[0].isb * nru + chn[0].ist * 2 * nru;
+  sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx, chn[0].xx0 );
+  sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxXC, chn[0].xx, chn[0].xxC );
+  sliceArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].stt, chn[0].stt0 );
+  sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].zuni, chn[0].zr );
+  sliceIntArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].kuni, chn[0].kr );
+  sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].runi, chn[0].ru );
+  permuteWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].kr, chn[0].xxC, chn[0].xxCP );
+  substractWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx0, chn[0].xxCP, chn[0].xxW );
+  scale2DArray <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].zr, chn[0].xxW );
+  addWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xxC, chn[0].xxW, chn[0].xx1 );
+  return 0;
+}
+
+__host__ int streachUpdate ( const Cupar *cdp, Chain *chn ) {
+  int nxx = chn[0].dim * chn[0].nwl / 2;
+  int indxX0 = chn[0].isb * nxx;
+  int nss = chn[0].nwl / 2;
+  int indxS0 = chn[0].isb * nss;
   returnStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].stt1 );
   returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
@@ -328,6 +554,12 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].ru );
   cudaFree ( chn[0].q );
   cudaFree ( chn[0].stt0 );
+  cudaFree ( chn[0].zr );
+  cudaFree ( chn[0].kr );
+  cudaFree ( chn[0].xxCP );
+  cudaFree ( chn[0].zuni );
+  cudaFree ( chn[0].kuni );
+  cudaFree ( chn[0].runi );
 }
 
 __host__ void simpleReadDataFloat ( const char *fl, float *data ) {

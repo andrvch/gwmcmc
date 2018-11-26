@@ -46,6 +46,8 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0[i] = 1.;
   }
 
+  initializeChain ( cdp, chn );
+
   if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
@@ -53,13 +55,19 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  initializeChain ( cdp, chn );
+  initializeRandomForStreach ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
-      walkMove ( cdp, chn );
+      //walkMove ( cdp, chn );
+      streachMove ( cdp, chn );
+      cudaDeviceSynchronize ();
+      printMove ( chn );
+      streachUpdate ( cdp, chn );
+      cudaDeviceSynchronize ();
+      printUpdate ( chn );
       chn[0].isb += 1;
     }
     saveCurrent ( chn );

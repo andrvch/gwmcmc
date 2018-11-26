@@ -16,7 +16,7 @@ samples = cudakde.read_data(sys.argv[1])
 print samples.shape
 #samples = samples[np.r_[0:7, 13:samples.shape[0]-1],:]
 #samples = samples[:-1,np.r_[np.where(samples[:,-2]<25240.)]]
-samples = samples[:-1,:]
+samples = samples[:,:]
 print samples.shape
 
 samples = np.transpose(samples)
