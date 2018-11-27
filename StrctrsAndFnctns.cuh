@@ -55,7 +55,7 @@ __global__ void setWalkersAtLast ( const int, const int, const float*, float* );
 __global__ void setStatisticAtLast ( const int, const int, const float*, float* );
 __global__ void shiftWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void addWalkers ( const int, const int, const float*, const float*, float* );
-__global__ void returnQ ( const int, const float*, const float*, float* );
+__global__ void returnQ ( const int, const int, const float*, const float*, const float*, float* );
 __global__ void updateWalkers ( const int, const int, const float*, const float*, const float*, float* );
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );

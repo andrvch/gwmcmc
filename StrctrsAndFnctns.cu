@@ -116,10 +116,10 @@ __global__ void addWalkers ( const int dim, const int nwl, const float *xx0, con
   }
 }
 
-__global__ void returnQ ( const int n, const float *s1, const float *s0, float *q ) {
+__global__ void returnQ ( const int dim, const int n, const float *s1, const float *s0, const float *zr, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
+    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) ) * powf ( zr[i], dim - 1 );
   }
 }
 
@@ -159,9 +159,7 @@ __global__ void saveStatistic ( const int nwl, const int ist, const float *stt, 
 
 __global__ void mapRandomNumbers ( const int n, const int nwl, const float *r, float *zr, int *kr, float *ru ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int ir;
   if ( i < n ) {
-    //r =
     zr[i] = 1. / ACONST * powf ( r[i] * ( ACONST - 1 ) + 1, 2. );
     kr[i] = ( int ) truncf ( r[i+nwl] * ( nwl - 1 + 0.999999 ) );
     ru[i] = r[i+2*nwl];
@@ -309,7 +307,7 @@ __host__ int walkMove ( const Cupar *cdp, Chain *chn ) {
   cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_N, CUBLAS_OP_N, chn[0].dim, chn[0].nwl/2 , chn[0].nwl/2, &alpha, chn[0].xxCM, chn[0].dim, chn[0].zz, chn[0].nwl/2, &beta, chn[0].xxW, chn[0].dim );
   addWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx0, chn[0].xxW, chn[0].xx1 );
   returnStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].stt1 );
-  returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].q );
+  returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].zz, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
   updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt0 );
   insertArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx0, chn[0].xx );
@@ -344,7 +342,7 @@ __host__ int streachUpdate ( const Cupar *cdp, Chain *chn ) {
   int nss = chn[0].nwl / 2;
   int indxS0 = chn[0].isb * nss;
   returnStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].stt1 );
-  returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].q );
+  returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].zr, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
   updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt0 );
   insertArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx0, chn[0].xx );
