@@ -157,12 +157,16 @@ __global__ void saveStatistic ( const int nwl, const int ist, const float *stt, 
   }
 }
 
-__global__ void mapRandomNumbers ( const int n, const int nwl, const float *r, float *zr, int *kr, float *ru ) {
+__global__ void mapRandomNumbers ( const int nwl, const int ist, const int isb, const float *r, float *zr, int *kr, float *ru ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < n ) {
-    zr[i] = 1. / ACONST * powf ( r[i] * ( ACONST - 1 ) + 1, 2. );
-    kr[i] = ( int ) truncf ( r[i+nwl] * ( nwl - 1 + 0.999999 ) );
-    ru[i] = r[i+2*nwl];
+  int rr;
+  if ( i < nwl ) {
+    rr = i + 0 * nwl + isb * 3 * nwl + ist * 3 * 2 * nwl;
+    zr[i] = 1. / ACONST * powf ( r[rr] * ( ACONST - 1 ) + 1, 2. );
+    rr = i + 1 * nwl + isb * 3 * nwl + ist * 3 * 2 * nwl;
+    kr[i] = ( int ) truncf ( r[rr] * ( nwl - 1 + 0.999999 ) );
+    rr = i + 2 * nwl + isb * 3 * nwl + ist * 3 * 2 * nwl;
+    ru[i] = r[rr];
   }
 }
 
@@ -226,7 +230,7 @@ __host__ int initializeCuda ( Cupar *cdp ) {
 
 __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].stn, chn[0].nst * 2 * chn[0].nwl / 2 * chn[0].nwl / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].uni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].uni, 3 * chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].lst, ( chn[0].dim + 1 ) * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].x0, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].zz, chn[0].nwl / 2 * chn[0].nwl / 2 * sizeof ( float ) );
@@ -279,8 +283,8 @@ __host__ int initializeRandomForWalk ( Cupar *cdp, Chain *chn ) {
 __host__ int initializeRandomForStreach ( Cupar *cdp, Chain *chn ) {
   int n = chn[0].nst * 2 * 3 * chn[0].nwl / 2;
   curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].uni, n );
-  int m = chn[0].nst * 2 * chn[0].nwl / 2;
-  mapRandomNumbers <<< grid1D ( m ), THRDSPERBLCK >>> ( m, chn[0].nwl/2, chn[0].uni, chn[0].zuni, chn[0].kuni, chn[0].runi );
+  //int m = chn[0].nst * 2 * chn[0].nwl / 2;
+  //mapRandomNumbers <<< grid1D ( m ), THRDSPERBLCK >>> ( m, chn[0].nwl/2, chn[0].uni, chn[0].zuni, chn[0].kuni, chn[0].runi );
   return 0;
 }
 
@@ -322,14 +326,14 @@ __host__ int streachMove ( const Cupar *cdp, Chain *chn ) {
   int nss = chn[0].nwl / 2;
   int indxS0 = chn[0].isb * nss;
   //int nru = chn[0].nwl / 2;
-  int indxRu = chn[0].isb * nru + chn[0].ist * 2 * nru;
+  //int indxRu = chn[0].isb * chn[0].nwl/2 + chn[0].ist * 2 * chn[0].nwl/2;
   sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx, chn[0].xx0 );
   sliceArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxXC, chn[0].xx, chn[0].xxC );
   sliceArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].stt, chn[0].stt0 );
-  sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].zuni, chn[0].zr );
-  sliceIntArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].kuni, chn[0].kr );
-  //mapRandomNumbers <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].uni, chn[0].zr, chn[0].kr, chn[0].ru );
-  sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].runi, chn[0].ru );
+  //sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].zuni, chn[0].zr );
+  //sliceIntArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].kuni, chn[0].kr );
+  mapRandomNumbers <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].ist, chn[0].isb, chn[0].uni, chn[0].zr, chn[0].kr, chn[0].ru );
+  //sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, indxRu, chn[0].runi, chn[0].ru );
   permuteWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].kr, chn[0].xxC, chn[0].xxCP );
   substractWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx0, chn[0].xxCP, chn[0].xxW );
   scale2DArray <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].zr, chn[0].xxW );

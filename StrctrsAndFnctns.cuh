@@ -60,7 +60,7 @@ __global__ void updateWalkers ( const int, const int, const float*, const float*
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );
 __global__ void saveStatistic ( const int, const int, const float*, float* );
-__global__ void mapRandomNumbers ( const int, const int, const float*, float*, int*, float* );
+__global__ void mapRandomNumbers ( const int, const int, const int, const float*, float*, int*, float* );
 __global__ void permuteWalkers ( const int, const int, const int*, const float*, float* );
 __global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP );
 __global__ void substractWalkers ( const int, const int, const float*, const float*, float* );
