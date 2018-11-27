@@ -159,12 +159,12 @@ __global__ void saveStatistic ( const int nwl, const int ist, const float *stt, 
 
 __global__ void mapRandomNumbers ( const int n, const int nwl, const float *r, float *zr, int *kr, float *ru ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int r;
+  int ir;
   if ( i < n ) {
-    r =
-    zr[i] = 1. / ACONST * powf ( r[i*3] * ( ACONST - 1 ) + 1, 2. );
-    kr[i] = ( int ) truncf ( r[1+i*3] * ( nwl - 1 + 0.999999 ) );
-    ru[i] = r[2+i*3];
+    //r =
+    zr[i] = 1. / ACONST * powf ( r[i] * ( ACONST - 1 ) + 1, 2. );
+    kr[i] = ( int ) truncf ( r[i+nwl] * ( nwl - 1 + 0.999999 ) );
+    ru[i] = r[i+2*nwl];
   }
 }
 
@@ -497,14 +497,25 @@ __host__ int printMove ( const Chain *chn ) {
   printf ( " subset - %i: ", chn[0].isb );
   printf ( "\n" );
   printf ( "=========================================\n" );
-  printf ( " random -- ")
+  printf ( " random -- ");
   printf ( "\n" );
-  int rr = ;
+  int rr = chn[0].isb * 3 * chn[0].nwl/2 + chn[0].ist * 3 * 2 * chn[0].nwl/2;
   int rrr;
   for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    rrr =
-    printf ( " %2.4f ", chn[0].uni[i] );
+    rrr = i + 0 * chn[0].nwl/2 + rr;
+    printf ( " %2.4f ", chn[0].uni[rrr] );
   }
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    rrr = i + 1 * chn[0].nwl/2 + rr;
+    printf ( " %2.4f ", chn[0].uni[rrr] );
+  }
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    rrr = i + 2 * chn[0].nwl/2 + rr;
+    printf ( " %2.4f ", chn[0].uni[rrr] );
+  }
+  printf ( "\n" );
   printf ( " xx -- "  );
   printf ( "\n" );
   for ( int i = 0; i < chn[0].dim; i++ ) {
