@@ -118,4 +118,6 @@ __global__ void MakeMatrix ( const int, const float*, float* );
 __global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const Walker*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const Walker*, float*, float* );
 
+__host__ int printMove ( const int, const int, const Chain* );
+__host__ int printUpdate ( const int, const int, const Chain* );
 #endif // _STRCTRSANDFNCTNS_CUH_

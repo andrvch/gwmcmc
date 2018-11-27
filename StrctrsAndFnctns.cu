@@ -603,4 +603,124 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
   }
 }
 
+__host__ int printMove ( const int ist, const int isb, const Chain *chn ) {
+  printf ( "=========================================\n" );
+  printf ( " step - %i ", ist );
+  printf ( " subset - %i: ", isb );
+  printf ( "\n" );
+  printf ( "=========================================\n" );
+  printf ( " xx -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < NPRS; i++ ) {
+    for ( int j = 0; j < chn[0].nmbrOfWlkrs; j++ ) {
+      printf ( " %2.4f ", chn[0].wlkrs[j].par[i] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nmbrOfWlkrs; i++ ) {
+    printf ( " %2.4f ", chn[0].sttstcs[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < NPRS; i++ ) {
+    for ( int j = isb*chn[0].nmbrOfWlkrs/2; j < (1+isb)*chn[0].nmbrOfWlkrs/2; j++ ) {
+      printf ( " %2.4f ", chn[0].wlkrs[j].par[i] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt0 -- "  );
+  printf ( "\n" );
+  for ( int i = isb*chn[0].nmbrOfWlkrs/2; i < (1+isb)*chn[0].nmbrOfWlkrs/2; i++ ) {
+    printf ( " %2.4f ", chn[0].sttstcs[i] );
+  }
+  printf ( "\n" );
+  printf ( " xxC -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < NPRS; i++ ) {
+    for ( int j = (1-isb)*chn[0].nmbrOfWlkrs/2; j < (2-isb)*chn[0].nmbrOfWlkrs/2; j++ ) {
+      printf ( " %2.4f ", chn[0].wlkrs[j].par[i] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  /*
+  printf ( " kr -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %i ", chn[0].kr[i] );
+  }
+  printf ( "\n" );
+  printf ( " xxCP -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xxCP[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  */
+  printf ( " zr -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
+    printf ( " %2.4f ", chn[0].zRndmVls[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < NPRS; i++ ) {
+    for ( int j = 0; j < chn[0].nmbrOfWlkrs/2; j++ ) {
+      printf ( " %2.4f ", chn[0].prpsdWlkrs[j].par[i] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  return 0;
+}
+
+__host__ int printUpdate ( const int ist, const int isb, const Chain *chn ) {
+  printf ( "------------------------------------------\n" );
+  printf ( " stt1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
+    printf ( " %2.4f ", chn[0].prpsdSttstcs[i] );
+  }
+  printf ( "\n" );
+  /*
+  printf ( " q -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].q[i] );
+  }
+  printf ( "\n" );
+  printf ( " ru -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].ru[i] );
+  }
+  printf ( "\n" );
+  */
+  printf ( " xx0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < NPRS; i++ ) {
+    for ( int j = 0; j < chn[0].nmbrOfWlkrs/2; j++ ) {
+      printf ( " %2.4f ", chn[0].wlkrs[j].par[i] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
+    printf ( " %2.4f ", chn[0].sttstcs[i] );
+  }
+  printf ( "\n" );
+  return 0;
+}
+
 #endif // _STRCTRSANDFNCTNS_CU_

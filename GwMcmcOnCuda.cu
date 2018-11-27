@@ -64,7 +64,7 @@ int main ( int argc, char *argv[] ) {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
   const float dlt = 1.E-6;
-  const float p0[NPRS] = { 0.1, 0.1 };
+  const float p0[NPRS] = { 1., 1. };
 
   Cuparam cdp[1];
   Chain chn[1];
@@ -104,7 +104,11 @@ int main ( int argc, char *argv[] ) {
       Propose ( sti, sbi, chn );
       Priors ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
       Statistics ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
+      cudaDeviceSynchronize ();
+      printMove ( sti, sbi, chn );
       Update ( sti, sbi, chn );
+      cudaDeviceSynchronize ();
+      printUpdate ( sti, sbi, chn );
       sbi += 1;
     }
     ToChain ( sti, chn );

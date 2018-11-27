@@ -1,15 +1,15 @@
 #!/bin/bash
 CUDAID=0
 CHAINFILE=$1
-LOGFILE="Log"
-NWALK=128
-LSTEP=8192
+LOGFILE="Log00"
+NWALK=10
+LSTEP=10
 i=$2
 NCHAINS=$3
 let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
-  ./runGwMcmcOnCuda $CUDAID $CHAINFILE $NWALK $LSTEP $i > $LOGFILE
+  ./runSFH00 $CUDAID $CHAINFILE $NWALK $LSTEP $i > $LOGFILE
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"
