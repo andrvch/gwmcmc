@@ -27,7 +27,7 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[:samples.shape[0]-1,:]
+samples = samples[:samples.shape[0],:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
@@ -36,11 +36,18 @@ npars = len(samples)
 
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
-quont = [0.99,0.95,0.90,0.68,0.40]
+#quont = [0.99,0.95,0.90,0.68,0.40]
+quont = [0.999,0.99,0.90,0.68,0.40]
 eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
 zizi = []
+
+xii,yii = np.mgrid[-5.:5.:nbins2D*1j,-5.:5.:nbins2D*1j]
+def gauss(x,y):
+    return np.exp(-0.5*(x**2+y**2))
+zii = gauss(xii,yii)
+levi,ziin = comp_lev(zii.flatten(),quont)
 
 sttime = time.time()
 for j in range(npars):
@@ -57,8 +64,12 @@ for j in range(npars):
         elif i > j:
             xi,yi,zi = kde_gauss_cuda2d(samples[j],samples[i],nbins2D)
             lev,zin = comp_lev(zi,quont)
-            ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
-            ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='black', linewidth=.5)
+            #ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
+            ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
+            #ax[i,j].contourf(xii,yii,ziin.reshape(xii.shape), lev, alpha=.35, cmap=plt.cm.Greens)
+            if i < npars-1:
+                ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
+
         elif j > i:
             ax[i,j].set_visible(False)
 print "gpu:"

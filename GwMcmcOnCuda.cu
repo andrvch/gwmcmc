@@ -15,145 +15,85 @@
 #include <cufft.h>
 #include "StrctrsAndFnctns.cuh"
 
-__host__ __device__ int PriorCondition ( const Walker w ) {
-  int cnd = 1;
-  //for ( int i = 0; i <  NPRS; i++ ) {
-  //  cnd *=  0. < w.par[i];
-  //}
-  return cnd;
-}
-
-__host__ __device__ float PriorStatistic ( const Walker w, const int cnd ) {
-  float p = 0, sum = 0;
-  if ( cnd ) {
-    p = sum;
-  } else {
-    p = INF;
-  }
-  return p;
-}
-
-__global__ void AssembleArrayOfPriors ( const int n, const Walker *w, float *p ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < n ) {
-    p[i] = PriorStatistic ( w[i], PriorCondition ( w[i] ) );
-  }
-}
-
-__host__ int Priors ( const int n, const Walker *wlk, float *prr ) {
-  AssembleArrayOfPriors <<< Blocks ( n ), THRDSPERBLCK >>> ( n, wlk, prr );
-  return 0;
-}
-
-__global__ void AssembleArrayOfStatistic ( const int n, const Walker *wlk, float *stt ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < n ) {
-    stt[i] = pow ( ( wlk[i].par[0] - wlk[i].par[1] ), 2. ) / 0.2 + pow ( ( wlk[i].par[0] + wlk[i].par[1] ), 2. );
-  }
-}
-
-__host__ int Statistics ( const int n, const Walker *wlk, float *stt ) {
-  AssembleArrayOfStatistic <<< Blocks ( n ), THRDSPERBLCK >>> ( n, wlk, stt );
-  return 0;
-}
-
-/**
- * Host main routine
- */
 int main ( int argc, char *argv[] ) {
-  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  const int verbose = 1;
-  const float dlt = 1.E-2;
-  const float p0[NPRS] = { 1., 1. };
+  const int vrb = 1;
 
-  Cuparam cdp[1];
+  Cupar cdp[1];
+  cdp[0].dev = atoi ( argv[1] );
+
+  initializeCuda ( cdp );
+
+  if ( vrb ) {
+    printf ( "\n" );
+    printf ( ".................................................................\n" );
+    printf ( " CUDA device ID: %d\n", cdp[0].dev );
+    printf ( " CUDA device Name: %s\n", cdp[0].prop.name );
+    printf ( " Driver API: v%d \n", cdp[0].driverVersion[0] );
+    printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
+  }
+
   Chain chn[1];
+  chn[0].name = argv[2];
+  chn[0].nwl = atoi ( argv[3] );
+  chn[0].nst = atoi ( argv[4] );
+  chn[0].indx = atoi ( argv[5] );
+  chn[0].dim = 3;
+  chn[0].dlt = 1.E-2;
 
-  cdp[0].dev = atoi( argv[1] );
-  chn[0].thrdNm = argv[2];
-  chn[0].nmbrOfWlkrs = atoi ( argv[3] );
-  chn[0].nmbrOfStps = atoi ( argv[4] );
-  chn[0].thrdIndx = atoi ( argv[5] );
-  chn[0].dlt = dlt;
-  chn[0].dimWlk = NPRS;
+  allocateChain ( chn );
 
-  InitializeCuda ( verbose, cdp );
-  InitializeChain ( verbose, cdp, p0, chn );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    chn[0].x0[i] = 1.;
+  }
 
-  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].rndmVls, NPRS * chn[0].nmbrOfWlkrs, 0., 1. );
+  initializeChain ( cdp, chn );
 
-  if ( chn[0].thrdIndx == 0 ) {
-    InitAtRandom ( chn );
-    Priors ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].prrs );
-    Statistics ( chn[0].nmbrOfWlkrs, chn[0].wlkrs, chn[0].sttstcs );
-  } else {
-    InitFromLast ( chn );
+  if ( vrb ) {
+    printf ( ".................................................................\n" );
+    printf ( " Start ...                                                  \n" );
   }
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  printf ( ".................................................................\n" );
-  printf ( " Start ...                                                  \n" );
+  initializeRandomForStreach ( cdp, chn );
 
-  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, chn[0].nmbrOfRndmVls );
-
-  int sti = 0, sbi;
-  while ( sti < chn[0].nmbrOfStps ) {
-    sbi = 0;
-    while ( sbi < 2 ) {
-      Propose ( sti, sbi, chn );
-      Priors ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
-      Statistics ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
-      cudaDeviceSynchronize ();
-      printMove ( sti, sbi, chn );
-      Update ( sti, sbi, chn );
-      cudaDeviceSynchronize ();
-      printUpdate ( sti, sbi, chn );
-      sbi += 1;
+  chn[0].ist = 0;
+  while ( chn[0].ist < chn[0].nst ) {
+    chn[0].isb = 0;
+    while ( chn[0].isb < 2 ) {
+      //walkMove ( cdp, chn );
+      streachMove ( cdp, chn );
+      statistic ( cdp, chn );
+      //cudaDeviceSynchronize ();
+      //printMove ( chn );
+      streachUpdate ( cdp, chn );
+      //cudaDeviceSynchronize ();
+      //printUpdate ( chn );
+      chn[0].isb += 1;
     }
-    ToChain ( sti, chn );
-    sti += 1;
+    saveCurrent ( chn );
+    chn[0].ist += 1;
   }
-  printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
+
+  if ( vrb ) {
+    printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
+  }
 
   cudaEventRecord ( cdp[0].stop, 0 );
   cudaEventSynchronize ( cdp[0].stop );
-  cudaEventElapsedTime ( &chn[0].elapsedTime, cdp[0].start, cdp[0].stop );
+  cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
-  cudaEventRecord ( cdp[0].start, 0 );
-
-  /* Autocorrelation function */
-  int NN[RANK] = { chn[0].nmbrOfStps };
-  cdp[0].cufftRes = cufftPlanMany ( &cdp[0].cufftPlan, RANK, NN, NULL, 1, chn[0].nmbrOfStps, NULL, 1, chn[0].nmbrOfStps, CUFFT_C2C, chn[0].nmbrOfWlkrs );
-  ReturnChainFunction <<< Grid ( chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps ), dimBlock >>> ( chn[0].nmbrOfStps, chn[0].nmbrOfWlkrs, 0, chn[0].chnOfWlkrs, chn[0].chnFnctn );
-  AutocorrelationFunctionAveraged ( cdp[0].cufftRes, cdp[0].cublasStat, cdp[0].cublasHandle, cdp[0].cufftPlan, chn[0].nmbrOfStps, chn[0].nmbrOfWlkrs, chn[0].chnFnctn, chn[0].atCrrFnctn );
-
-  cudaEventRecord ( cdp[0].stop, 0 );
-  cudaEventSynchronize ( cdp[0].stop );
-  cudaEventElapsedTime ( &chn[0].cufftElapsedTime, cdp[0].start, cdp[0].stop );
-
-  /* Autocorreation time */
-  CumulativeSumOfAutocorrelationFunction ( chn[0].nmbrOfStps, chn[0].atCrrFnctn, chn[0].cmSmAtCrrFnctn );
-  int MM = ChooseWindow ( chn[0].nmbrOfStps, 5e0f, chn[0].cmSmAtCrrFnctn );
-  chn[0].atcTime = 2 * chn[0].cmSmAtCrrFnctn[MM] - 1e0f;
-
-  printf ( ".................................................................\n" );
-  printf ( " Autocorrelation time window -- %i\n", MM );
-  printf ( " Autocorrelation time -- %.8E\n", chn[0].atcTime );
-  printf ( " Autocorrelation time threshold -- %.8E\n", chn[0].nmbrOfStps / 5e1f );
-  printf ( " Effective number of independent samples -- %.8E\n", chn[0].nmbrOfWlkrs * chn[0].nmbrOfStps / chn[0].atcTime );
-  printf ( ".................................................................\n" );
-  printf ( " Time to generate: %3.1f ms\n", chn[0].elapsedTime );
-  printf ( " Time to compute Autocorrelation Function: %3.1f ms\n", chn[0].cufftElapsedTime );
-  printf ( "\n" );
+  if ( vrb ) {
+    printf ( ".................................................................\n" );
+    printf ( " Time to generate: %3.1f ms\n", chn[0].time );
+    printf ( "\n" );
+  }
 
   /* Write results to a file */
-  SimpleWriteDataFloat ( "Autocor.out", chn[0].nmbrOfStps, chn[0].atCrrFnctn );
-  SimpleWriteDataFloat ( "AutocorCM.out", chn[0].nmbrOfStps, chn[0].cmSmAtCrrFnctn );
-  WriteChainToFile ( chn[0].thrdNm, chn[0].thrdIndx, chn[0].nmbrOfWlkrs, chn[0].nmbrOfStps, chn[0].chnOfWlkrs, chn[0].chnOfSttstcs, chn[0].chnOfPrrs );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
 
-  DestroyAllTheCudaStaff ( cdp );
-  FreeChain ( chn );
+  destroyCuda ( cdp );
+  freeChain ( chn );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While
