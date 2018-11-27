@@ -104,10 +104,10 @@ int main ( int argc, char *argv[] ) {
       Propose ( sti, sbi, chn );
       Priors ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
       Statistics ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
       printMove ( sti, sbi, chn );
       Update ( sti, sbi, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
       printUpdate ( sti, sbi, chn );
       sbi += 1;
     }
