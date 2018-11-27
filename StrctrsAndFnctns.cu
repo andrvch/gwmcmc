@@ -648,23 +648,29 @@ __host__ int printMove ( const int ist, const int isb, const Chain *chn ) {
     printf ( "\n" );
   }
   printf ( "\n" );
-  /*
+
   printf ( " kr -- "  );
   printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %i ", chn[0].kr[i] );
+  int r;
+  int k;
+  for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
+    r = i + 1 * chn[0].nmbrOfWlkrs/2 + sbi * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * n;
+    k = ( int ) truncf ( rnd[r] * ( chn[0].nmbrOfWlkrs/2 - 1 + 0.999999 ) )
+    printf ( " %i ", k );
   }
   printf ( "\n" );
   printf ( " xxCP -- "  );
   printf ( "\n" );
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
-      printf ( " %2.4f ", chn[0].xxCP[i+j*chn[0].dim] );
+  for ( int i = 0; i < NPRS; i++ ) {
+    for ( int j = 0; j < chn[0].nmbrOfWlkrs/2; j++ ) {
+      r = i + 1 * chn[0].nmbrOfWlkrs/2 + sbi * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * n;
+      k = ( int ) truncf ( rnd[r] * ( chn[0].nmbrOfWlkrs/2 - 1 + 0.999999 ) )
+      printf ( " %2.4f ", chn[0].wlkrs[k+(1-isb)*chn[0].nmbrOfWlkrs/2].par[i] );
     }
     printf ( "\n" );
   }
   printf ( "\n" );
-  */
+
   printf ( " zr -- "  );
   printf ( "\n" );
   for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
