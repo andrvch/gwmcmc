@@ -159,7 +159,9 @@ __global__ void saveStatistic ( const int nwl, const int ist, const float *stt, 
 
 __global__ void mapRandomNumbers ( const int n, const int nwl, const float *r, float *zr, int *kr, float *ru ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int r;
   if ( i < n ) {
+    r =
     zr[i] = 1. / ACONST * powf ( r[i*3] * ( ACONST - 1 ) + 1, 2. );
     kr[i] = ( int ) truncf ( r[1+i*3] * ( nwl - 1 + 0.999999 ) );
     ru[i] = r[2+i*3];
@@ -202,123 +204,6 @@ __global__ void scale2DArray ( const int dim, const int nwl, const float *zr, fl
   if ( i < dim && j < nwl ) {
     xx1[t] = zr[j] * xx1[t];
   }
-}
-
-
-__host__ int printMove ( const Chain *chn ) {
-  printf ( "=========================================\n" );
-  printf ( " step - %i ", chn[0].ist );
-  printf ( " subset - %i: ", chn[0].isb );
-  printf ( "\n" );
-  printf ( "=========================================\n" );
-  printf ( " xx -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < chn[0].nwl; j++ ) {
-      printf ( " %2.4f ", chn[0].xx[i+j*chn[0].dim] );
-    }
-    printf ( "\n" );
-  }
-  printf ( "\n" );
-  printf ( " stt -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl; i++ ) {
-    printf ( " %2.4f ", chn[0].stt[i] );
-  }
-  printf ( "\n" );
-  printf ( " xx0 -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
-      printf ( " %2.4f ", chn[0].xx0[i+j*chn[0].dim] );
-    }
-    printf ( "\n" );
-  }
-  printf ( "\n" );
-  printf ( " stt0 -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].stt0[i] );
-  }
-  printf ( "\n" );
-  printf ( " xxC -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
-      printf ( " %2.4f ", chn[0].xxC[i+j*chn[0].dim] );
-    }
-    printf ( "\n" );
-  }
-  printf ( "\n" );
-  printf ( " kr -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %i ", chn[0].kr[i] );
-  }
-  printf ( "\n" );
-  printf ( " xxCP -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
-      printf ( " %2.4f ", chn[0].xxCP[i+j*chn[0].dim] );
-    }
-    printf ( "\n" );
-  }
-  printf ( "\n" );
-  printf ( " zr -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].zr[i] );
-  }
-  printf ( "\n" );
-  printf ( " xx1 -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
-      printf ( " %2.4f ", chn[0].xx1[i+j*chn[0].dim] );
-    }
-    printf ( "\n" );
-  }
-  printf ( "\n" );
-  return 0;
-}
-
-__host__ int printUpdate ( const Chain *chn ) {
-  printf ( "------------------------------------------\n" );
-  printf ( " stt1 -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].stt1[i] );
-  }
-  printf ( "\n" );
-  printf ( " q -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].q[i] );
-  }
-  printf ( "\n" );
-  printf ( " ru -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].ru[i] );
-  }
-  printf ( "\n" );
-  printf ( " xx0 -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
-      printf ( " %2.4f ", chn[0].xx0[i+j*chn[0].dim] );
-    }
-    printf ( "\n" );
-  }
-  printf ( "\n" );
-  printf ( " stt0 -- "  );
-  printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].stt0[i] );
-  }
-  printf ( "\n" );
-  return 0;
 }
 
 __host__ int initializeCuda ( Cupar *cdp ) {
@@ -604,6 +489,130 @@ __host__ void simpleWriteDataFloat2D ( const char *fl, const int ns, const int n
     fprintf ( fptr,  "\n" );
   }
   fclose ( fptr );
+}
+
+__host__ int printMove ( const Chain *chn ) {
+  printf ( "=========================================\n" );
+  printf ( " step - %i ", chn[0].ist );
+  printf ( " subset - %i: ", chn[0].isb );
+  printf ( "\n" );
+  printf ( "=========================================\n" );
+  printf ( " random -- ")
+  printf ( "\n" );
+  int rr = ;
+  int rrr;
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    rrr =
+    printf ( " %2.4f ", chn[0].uni[i] );
+  }
+  printf ( " xx -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl; j++ ) {
+      printf ( " %2.4f ", chn[0].xx[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].stt[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xx0[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].stt0[i] );
+  }
+  printf ( "\n" );
+  printf ( " xxC -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xxC[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " kr -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %i ", chn[0].kr[i] );
+  }
+  printf ( "\n" );
+  printf ( " xxCP -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xxCP[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " zr -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].zr[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xx1[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  return 0;
+}
+
+__host__ int printUpdate ( const Chain *chn ) {
+  printf ( "------------------------------------------\n" );
+  printf ( " stt1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].stt1[i] );
+  }
+  printf ( "\n" );
+  printf ( " q -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].q[i] );
+  }
+  printf ( "\n" );
+  printf ( " ru -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].ru[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " %2.4f ", chn[0].xx0[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+    printf ( " %2.4f ", chn[0].stt0[i] );
+  }
+  printf ( "\n" );
+  return 0;
 }
 
 #endif // _STRCTRSANDFNCTNS_CU_
