@@ -48,7 +48,7 @@ __host__ int Priors ( const int n, const Walker *wlk, float *prr ) {
 __global__ void AssembleArrayOfStatistic ( const int n, const Walker *wlk, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    stt[i] = pow ( ( wlk[i].par[0] - wlk[i].par[1] ), 2. ) / 0.2 + pow ( ( wlk[i].par[1] + wlk[i].par[1] ), 2. );
+    stt[i] = pow ( ( wlk[i].par[0] - wlk[i].par[1] ), 2. ) / 0.2 + pow ( ( wlk[i].par[0] + wlk[i].par[1] ), 2. );
   }
 }
 
