@@ -654,8 +654,8 @@ __host__ int printMove ( const int ist, const int isb, const Chain *chn ) {
   int r;
   int k;
   for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
-    r = i + 1 * chn[0].nmbrOfWlkrs/2 + sbi * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * n;
-    k = ( int ) truncf ( rnd[r] * ( chn[0].nmbrOfWlkrs/2 - 1 + 0.999999 ) )
+    r = i + 1 * chn[0].nmbrOfWlkrs/2 + isb * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * chn[0].nmbrOfWlkrs/2 ;
+    k = ( int ) truncf ( chn[0].rndmVls[r] * ( chn[0].nmbrOfWlkrs/2 - 1 + 0.999999 ) );
     printf ( " %i ", k );
   }
   printf ( "\n" );
@@ -663,8 +663,8 @@ __host__ int printMove ( const int ist, const int isb, const Chain *chn ) {
   printf ( "\n" );
   for ( int i = 0; i < NPRS; i++ ) {
     for ( int j = 0; j < chn[0].nmbrOfWlkrs/2; j++ ) {
-      r = i + 1 * chn[0].nmbrOfWlkrs/2 + sbi * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * n;
-      k = ( int ) truncf ( rnd[r] * ( chn[0].nmbrOfWlkrs/2 - 1 + 0.999999 ) )
+      r = i + 1 * chn[0].nmbrOfWlkrs/2 + isb * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * chn[0].nmbrOfWlkrs/2;
+      k = ( int ) truncf ( chn[0].rndmVls[r] * ( chn[0].nmbrOfWlkrs/2 - 1 + 0.999999 ) );
       printf ( " %2.4f ", chn[0].wlkrs[k+(1-isb)*chn[0].nmbrOfWlkrs/2].par[i] );
     }
     printf ( "\n" );
@@ -697,20 +697,20 @@ __host__ int printUpdate ( const int ist, const int isb, const Chain *chn ) {
     printf ( " %2.4f ", chn[0].prpsdSttstcs[i] );
   }
   printf ( "\n" );
-  /*
   printf ( " q -- "  );
   printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].q[i] );
+  for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
+    printf ( " %2.4f ", expf ( -0.5 * ( chn[0].prpsdSttstcs[i] - chn[0].sttstcs[i+isb*chn[0].nmbrOfWlkrs] ) ) );
   }
   printf ( "\n" );
   printf ( " ru -- "  );
   printf ( "\n" );
-  for ( int i = 0; i < chn[0].nwl/2; i++ ) {
-    printf ( " %2.4f ", chn[0].ru[i] );
+  int r;
+  for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
+    r = i + 2 * chn[0].nmbrOfWlkrs/2 + isb * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * chn[0].nmbrOfWlkrs/2 ;
+    printf ( " %2.4f ", chn[0].rndmVls[r] );
   }
   printf ( "\n" );
-  */
   printf ( " xx0 -- "  );
   printf ( "\n" );
   for ( int i = 0; i < NPRS; i++ ) {
