@@ -37,7 +37,7 @@ struct Chain {
   char *name;
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
-  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi;
+  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1;
 };
 
 __host__ int grid1D ( const int );
@@ -73,6 +73,7 @@ __host__ int initializeRandomForWalk ( Cupar*, Chain* );
 __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
 __host__ int streachMove ( const Cupar*, Chain* );
+__host__ int statistic ( const Cupar*, Chain* );
 __host__ int streachUpdate ( const Cupar*, Chain* );
 __host__ int saveCurrent ( Chain* );
 __host__ void readLastFromFile ( const char*, const int, const int, const int, float* );

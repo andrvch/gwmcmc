@@ -37,7 +37,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dim = 2;
+  chn[0].dim = 3;
   chn[0].dlt = 1.E-2;
 
   allocateChain ( chn );
@@ -63,11 +63,12 @@ int main ( int argc, char *argv[] ) {
     while ( chn[0].isb < 2 ) {
       //walkMove ( cdp, chn );
       streachMove ( cdp, chn );
+      statistic ( cdp, chn );
       //cudaDeviceSynchronize ();
-      printMove ( chn );
+      //printMove ( chn );
       streachUpdate ( cdp, chn );
       //cudaDeviceSynchronize ();
-      printUpdate ( chn );
+      //printUpdate ( chn );
       chn[0].isb += 1;
     }
     saveCurrent ( chn );

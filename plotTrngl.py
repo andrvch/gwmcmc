@@ -43,9 +43,9 @@ eqh_inter = np.empty([npars,3])
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
 zizi = []
 
-xii,yii = np.mgrid[-2.:2.:nbins2D*1j,-2.:2.:nbins2D*1j]
+xii,yii = np.mgrid[-5.:5.:nbins2D*1j,-5.:5.:nbins2D*1j]
 def gauss(x,y):
-    return np.exp(-0.5*((x-y)**2/0.2+(x+y)**2))
+    return np.exp(-0.5*(x**2+y**2))
 zii = gauss(xii,yii)
 levi,ziin = comp_lev(zii.flatten(),quont)
 
@@ -67,7 +67,8 @@ for j in range(npars):
             #ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
             #ax[i,j].contourf(xii,yii,ziin.reshape(xii.shape), lev, alpha=.35, cmap=plt.cm.Greens)
-            ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
+            if i < npars-1:
+                ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
 
         elif j > i:
             ax[i,j].set_visible(False)

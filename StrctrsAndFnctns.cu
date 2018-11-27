@@ -68,10 +68,12 @@ __global__ void initializeAtRandom ( const int dim, const int nwl, const float d
   }
 }
 
-__global__ void returnStatistic ( const int dim, const int n, const float *xx, float *s ) {
+__global__ void returnStatistic ( const int dim, const int nwl, const float *xx, float *s ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < n ) {
-    s[i] = powf ( xx[i*dim] - xx[1+i*dim], 2. ) / 0.2 + powf ( xx[i*dim] + xx[1+i*dim], 2. ) ;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    s[t] = powf ( xx[t], 2. );
   }
 }
 
@@ -237,6 +239,7 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].ru, chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt1, chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sstt1, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt0, chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].q, chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx, chn[0].dim * chn[0].nwl * sizeof ( float ) );
@@ -341,12 +344,19 @@ __host__ int streachMove ( const Cupar *cdp, Chain *chn ) {
   return 0;
 }
 
+__host__ int statistic ( const Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  returnStatistic <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].sstt1 );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
+  return 0;
+}
+
 __host__ int streachUpdate ( const Cupar *cdp, Chain *chn ) {
   int nxx = chn[0].dim * chn[0].nwl / 2;
   int indxX0 = chn[0].isb * nxx;
   int nss = chn[0].nwl / 2;
   int indxS0 = chn[0].isb * nss;
-  returnStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].stt1 );
   returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].zr, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
   updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt0 );
@@ -398,7 +408,7 @@ __host__ void writeChainToFile ( const char *name, const int indx, const int dim
     while ( wlkrIndx < nwl ) {
       ttlChnIndx = wlkrIndx * dim + stpIndx * nwl * dim;
       prmtrIndx = 0;
-      while ( prmtrIndx < NPRS ) {
+      while ( prmtrIndx < dim ) {
         fprintf ( flPntr, " %.8E ", smpls[prmtrIndx+ttlChnIndx] );
         prmtrIndx += 1;
       }
@@ -439,6 +449,7 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].smpls );
   cudaFree ( chn[0].stat );
   cudaFree ( chn[0].stt1 );
+  cudaFree ( chn[0].sstt1 );
   cudaFree ( chn[0].ru );
   cudaFree ( chn[0].q );
   cudaFree ( chn[0].stt0 );
