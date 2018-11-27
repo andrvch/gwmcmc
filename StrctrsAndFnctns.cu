@@ -402,7 +402,7 @@ __host__ void writeChainToFile ( const char *name, const int indx, const int dim
         fprintf ( flPntr, " %.8E ", smpls[prmtrIndx+ttlChnIndx] );
         prmtrIndx += 1;
       }
-      fprintf ( flPntr, " %.8E\n", stat[ttlChnIndx] );
+      fprintf ( flPntr, " %.8E\n", stat[wlkrIndx+stpIndx*nwl] );
       wlkrIndx += 1;
     }
     stpIndx += 1;
