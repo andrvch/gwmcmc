@@ -55,18 +55,20 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  initializeRandomForStreach ( cdp, chn );
+  //initializeRandomForStreach ( cdp, chn );
+  initializeRandomForWalk ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
-      //walkMove ( cdp, chn );
-      streachMove ( cdp, chn );
+      walkMove ( cdp, chn );
+      //streachMove ( cdp, chn );
       statistic ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMove ( chn );
-      streachUpdate ( cdp, chn );
+      walkUpdate ( cdp, chn );
+      //streachUpdate ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printUpdate ( chn );
       chn[0].isb += 1;

@@ -56,6 +56,7 @@ __global__ void setStatisticAtLast ( const int, const int, const float*, float* 
 __global__ void shiftWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void addWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void returnQ ( const int, const int, const float*, const float*, const float*, float* );
+__global__ void returnQM ( const int, const int, const float*, const float*, float* );
 __global__ void updateWalkers ( const int, const int, const float*, const float*, const float*, float* );
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );
@@ -74,6 +75,7 @@ __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
 __host__ int streachMove ( const Cupar*, Chain* );
 __host__ int statistic ( const Cupar*, Chain* );
+__host__ int walkUpdate ( const Cupar*, Chain* );
 __host__ int streachUpdate ( const Cupar*, Chain* );
 __host__ int saveCurrent ( Chain* );
 __host__ void readLastFromFile ( const char*, const int, const int, const int, float* );
