@@ -48,7 +48,7 @@ __host__ int Priors ( const int n, const Walker *wlk, float *prr ) {
 __global__ void AssembleArrayOfStatistic ( const int n, const Walker *wlk, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    stt[i] = pow ( wlk[i].par[0], 2. ) + pow ( wlk[i].par[1], 2. );
+    stt[i] = pow ( ( wlk[i].par[0] - wlk[i].par[1] ), 2. ) / 0.2 + pow ( ( wlk[i].par[1] + wlk[i].par[1] ), 2. );
   }
 }
 
@@ -104,10 +104,10 @@ int main ( int argc, char *argv[] ) {
       Propose ( sti, sbi, chn );
       Priors ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdPrrs );
       Statistics ( chn[0].nmbrOfWlkrs / 2, chn[0].prpsdWlkrs, chn[0].prpsdSttstcs );
-      cudaDeviceSynchronize ();
+      //cudaDeviceSynchronize ();
       printMove ( sti, sbi, chn );
       Update ( sti, sbi, chn );
-      cudaDeviceSynchronize ();
+      //cudaDeviceSynchronize ();
       printUpdate ( sti, sbi, chn );
       sbi += 1;
     }
