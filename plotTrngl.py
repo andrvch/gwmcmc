@@ -27,7 +27,7 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[:samples.shape[0],:]
+samples = samples[:samples.shape[0]-1,:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
