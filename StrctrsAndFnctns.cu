@@ -719,7 +719,7 @@ __host__ int printUpdate ( const int ist, const int isb, const Chain *chn ) {
   printf ( " q -- "  );
   printf ( "\n" );
   for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
-    printf ( " %2.4f ", expf ( -0.5 * ( chn[0].prpsdSttstcs[i] - chn[0].sttstcs[i+isb*chn[0].nmbrOfWlkrs] ) ) );
+    printf ( " %2.4f ", expf ( -0.5 * ( chn[0].prpsdSttstcs[i] - chn[0].sttstcs[i+isb*chn[0].nmbrOfWlkrs/2] ) ) * powf ( chn[0].zRndmVls[i], NPRS-1 ) );
   }
   printf ( "\n" );
   printf ( " ru -- "  );
