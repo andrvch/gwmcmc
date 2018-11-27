@@ -63,10 +63,10 @@ int main ( int argc, char *argv[] ) {
     while ( chn[0].isb < 2 ) {
       //walkMove ( cdp, chn );
       streachMove ( cdp, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
       printMove ( chn );
       streachUpdate ( cdp, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
       printUpdate ( chn );
       chn[0].isb += 1;
     }
