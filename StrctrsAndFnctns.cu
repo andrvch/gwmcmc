@@ -16,27 +16,6 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__global__ void divideWalkers ( const int nWlk, const int dimWlk, const int sbIdx, const float *wlk, float *wlk0, float *wlkC ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  if ( i < nWlk/2 && j < dimWlk ) {
-    wlk0[i+j*nWlk/2] = wlk[i+sbIdx*nWlk/2+j*nWlk];
-    wlkC[i+j*nWlk/2] = wlk[i+(1-sbIdx)*nWlk/2+j*nWlk];
-  }
-}
-
-__host__ void proposeWalkMove ( const Cuparam *cdp,  ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  dim3 block ( THRDSPERBLCK, THRDSPERBLCK );
-  dim3 grid ( ( nWlk/2 + block.x - 1 ) / block.x, ( dimWlk + block.y - 1 ) / block.y );
-  divideWalkers << grid, block >> ( chn[0].nWlk, chn[0].dimWlk, chn[0].sbIdx, chn[0].wlk, chn[0].wlk0, chn[0].wlkC );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nWlk / 2, chn[0].dimWlk, &alpha, chn[0].wlkC, chn[0].nWlk / 2, chn[0].ons, incxx, &beta, chn[0].mwlk, incyy );
-  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stnrm, chn[0].nWlk / 2 * chn[0].nWlk / 2, 0, 1 );
-  cublasSgemm ( cdp[0].cublasHandle, CUBLAS_OP_T, CUBLAS_OP_T, chn[0].dimWlk, chn[0].nWlk / 2, chn[0].dimWlk, &alpha,
-  chn[0].stnrm, chn[0].nWlk / 2, chn[0].wlkC, &beta, chn[0].wlnrm, chn[0].dimWlk );
-}
-
 __host__ int InitializeCuda ( const int verbose, Cuparam *cdp ) {
   cudaRuntimeGetVersion ( cdp[0].runtimeVersion );
   cudaDriverGetVersion ( cdp[0].driverVersion );
@@ -66,7 +45,7 @@ __host__ int InitializeCuda ( const int verbose, Cuparam *cdp ) {
 }
 
 __host__ int InitializeChain ( const int verbose, Cuparam *cdp, const float *strtng, Chain *chn ) {
-  chn[0].nmbrOfRndmVls = 3 * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfStps;
+  chn[0].nmbrOfRndmVls = 3 * 2 * chn[0].nmbrOfWlkrs / 2 * chn[0].nmbrOfStps;
   cudaMallocManaged ( ( void ** ) &chn[0].wlkrs, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
   cudaMallocManaged ( ( void ** ) &chn[0].wlkc, chn[0].dimWlk * chn[0].nmbrOfWlkrs * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prpsdWlkrs, chn[0].nmbrOfWlkrs * sizeof ( Walker ) );
@@ -465,11 +444,11 @@ __global__ void GenerateProposal ( const int n, const int ist, const int isb, co
   Walker B;
   if ( i < n ) {
     r = 0;
-    tr = i + r * n + ist * 3 * n;
+    tr = i + r * n + isb * 3 * n + ist * 3 * 2 * n;
     zz = 1. / ACONST * powf ( rnd[tr] * ( ACONST - 1 ) + 1, 2. );
     zrnd[i] = zz;
     r = 1;
-    tr = i + r * n + ist * 3 * n;
+    tr = i + r * n + isb * 3 * n + ist * 3 * 2 * n;
     k = ( int ) truncf ( rnd[tr] * ( n - 1 + 0.999999 ) );
     tc = k + ( 1 - isb ) * n;
     B = AddWalkers ( wlk[ts], ScaleWalker ( wlk[tc], -1. ) );
@@ -491,7 +470,7 @@ __global__ void UpdateWalkers ( const int nmbrOfHlfTheWlkrs, const int stpIndx, 
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int t = i + sbstIndx * nmbrOfHlfTheWlkrs;
   int rnIndx = 2;
-  int r = i + rnIndx * nmbrOfHlfTheWlkrs + stpIndx * 3 * nmbrOfHlfTheWlkrs;
+  int r = i + rnIndx * nmbrOfHlfTheWlkrs + sbstIndx * 3 * nmbrOfHlfTheWlkrs + stpIndx * 3 * nmbrOfHlfTheWlkrs;
   float q;
   if ( i < nmbrOfHlfTheWlkrs ) {
     q = - 0.5 * ( pstt[i] + pprr[i] - stt[t] - prr[t] );
