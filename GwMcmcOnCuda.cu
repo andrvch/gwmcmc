@@ -63,7 +63,7 @@ __host__ int Statistics ( const int n, const Walker *wlk, float *stt ) {
 int main ( int argc, char *argv[] ) {
   dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
   const int verbose = 1;
-  const float dlt = 1.E-6;
+  const float dlt = 1.E-2;
   const float p0[NPRS] = { 1., 1. };
 
   Cuparam cdp[1];
@@ -80,7 +80,7 @@ int main ( int argc, char *argv[] ) {
   InitializeCuda ( verbose, cdp );
   InitializeChain ( verbose, cdp, p0, chn );
 
-  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].rndmVls, NPRS * chn[0].nmbrOfWlkrs );
+  curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].rndmVls, NPRS * chn[0].nmbrOfWlkrs, 0., 1. );
 
   if ( chn[0].thrdIndx == 0 ) {
     InitAtRandom ( chn );
