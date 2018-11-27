@@ -609,22 +609,23 @@ __host__ int printMove ( const int ist, const int isb, const Chain *chn ) {
   printf ( " subset - %i: ", isb );
   printf ( "\n" );
   printf ( "=========================================\n" );
-  printf ( " random -- ")
+  printf ( " random -- ");
   printf ( "\n" );
   int rr = isb * 3 * chn[0].nmbrOfWlkrs/2 + ist * 3 * 2 * chn[0].nmbrOfWlkrs/2;
+  int rrr;
   for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
-    r = i + 0 * chn[0].nmbrOfWlkrs/2 + rr;
-    printf ( " %2.4f ", chn[0].rndmVls[r] );
+    rrr = i + 0 * chn[0].nmbrOfWlkrs/2 + rr;
+    printf ( " %2.4f ", chn[0].rndmVls[rrr] );
   }
   printf ( "\n" );
   for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
-    r = i + 1 * chn[0].nmbrOfWlkrs/2 + rr;
-    printf ( " %2.4f ", chn[0].rndmVls[r] );
+    rrr = i + 1 * chn[0].nmbrOfWlkrs/2 + rr;
+    printf ( " %2.4f ", chn[0].rndmVls[rrr] );
   }
   printf ( "\n" );
   for ( int i = 0; i < chn[0].nmbrOfWlkrs/2; i++ ) {
-    r = i + 2 * chn[0].nmbrOfWlkrs/2 + rr;
-    printf ( " %2.4f ", chn[0].rndmVls[r] );
+    rrr = i + 2 * chn[0].nmbrOfWlkrs/2 + rr;
+    printf ( " %2.4f ", chn[0].rndmVls[rrr] );
   }
   printf ( "\n" );
   printf ( " xx -- "  );
