@@ -67,7 +67,7 @@ for j in range(npars):
             #ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
             #ax[i,j].contourf(xii,yii,ziin.reshape(xii.shape), lev, alpha=.35, cmap=plt.cm.Greens)
-            ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), lev, colors='black', linewidth=.5)
+            ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
 
         elif j > i:
             ax[i,j].set_visible(False)
