@@ -71,7 +71,7 @@ __global__ void initializeAtRandom ( const int dim, const int nwl, const float d
 __global__ void returnStatistic ( const int dim, const int n, const float *xx, float *s ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    s[i] = powf ( xx[i*dim], 2. ) + powf ( xx[1+i*dim], 2. ) ;
+    s[i] = powf ( xx[i*dim] - xx[1+i*dim], 2. ) / 0.2 + powf ( xx[i*dim] + xx[1+i*dim], 2. ) ;
   }
 }
 
@@ -393,7 +393,7 @@ __host__ void writeChainToFile ( const char *name, const int indx, const int dim
   while ( stpIndx < nst ) {
     wlkrIndx = 0;
     while ( wlkrIndx < nwl ) {
-      ttlChnIndx = wlkrIndx + stpIndx * nwl;
+      ttlChnIndx = wlkrIndx * dim + stpIndx * nwl * dim;
       prmtrIndx = 0;
       while ( prmtrIndx < NPRS ) {
         fprintf ( flPntr, " %.8E ", smpls[prmtrIndx+ttlChnIndx] );
