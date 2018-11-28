@@ -452,6 +452,9 @@ __host__ int saveCurrent ( Chain *chn ) {
 __host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
+  int NN[RANK] = { chn[0].nst };
+  cufftPlanMany ( &cdp[0].cufftPlan, RANK, NN, NULL, 1, chn[0].nst, NULL, 1, chn[0].nst, CUFFT_C2C, chn[0].nwl );
+  chainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nst, 0, chn[0].smpls, chn[0].chnFnctn );
   constantArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, alpha / chn[0].nst, chn[0].stps );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nwl, chn[0].nst, &alpha, chn[0].chnFnctn, chn[0].nwl, chn[0].stps, incxx, &beta, chn[0].smOfChn, incyy );
   shiftWalkers <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, chn[0].smOfChn, chn[0].chnFnctn, chn[0].cntrlChnFnctn );
@@ -465,7 +468,6 @@ __host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
   scaleArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, 1. / chn[0].atcrrFnctn[0], chn[0].atcrrFnctn );
   return 0;
 }
-
 
 __host__ void readLastFromFile ( const char *name, const int indx, const int dim, const int nwl, float *lst ) {
   FILE *fptr;
