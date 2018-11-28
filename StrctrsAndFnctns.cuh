@@ -68,6 +68,9 @@ __global__ void permuteWalkers ( const int, const int, const int*, const float*,
 __global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP );
 __global__ void substractWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void scale2DArray ( const int, const int, const float*, const float*, float* );
+__global__ void complexPointwiseMultiplyByConjugateAndScale ( const int, const int, const float, Complex* );
+__global__ void testChainFunction ( const int, const int, const int, float*, Complex* );
+__global__ void chainFunction ( const int, const int, const int, const int, const float*, float* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
