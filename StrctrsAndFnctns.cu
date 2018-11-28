@@ -266,6 +266,12 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].kr, chn[0].nwl / 2 * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].kuni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].runi, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stps, chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smOfChn, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].cntrlChnFnctn, chn[0].nst * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, chn[0].nst * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ftOfChn, chn[0].nst * chn[0].nwl * sizeof ( cufftComplex ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].cmSmMtrx, chn[0].nst * chn[0].nwl * sizeof ( float ) );
   return 0;
 }
 
@@ -385,6 +391,24 @@ __host__ int saveCurrent ( Chain *chn ) {
   return 0;
 }
 
+__host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  constantArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, alpha / chn[0].nst, chn[0].stps );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nwl, chn[0].nst, &alpha, chn[0].chnFnctn, chn[0].nwl, chn[0].stps, incxx, &beta, chn[0].smOfChn, incyy );
+  centralChainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nst, chn[0].nwl, chn[0].smOfChn, chn[0].chnFnctn, chn[0].cntrlChnFnctn );
+  testChainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nst, chn[0].nwl, 0, chn[0].cntrlChnFnctn, chn[0].ftOfChn );
+  cufftExecC2C ( cdp[0].cufftPlan, ( cufftComplex * ) chn[0].ftOfChn, ( cufftComplex * ) chn[0].ftOfChn, CUFFT_FORWARD );
+  complexPointwiseMultiplyByConjugateAndScale <<< grid2D ( chn[0].nst, chn[0].nwl ), block2D () >>> ( chn[0].nst, chn[0].nwl, alpha / chn[0].nst, chn[0].ftOfChn );
+  cufftExecC2C ( cdp[0].cufftPlan, ( cufftComplex * ) chn[0].ftOfChn, ( cufftComplex * ) chn[0].ftOfChn, CUFFT_INVERSE );
+  testChainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nst, chn[0].nwl, 1, chn[0].cntrlChnFnctn, chn[0].ftOfChn );
+  constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, alpha / chn[0].nwl, chn[0].wcnst );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nwl, chn[0].nst, &alpha, chn[0].cntrlChnFnctn, chn[0].nwl, chn[0].wcnst, incxx, &beta, chn[0].atcrrFnctn, incyy );
+  scaleArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, 1. / chn[0].atcrrFnctn[0], chn[0].atcrrFnctn );
+  return 0;
+}
+
+
 __host__ void readLastFromFile ( const char *name, const int indx, const int dim, const int nwl, float *lst ) {
   FILE *fptr;
   char fl[FLEN_CARD];
@@ -473,6 +497,12 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].zuni );
   cudaFree ( chn[0].kuni );
   cudaFree ( chn[0].runi );
+  cudaFree ( chn[0].stps );
+  cudaFree ( chn[0].smOfChn );
+  cudaFree ( chn[0].cntrlChnFnctn );
+  cudaFree ( chn[0].ftOfChn );
+  cudaFree ( chn[0].cmSmMtrx );
+  cudaFree ( chn[0].chnFnctn );
 }
 
 __host__ void simpleReadDataFloat ( const char *fl, float *data ) {

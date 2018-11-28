@@ -38,6 +38,8 @@ struct Chain {
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
   float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1;
+  float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn;
+  cufftComplex *ftOfChn;
 };
 
 __host__ int grid1D ( const int );
@@ -88,5 +90,6 @@ __host__ void simpleWriteDataFloat ( const char*, const int, const float* );
 __host__ void simpleWriteDataFloat2D ( const char*, const int, const int, const float* );
 __host__ int printMove ( const Chain* );
 __host__ int printUpdate ( const Chain* );
+__host__ int averagedAutocorrelationFunction ( Cupar*, Chain* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
