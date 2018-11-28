@@ -37,7 +37,7 @@ struct Chain {
   char *name;
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
-  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1;
+  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt;
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
   cufftComplex *ftOfChn;
   int mmm;
@@ -77,6 +77,7 @@ __global__ void complexPointwiseMultiplyByConjugateAndScale ( const int, const i
 __global__ void testChainFunction ( const int, const int, const int, float*, Complex* );
 __global__ void chainFunction ( const int, const int, const int, const int, const float*, float* );
 __global__ void normArray ( const int, float* );
+__global__ void metropolisPoposal ( const int, const int, const float*, const float*, float* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
@@ -102,5 +103,10 @@ __host__ int printUpdate ( const Chain* );
 __host__ int averagedAutocorrelationFunction ( Cupar*, Chain* );
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int, const float*, float* );
 __host__ int chooseWindow ( const int, const float, const float* );
+__host__ int initializeRandomForMetropolis ( Cupar *cdp, Chain *chn );
+__host__ int metropolisMove ( const Cupar *cdp, Chain *chn );
+__host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
+__host__ int statistic0 ( const Cupar *cdp, Chain *chn );
+__host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

@@ -37,7 +37,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dim = 5;
+  chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
 
   allocateChain ( chn );
@@ -57,9 +57,13 @@ int main ( int argc, char *argv[] ) {
 
   initializeRandomForStreach ( cdp, chn );
   //initializeRandomForWalk ( cdp, chn );
+  //initializeRandomForMetropolis ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
+    /*metropolisMove ( cdp, chn );
+    statisticMetropolis ( cdp, chn );
+    metropolisUpdate ( cdp, chn );*/
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
       //walkMove ( cdp, chn );
