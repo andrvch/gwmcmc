@@ -37,7 +37,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dim = 2;
+  chn[0].dim = 5;
   chn[0].dlt = 1.E-2;
 
   allocateChain ( chn );
@@ -110,8 +110,7 @@ int main ( int argc, char *argv[] ) {
   }
 
   /* Write results to a file */
-  simpleWriteDataFloat ( "Autocor.out", chn[0].nwl, chn[0].ftOfChn );
-  //simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
+  simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
   writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
 

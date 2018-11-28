@@ -76,6 +76,7 @@ __global__ void scale2DArray ( const int, const int, const float*, const float*,
 __global__ void complexPointwiseMultiplyByConjugateAndScale ( const int, const int, const float, Complex* );
 __global__ void testChainFunction ( const int, const int, const int, float*, Complex* );
 __global__ void chainFunction ( const int, const int, const int, const int, const float*, float* );
+__global__ void normArray ( const int, float* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
