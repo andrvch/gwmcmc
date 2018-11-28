@@ -45,6 +45,10 @@ struct Chain {
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
 __host__ dim3 block2D ();
+__host__ __device__ Complex addComplex ( Complex, Complex );
+__host__ __device__ Complex scaleComplex ( Complex, float );
+__host__ __device__ Complex multiplyComplex ( Complex, Complex );
+__host__ __device__ Complex conjugateComplex ( Complex );
 
 __global__ void scaleArray ( const int, const float, float* );
 __global__ void constantArray ( const int, const float, float* );

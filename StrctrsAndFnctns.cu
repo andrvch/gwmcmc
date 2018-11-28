@@ -31,6 +31,34 @@ __host__ dim3 block2D () {
   return block;
 }
 
+__host__ __device__ Complex addComplex ( Complex a, Complex b ) {
+  Complex c;
+  c.x = a.x + b.x;
+  c.y = a.y + b.y;
+  return c;
+}
+
+__host__ __device__ Complex scaleComplex ( Complex a, float s ) {
+  Complex c;
+  c.x = s * a.x;
+  c.y = s * a.y;
+  return c;
+}
+
+__host__ __device__ Complex multiplyComplex ( Complex a, Complex b ) {
+  Complex c;
+  c.x = a.x * b.x - a.y * b.y;
+  c.y = a.x * b.y + a.y * b.x;
+  return c;
+}
+
+__host__ __device__ Complex conjugateComplex ( Complex a ) {
+  Complex c;
+  c.x = a.x;
+  c.y = - a.y;
+  return c;
+}
+
 __global__ void constantArray ( const int n, const float c, float *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
