@@ -14,4 +14,4 @@ nvcc \
 GwMcmcOnCuda.o StrctrsAndFnctns.o \
 photo.o gphoto.o phfit2.o \
 -lcfitsio -lcusparse -lcublas -lcurand -lcufft \
--o runSFH00
+-o runSFH

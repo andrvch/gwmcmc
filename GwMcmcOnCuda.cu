@@ -37,7 +37,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dim = 3;
+  chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
 
   allocateChain ( chn );
@@ -55,8 +55,8 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  //initializeRandomForStreach ( cdp, chn );
-  initializeRandomForWalk ( cdp, chn );
+  initializeRandomForStreach ( cdp, chn );
+  //initializeRandomForWalk ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
@@ -99,9 +99,12 @@ int main ( int argc, char *argv[] ) {
   cudaEventSynchronize ( cdp[0].stop );
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
-  printf ( "%i", vrb );
   if ( vrb ) {
     printf ( ".................................................................\n" );
+    printf ( " Autocorrelation time window -- %i\n", chn[0].mmm );
+    printf ( " Autocorrelation time -- %.8E\n", chn[0].atcTime );
+    printf ( " Autocorrelation time threshold -- %.8E\n", chn[0].nst / 5e1f );
+    printf ( " Effective number of independent samples -- %.8E\n", chn[0].nwl * chn[0].nst / chn[0].atcTime );
     printf ( " Time to compute acor time: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
   }
