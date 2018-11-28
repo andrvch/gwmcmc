@@ -55,8 +55,8 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  initializeRandomForStreach ( cdp, chn );
-  //initializeRandomForWalk ( cdp, chn );
+  //initializeRandomForStreach ( cdp, chn );
+  initializeRandomForWalk ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
@@ -110,6 +110,9 @@ int main ( int argc, char *argv[] ) {
   }
 
   /* Write results to a file */
+  simpleWriteDataFloat ( "Autocor.out", chn[0].nwl, chn[0].ftOfChn );
+  //simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
+  simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
   writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
 
   destroyCuda ( cdp );
