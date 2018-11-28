@@ -91,6 +91,21 @@ int main ( int argc, char *argv[] ) {
     printf ( "\n" );
   }
 
+  cudaEventRecord ( cdp[0].start, 0 );
+
+  averagedAutocorrelationFunction ( cdp, chn );
+
+  cudaEventRecord ( cdp[0].stop, 0 );
+  cudaEventSynchronize ( cdp[0].stop );
+  cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
+
+  printf ( "%i", vrb );
+  if ( vrb ) {
+    printf ( ".................................................................\n" );
+    printf ( " Time to compute acor time: %3.1f ms\n", chn[0].time );
+    printf ( "\n" );
+  }
+
   /* Write results to a file */
   writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
 

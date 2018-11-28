@@ -467,7 +467,7 @@ __host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, alpha / chn[0].nwl, chn[0].wcnst );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nwl, chn[0].nst, &alpha, chn[0].cntrlChnFnctn, chn[0].nwl, chn[0].wcnst, incxx, &beta, chn[0].atcrrFnctn, incyy );
   scaleArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, 1. / chn[0].atcrrFnctn[0], chn[0].atcrrFnctn );
-  cumulativeSumOfAutocorrelationFunction ( chn[0].nst, chn[0].atCrrFnctn, chn[0].cmSmAtCrrFnctn );
+  cumulativeSumOfAutocorrelationFunction ( chn[0].nst, chn[0].atcrrFnctn, chn[0].cmSmAtCrrFnctn );
   int MM = chooseWindow ( chn[0].nst, 5e0f, chn[0].cmSmAtCrrFnctn );
   chn[0].atcTime = 2 * chn[0].cmSmAtCrrFnctn[MM] - 1e0f;
   return 0;
@@ -569,6 +569,22 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atcrrFnctn );
   cudaFree ( chn[0].cmSmAtCrrFnctn );
+}
+
+__host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
+  float sum = 0;
+  for ( int i = 0; i < nst; i++ ) {
+    sum = sum + chn[i];
+    cmSmChn[i] = sum;
+  }
+}
+
+__host__ int chooseWindow ( const int nst, const float c, const float *cmSmChn ) {
+  int m = 0;
+  while ( m < c * ( 2 * cmSmChn[m] - 1e0f ) && m < nst  ) {
+    m += 1;
+  }
+  return m;
 }
 
 __host__ void simpleReadDataFloat ( const char *fl, float *data ) {

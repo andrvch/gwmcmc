@@ -98,5 +98,7 @@ __host__ void simpleWriteDataFloat2D ( const char*, const int, const int, const 
 __host__ int printMove ( const Chain* );
 __host__ int printUpdate ( const Chain* );
 __host__ int averagedAutocorrelationFunction ( Cupar*, Chain* );
+__host__ void cumulativeSumOfAutocorrelationFunction ( const int, const float*, float* );
+__host__ int chooseWindow ( const int, const float, const float* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
