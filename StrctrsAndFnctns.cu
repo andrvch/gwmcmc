@@ -272,6 +272,7 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].chnFnctn, chn[0].nst * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ftOfChn, chn[0].nst * chn[0].nwl * sizeof ( cufftComplex ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmMtrx, chn[0].nst * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].atcrrFnctn, chn[0].nst * sizeof ( float ) );
   return 0;
 }
 
@@ -503,6 +504,7 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].ftOfChn );
   cudaFree ( chn[0].cmSmMtrx );
   cudaFree ( chn[0].chnFnctn );
+  cudaFree ( chn[0].atcrrFnctn );
 }
 
 __host__ void simpleReadDataFloat ( const char *fl, float *data ) {

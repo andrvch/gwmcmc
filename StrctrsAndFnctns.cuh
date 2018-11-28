@@ -38,7 +38,7 @@ struct Chain {
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
   float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1;
-  float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn;
+  float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn;
   cufftComplex *ftOfChn;
 };
 
