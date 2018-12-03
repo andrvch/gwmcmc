@@ -65,7 +65,7 @@ int main ( int argc, char *argv[] ) {
     statisticMetropolis ( cdp, chn );
     metropolisUpdate ( cdp, chn );*/
     chn[0].isb = 0;
-    while ( chn[0].isb < chn[0].dim ) {
+    while ( chn[0].isb < 2 ) {
       //walkMove ( cdp, chn );
       streachMove ( cdp, chn );
       //metropolisMove ( cdp, chn );
