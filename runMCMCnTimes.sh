@@ -1,7 +1,7 @@
 #!/bin/bash
 CUDAID=0
 CHAINFILE=$1
-LOGFILE="Log22M"
+LOGFILE="LogMetro"
 NWALK=128
 LSTEP=2048
 i=$2

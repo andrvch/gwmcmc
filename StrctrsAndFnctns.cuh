@@ -77,7 +77,7 @@ __global__ void complexPointwiseMultiplyByConjugateAndScale ( const int, const i
 __global__ void testChainFunction ( const int, const int, const int, float*, Complex* );
 __global__ void chainFunction ( const int, const int, const int, const int, const float*, float* );
 __global__ void normArray ( const int, float* );
-__global__ void metropolisPoposal ( const int, const int, const float*, const float*, float* );
+__global__ void metropolisPoposal2 ( const int, const int, const int, const float*, const float*, float* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
@@ -100,13 +100,15 @@ __host__ void simpleWriteDataFloat ( const char*, const int, const float* );
 __host__ void simpleWriteDataFloat2D ( const char*, const int, const int, const float* );
 __host__ int printMove ( const Chain* );
 __host__ int printUpdate ( const Chain* );
+__host__ int printMetropolisMove ( const Chain* );
+__host__ int printMetropolisUpdate ( const Chain* );
 __host__ int averagedAutocorrelationFunction ( Cupar*, Chain* );
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int, const float*, float* );
 __host__ int chooseWindow ( const int, const float, const float* );
 __host__ int initializeRandomForMetropolis ( Cupar *cdp, Chain *chn );
 __host__ int metropolisMove ( const Cupar *cdp, Chain *chn );
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
-__host__ int statistic0 ( const Cupar *cdp, Chain *chn );
-__host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn );
+__host__ int statistic0 ( const Cupar*, Chain* );
+__host__ int metropolisUpdate ( const Cupar*, Chain* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

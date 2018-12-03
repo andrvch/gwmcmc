@@ -282,12 +282,12 @@ __global__ void scale2DArray ( const int dim, const int nwl, const float *zr, co
   }
 }
 
-__global__ void metropolisPoposal ( const int dim, const int nwl, const float *xx, const float *rr, float *xx1 ) {
+__global__ void metropolisPoposal2 ( const int dim, const int nwl, const int isb, const float *xx, const float *rr, float *xx1 ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    xx1[t] = xx[t] + rr[t];
+    xx1[t] = xx[t] + ( i == isb ) * rr[j];
   }
 }
 
@@ -314,31 +314,31 @@ __host__ int initializeCuda ( Cupar *cdp ) {
 __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].stn, chn[0].nst * 2 * chn[0].nwl * chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stn1, chn[0].nst * chn[0].nwl * chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].uni, 3 * chn[0].nst * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].uni, chn[0].dim * chn[0].nst * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].lst, ( chn[0].dim + 1 ) * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].x0, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].zz, chn[0].nwl / 2 * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].zz, chn[0].nwl * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ru, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].rr, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt1, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sstt1, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sstt, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stt0, chn[0].nwl / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].q, chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stt0, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].q, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xx0, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxC, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xx0, chn[0].dim * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxC, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx1, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxCM, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxCM, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xCM, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxW, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxW, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].wcnst, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].dcnst, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].smpls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stat, chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxCP, chn[0].dim * chn[0].nwl / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].zr, chn[0].nwl / 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xxCP, chn[0].dim * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].zr, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].zuni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].kr, chn[0].nwl / 2 * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].kuni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( int ) );
@@ -382,7 +382,7 @@ __host__ int initializeRandomForStreach ( Cupar *cdp, Chain *chn ) {
 }
 
 __host__ int initializeRandomForMetropolis ( Cupar *cdp, Chain *chn ) {
-  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].uni, chn[0].nst * chn[0].nwl );
+  curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].uni, chn[0].nst * chn[0].nwl * chn[0].dim );
   curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn1, chn[0].nst * chn[0].nwl * chn[0].dim, 0, 1 );
   return 0;
 }
@@ -435,13 +435,13 @@ __host__ int streachMove ( const Cupar *cdp, Chain *chn ) {
 }
 
 __host__ int metropolisMove ( const Cupar *cdp, Chain *chn ) {
-  int nrn = chn[0].dim * chn[0].nwl;
-  int iRn = chn[0].ist * nrn;
+  int nrn = chn[0].nwl;
+  int iRn = chn[0].isb * chn[0].nwl + chn[0].ist * chn[0].dim * chn[0].nwl;
   int nru = chn[0].nwl;
-  int iRu = chn[0].ist * nru;
+  int iRu = chn[0].isb * chn[0].nwl + chn[0].ist * chn[0].dim * chn[0].nwl;
   sliceArray <<< grid1D ( nrn ), THRDSPERBLCK >>> ( nrn, iRn, chn[0].stn1, chn[0].rr );
   sliceArray <<< grid1D ( nru ), THRDSPERBLCK >>> ( nru, iRu, chn[0].uni, chn[0].ru );
-  metropolisPoposal <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx, chn[0].rr, chn[0].xx1 );
+  metropolisPoposal2 <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].isb, chn[0].xx, chn[0].rr, chn[0].xx1 );
   return 0;
 }
 
@@ -484,7 +484,7 @@ __host__ int walkUpdate ( const Cupar *cdp, Chain *chn ) {
 
 __host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn ) {
   returnQM <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl, chn[0].stt1, chn[0].stt0, chn[0].q );
-  updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
+  updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx );
   updateStatistic <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt );
   return 0;
 }
@@ -694,6 +694,70 @@ __host__ void simpleWriteDataFloat2D ( const char *fl, const int ns, const int n
   }
   fclose ( fptr );
 }
+
+__host__ int printMetropolisMove ( const Chain *chn ) {
+  printf ( "=========================================\n" );
+  printf ( " step - %i ", chn[0].ist );
+  printf ( " subset - %i: ", chn[0].isb );
+  printf ( "\n" );
+  printf ( "=========================================\n" );
+  printf ( "\n" );
+  printf ( " rr -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].rr[i] );
+  }
+  printf ( "\n" );
+  printf ( " ru -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].ru[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl; j++ ) {
+      printf ( " %2.4f ", chn[0].xx[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( " stt -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].stt[i] );
+  }
+  printf ( "\n" );
+  printf ( " xx1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < chn[0].nwl; j++ ) {
+      printf ( " %2.4f ", chn[0].xx1[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
+  printf ( "\n" );
+  return 0;
+}
+
+__host__ int printMetropolisUpdate ( const Chain *chn ) {
+  printf ( "------------------------------------------\n" );
+  printf ( " stt1 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].stt1[i] );
+  }
+  printf ( "\n" );
+  printf ( " q -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].q[i] );
+  }
+  printf ( "\n" );
+  return 0;
+}
+
 
 __host__ int printMove ( const Chain *chn ) {
   printf ( "=========================================\n" );
