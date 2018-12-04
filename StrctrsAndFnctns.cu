@@ -34,9 +34,9 @@ __global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, c
 }
 
 __host__ __device__ int binNumber ( const int nbn, const float tms, const float fr, const float ph ) {
-  float frq, phs, jt, jtFr, jtJt, jtInt;
+  float jt, jtFr, jtJt, jtInt;
   int jIndx;
-  jt = 1 + nbn * fmodf ( 2 * PI * ( frq * tms + phs ), 2 * PI ) / 2 / PI;
+  jt = 1 + nbn * fmodf ( 2 * PI * ( fr * tms + ph ), 2 * PI ) / 2 / PI;
   jtFr = modff( jt, &jtInt );
   jtJt = jt - jtFr;
   jIndx = llroundf ( jtJt );
