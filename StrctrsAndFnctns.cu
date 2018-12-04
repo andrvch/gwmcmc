@@ -16,6 +16,67 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__global__ void arrayOf2DConditions ( const dim, const int nwl, const float *bn, const float *xx, float *cc ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    cc[t] = ( bn[0+i*2] < xx[t] ) * ( xx[t] < bn[1+i*2] );
+  }
+}
+
+__global__ void arrayOfPriors ( const dim, const int nwl, const float *cn, const float *xx, float *pr ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  float sum = 2. * logf ( 2 * xx[0+i*dim] );
+  if ( i < nwl ) {
+    pr[i] = ( cn[i] == 1 ) * sum + ( cn[i] < 1 ) * INF;
+  }
+}
+
+__host__ __device__ int binNumber ( const int nbn, const float tms, const float fr, const float ph ) {
+  float frq, phs, jt, jtFr, jtJt, jtInt;
+  int jIndx;
+  jt = 1 + nbn * fmodf ( 2 * PI * ( frq * tms + phs ), 2 * PI ) / 2 / PI;
+  jtFr = modff( jt, &jtInt );
+  jtJt = jt - jtFr;
+  jIndx = llroundf ( jtJt );
+  return jIndx;
+}
+
+__global__ void arrayOfBinTimes ( const int dim, const int nbm, const int nwl, const int nph, const float *xx, const float *at, float *nn ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * nph;
+  int ntot, iw, nbn, ib, ibb;
+  if ( i < nph && j < nwl * ntot ) {
+    nn[t] = ( ibb+1 == binNumber ( at[i], nbn, xx[0+iw*dim], xx[1+iw*dim] ) ) * 1.;
+  }
+}
+
+__global__ void arrayOfMultiplicity ( const int nmbrOfWlkrs, const int nmbrOfPhtns, const float Ttot, const float *nTms, float *sttstcs )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  float sum;
+  if ( i < nmbrOfWlkrs )
+  {
+    sum = 0;
+    for ( int b = 0; b < NTBINS; b++ )
+    {
+      sum += nTms[b+i*NTBINS] * logf ( nTms[b+i*NTBINS] / nmbrOfPhtns ) + 0.5 * logf ( nTms[b+i*NTBINS] );
+    }
+    sttstcs[i] = - 2. * sum;
+  }
+}
+
+__host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *nTms, float *sttstcs, const Spectrum spec )
+{
+  float alpha = ALPHA;
+  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfPhtns, nmbrOfWlkrs * NTBINS, &alpha, spec.nnTms, spec.nmbrOfPhtns, spec.ntcdTms, INCXX, &beta, nTms, INCYY );
+  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+  AssembleArrayOfMultiplicity <<< Blocks ( nmbrOfWlkrs ), THRDSPERBLCK >>> ( nmbrOfWlkrs, spec.nmbrOfPhtns, spec.srcExptm, nTms, sttstcs );
+  return 0;
+}
+
 __host__ int grid1D ( const int n ) {
   int b = ( n + THRDSPERBLCK - 1 ) / THRDSPERBLCK;
   return b;
