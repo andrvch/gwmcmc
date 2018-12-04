@@ -16,7 +16,7 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__global__ void arrayOf2DConditions ( const dim, const int nwl, const float *bn, const float *xx, float *cc ) {
+__global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *bn, const float *xx, float *cc ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
@@ -25,7 +25,7 @@ __global__ void arrayOf2DConditions ( const dim, const int nwl, const float *bn,
   }
 }
 
-__global__ void arrayOfPriors ( const dim, const int nwl, const float *cn, const float *xx, float *pr ) {
+__global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, const float *xx, float *pr ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   float sum = 2. * logf ( 2 * xx[0+i*dim] );
   if ( i < nwl ) {
