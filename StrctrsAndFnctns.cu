@@ -59,7 +59,7 @@ __global__ void arrayOfMultiplicity ( const int nph, const int nbm, const float 
   int t = i + j * nbm;
   if ( i < nbm && j < nbm ) {
     if ( i <= j ) {
-      stt[t] = nTms[t] * logf ( nTms[t] / nph ) + 0.5 * logf ( nTms[t] );
+      stt[t] = ( nTms[t] * logf ( nTms[t] / nph ) + 0.5 * logf ( nTms[t] ) );
     } else {
       stt[t] = 0.;
     }
@@ -69,7 +69,7 @@ __global__ void arrayOfMultiplicity ( const int nph, const int nbm, const float 
 __global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nbm - 1 ) {
-    mstt[i] = mt[1+i] / mt[0];
+    mstt[i] = - 2. * mt[1+i] / mt[0];
   }
 }
 
@@ -960,6 +960,15 @@ __host__ int printMetropolisUpdate ( const Chain *chn ) {
       }
       printf ( "\n" );
     }
+  }
+  printf ( "\n" );
+  printf ( " nt -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nbm; i++ ) {
+    for ( int j = 0; j < chn[0].nbm; j++ ) {
+        printf ( " %2.4f ", chn[0].nt[j+i*chn[0].nbm] );
+    }
+    printf ( "\n" );
   }
   printf ( "\n" );
   printf ( "\n" );
