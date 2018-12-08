@@ -67,9 +67,8 @@ int main ( int argc, char *argv[] ) {
     printf ( " Start ...                                                  \n" );
   }
 
-  cudaDeviceSynchronize ();
-
-  printMetropolisMove ( chn );
+  //cudaDeviceSynchronize ();
+  //printMetropolisMove ( chn );
 
   cudaEventRecord ( cdp[0].start, 0 );
 

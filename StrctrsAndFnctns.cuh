@@ -68,7 +68,7 @@ __global__ void setStatisticAtLast ( const int, const int, const float*, float* 
 __global__ void shiftWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void addWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void returnQ ( const int, const int, const float*, const float*, const float*, float* );
-__global__ void returnQM ( const int, const int, const float*, const float*, const float*, const float*, float* );
+__global__ void returnQM ( const int, const int, const float*, const float*, float* );
 __global__ void updateWalkers ( const int, const int, const float*, const float*, const float*, float* );
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );
@@ -95,6 +95,7 @@ __host__ dim3 grid3D ( const int, const int, const int, const dim3 );
 __host__ int readTimesInfo ( const char*, int*, float* );
 __host__ int readTimesData ( const char*, const int, float* );
 __host__ int modelStatistic1 ( const Cupar*, Chain* );
+__host__ int allocateTimes ( Chain* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
@@ -111,6 +112,7 @@ __host__ void readLastFromFile ( const char*, const int, const int, const int, f
 __host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float* );
 __host__ int destroyCuda ( const Cupar* );
 __host__ void freeChain ( const Chain* );
+__host__ void freeTimes ( const Chain* );
 __host__ void simpleReadDataFloat ( const char*, float* );
 __host__ void simpleReadDataInt ( const char*, int*);
 __host__ void simpleWriteDataFloat ( const char*, const int, const float* );

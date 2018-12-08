@@ -327,10 +327,10 @@ __global__ void returnQ ( const int dim, const int n, const float *s1, const flo
   }
 }
 
-__global__ void returnQM ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, float *q ) {
+__global__ void returnQM ( const int dim, const int n, const float *s1, const float *s0, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    q[i] = expf ( - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) );
+    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
   }
 }
 
@@ -488,8 +488,12 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmMtrx, chn[0].nst * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atcrrFnctn, chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nst * sizeof ( float ) );
-  //cudaMallocManaged ( ( void ** ) &chn[0].atms, chn[0].nph * sizeof ( float ) );
-  //cudaMallocManaged ( ( void ** ) &chn[0].nnt, chn[0].nph * chn[0].nbm * chn[0].nbm * sizeof ( float ) );
+  return 0;
+}
+
+__host__ int allocateTimes ( Chain *chn ) {
+  cudaMallocManaged ( ( void ** ) &chn[0].atms, chn[0].nph * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].nnt, chn[0].nph * chn[0].nbm * chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nt, chn[0].nbm * chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mmt, chn[0].nbm * chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mt, chn[0].nbm * sizeof ( float ) );
@@ -625,7 +629,7 @@ __host__ int walkUpdate ( const Cupar *cdp, Chain *chn ) {
   int indxX0 = chn[0].isb * nxx;
   int nss = chn[0].nwl / 2;
   int indxS0 = chn[0].isb * nss;
-  returnQM <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].prr1, chn[0].prr, chn[0].stt1, chn[0].stt0, chn[0].q );
+  returnQM <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].stt1, chn[0].stt0, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
   updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].nwl/2, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt0 );
   insertArray <<< grid1D ( nxx ), THRDS >>> ( nxx, indxX0, chn[0].xx0, chn[0].xx );
@@ -634,7 +638,7 @@ __host__ int walkUpdate ( const Cupar *cdp, Chain *chn ) {
 }
 
 __host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn ) {
-  returnQM <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].prr1, chn[0].prr, chn[0].stt1, chn[0].stt0, chn[0].q );
+  returnQM <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].stt1, chn[0].stt0, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx );
   updateStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt );
   return 0;
@@ -784,6 +788,9 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].stn1 );
   cudaFree ( chn[0].rr );
   cudaFree ( chn[0].sstt );
+}
+
+__host__ void freeTimes ( const Chain *chn ) {
   cudaFree ( chn[0].atms );
   cudaFree ( chn[0].nnt );
   cudaFree ( chn[0].nt );
@@ -795,6 +802,8 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].cnd );
   cudaFree ( chn[0].ccnd );
   cudaFree ( chn[0].xbnd );
+  cudaFree ( chn[0].pcnst );
+  cudaFree ( chn[0].bcnst );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
