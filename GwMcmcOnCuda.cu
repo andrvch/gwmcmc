@@ -40,13 +40,14 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[6] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
-  chn[0].nbm = 10;
+  chn[0].nbm = 2;
 
-  //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+  readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
 
   allocateChain ( chn );
+  allocateTimes ( chn );
 
-  //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
+  readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].x0[0] = 3.0;
@@ -86,19 +87,19 @@ int main ( int argc, char *argv[] ) {
       //walkMove ( cdp, chn );
       //streachMove ( cdp, chn );
       metropolisMove ( cdp, chn );
-      //cudaDeviceSynchronize ();
-      //printMetropolisMove ( chn );
+      cudaDeviceSynchronize ();
+      printMetropolisMove ( chn );
       //statistic ( cdp, chn );
       statisticMetropolis ( cdp, chn );
-      //modelStatistic1 ( cdp, chn );
+      modelStatistic1 ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
       //printMove ( chn );
       //walkUpdate ( cdp, chn );
       //streachUpdate ( cdp, chn );
       metropolisUpdate ( cdp, chn );
-      //cudaDeviceSynchronize ();
-      //printMetropolisUpdate ( chn );
+      cudaDeviceSynchronize ();
+      printMetropolisUpdate ( chn );
       //printUpdate ( chn );
       chn[0].isb += 1;
     }
@@ -145,6 +146,7 @@ int main ( int argc, char *argv[] ) {
 
   destroyCuda ( cdp );
   freeChain ( chn );
+  freeTimes ( chn );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While

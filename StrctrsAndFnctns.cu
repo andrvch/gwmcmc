@@ -49,7 +49,7 @@ __global__ void arrayOfBinTimes ( const int nph, const int nbm, const float *xx,
   int k = threadIdx.z + blockDim.z * blockIdx.z;
   int t = i + (j+k*nbm) * nph;
   if ( i < nph && j < nbm && k < nbm ) {
-    nn[t] = ( j <= k ) * ( j+1 == binNumber ( at[i], k+1, xx[0], xx[1] ) ) * 1.;
+    nn[t] = binNumber ( at[i], k+1, xx[0], xx[1] );
   }
 }
 
@@ -60,6 +60,8 @@ __global__ void arrayOfMultiplicity ( const int nph, const int nbm, const float 
   if ( i < nbm && j < nbm ) {
     if ( i <= j ) {
       stt[t] = nTms[t] * logf ( nTms[t] / nph ) + 0.5 * logf ( nTms[t] );
+    } else {
+      stt[t] = 0.;
     }
   }
 }
@@ -81,7 +83,7 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nbm ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nt, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nbm, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].mt, incyy );
   arrayOfStat <<< grid1D ( chn[0].nbm-1 ), THRDS >>> ( chn[0].nbm, chn[0].mt, chn[0].mstt );
-  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt );
+  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt0 );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
   arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
@@ -98,7 +100,7 @@ __host__ int modelStatistic1 ( const Cupar *cdp, Chain *chn ) {
   arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nbm ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nt, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nbm, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].mt, incyy );
   arrayOfStat <<< grid1D ( chn[0].nbm-1 ), THRDS >>> ( chn[0].nbm, chn[0].mt, chn[0].mstt );
-  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt1 );
+  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt0 );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
   arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
@@ -334,6 +336,14 @@ __global__ void returnQM ( const int dim, const int n, const float *s1, const fl
   }
 }
 
+
+__global__ void returnQM1 ( const int dim, const int n, const float *p1, const float *p0,  const float *s1, const float *s0, float *q ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
+  }
+}
+
 __global__ void updateWalkers ( const int dim, const int nwl, const float *xx1, const float *q, const float *r, float *xx0 ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -488,6 +498,11 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmMtrx, chn[0].nst * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atcrrFnctn, chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prr, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prr1, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].xbnd, chn[0].dim * 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].cnd, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   return 0;
 }
 
@@ -498,11 +513,8 @@ __host__ int allocateTimes ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].mmt, chn[0].nbm * chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mt, chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mstt, chn[0].nbm * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prr, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].prr1, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].cnd, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xbnd, chn[0].dim * 2 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].bcnst, chn[0].nbm * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].pcnst, chn[0].nph * sizeof ( float ) );
   return 0;
 }
 
@@ -516,6 +528,7 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
     statistic0 ( cdp, chn );
+    modelStatistic ( cdp, chn );
   } else {
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
@@ -638,7 +651,7 @@ __host__ int walkUpdate ( const Cupar *cdp, Chain *chn ) {
 }
 
 __host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn ) {
-  returnQM <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].stt1, chn[0].stt0, chn[0].q );
+  returnQM <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].stt1, chn[0].stt, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx );
   updateStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt );
   return 0;
@@ -788,6 +801,11 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].stn1 );
   cudaFree ( chn[0].rr );
   cudaFree ( chn[0].sstt );
+  cudaFree ( chn[0].prr );
+  cudaFree ( chn[0].prr1 );
+  cudaFree ( chn[0].cnd );
+  cudaFree ( chn[0].ccnd );
+  cudaFree ( chn[0].xbnd );
 }
 
 __host__ void freeTimes ( const Chain *chn ) {
@@ -797,11 +815,6 @@ __host__ void freeTimes ( const Chain *chn ) {
   cudaFree ( chn[0].mmt );
   cudaFree ( chn[0].mt );
   cudaFree ( chn[0].mstt );
-  cudaFree ( chn[0].prr );
-  cudaFree ( chn[0].prr1 );
-  cudaFree ( chn[0].cnd );
-  cudaFree ( chn[0].ccnd );
-  cudaFree ( chn[0].xbnd );
   cudaFree ( chn[0].pcnst );
   cudaFree ( chn[0].bcnst );
 }
@@ -918,6 +931,24 @@ __host__ int printMetropolisUpdate ( const Chain *chn ) {
   printf ( "\n" );
   for ( int i = 0; i < chn[0].nwl; i++ ) {
     printf ( " %2.4f ", chn[0].stt1[i] );
+  }
+  printf ( "\n" );
+  printf ( " nnt -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nbm; i++ ) {
+    for ( int j = 0; j < chn[0].nbm; j++ ) {
+      for ( int k = 0; k < 20; k++ ) {
+        printf ( " %2.4f ", chn[0].nnt[k+(i+j*chn[0].nbm)*chn[0].nph] );
+      }
+      printf ( "\n" );
+    }
+  }
+  printf ( "\n" );
+  printf ( "\n" );
+  printf ( " stt0 -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.4f ", chn[0].stt0[i] );
   }
   printf ( "\n" );
   printf ( " q -- "  );
