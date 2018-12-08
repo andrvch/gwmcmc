@@ -34,6 +34,8 @@ struct Cupar {
 };
 
 struct Chain {
+  char *dfl;
+  float exptm;
   char *name;
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
@@ -90,6 +92,8 @@ __global__ void arrayOfMultiplicity ( const int, const int, const float*, float*
 __global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt );
 __host__ int modelStatistic ( const Cupar *cdp, Chain *chn );
 __host__ dim3 grid3D ( const int, const int, const int, const dim3 );
+__host__ int readTimesInfo ( const char*, int*, float* );
+__host__ int readTimesData ( const char*, const int, float* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );

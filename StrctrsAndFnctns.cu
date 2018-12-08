@@ -93,6 +93,48 @@ __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block )
   return grid;
 }
 
+__host__ int readTimesInfo ( const char *spcFl, int *nmbrOfPhtns, float *srcExptm ) {
+  fitsfile *fptr;      /* FITS file pointer, defined in fitsio.h */
+  int status = 0, hdutype;   /*  CFITSIO status value MUST be initialized to zero!  */
+  long nrows;
+  fits_open_file ( &fptr, spcFl, READONLY, &status );
+  fits_movabs_hdu ( fptr, 2, &hdutype, &status );
+  fits_get_num_rows ( fptr, &nrows, &status );
+  printf ( "%i\n", status );
+  *nmbrOfPhtns = nrows;
+  printf ( "%i\n", *nmbrOfPhtns );
+  //snprintf ( card, sizeof ( card ), "%s%s", spcFl, "[EVENTS]" );
+  //fits_open_file ( &fptr, card, READONLY, &status );
+  fits_read_key ( fptr, TFLOAT, "DURATION", srcExptm, NULL, &status );
+  printf ( "%i\n", status );
+  printf ( "%.8E\n", *srcExptm );
+  return 0;
+}
+
+__host__ int readTimesData ( const char *spcFl, const int nmbrOfPhtns, float *arrTms ) {
+  fitsfile *fptr;      /* FITS file pointer, defined in fitsio.h */
+  int status = 0, hdutype;   /*  CFITSIO status value MUST be initialized to zero!  */
+  long nrows;
+  long  firstrow=1, firstelem = 1;
+  int colnum = 1, anynul;
+  float enullval = 0.0;
+  fits_open_file ( &fptr, spcFl, READONLY, &status );
+  fits_movabs_hdu ( fptr, 2, &hdutype, &status );
+  fits_get_num_rows ( fptr, &nrows, &status );
+  int numData = nrows;
+  double *tms0;
+  cudaMallocManaged ( ( void ** ) &tms0, numData * sizeof ( double ) );
+  fits_read_col_dbl ( fptr, colnum, firstrow, firstelem, nrows, enullval, tms0, &anynul, &status );
+  fits_close_file( fptr, &status );
+  for ( int i = 0; i < nrows; i++ )
+  {
+    arrTms[i] = tms0[i] - tms0[0];
+  }
+  cudaFree ( tms0 );
+  return 0;
+}
+
+
 __host__ int grid1D ( const int n ) {
   int b = ( n + THRDS - 1 ) / THRDS;
   return b;

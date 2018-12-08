@@ -33,14 +33,19 @@ int main ( int argc, char *argv[] ) {
   }
 
   Chain chn[1];
-  chn[0].name = argv[2];
-  chn[0].nwl = atoi ( argv[3] );
-  chn[0].nst = atoi ( argv[4] );
-  chn[0].indx = atoi ( argv[5] );
+  chn[0].dfl = argv[2]
+  chn[0].name = argv[3];
+  chn[0].nwl = atoi ( argv[4] );
+  chn[0].nst = atoi ( argv[5] );
+  chn[0].indx = atoi ( argv[6] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
 
+  readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+
   allocateChain ( chn );
+
+  readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
 
   for ( int i = 0; i < chn[0].dim; i++ ) {
     chn[0].x0[i] = 1.;
