@@ -46,6 +46,13 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0[i] = 1.;
   }
 
+  //for ( int i = 0; i < chn[0].dim; i++ ) {
+  chn[0].xbnd[0] = 2.0;
+  chn[0].xbnd[1] = 4.0;
+  chn[0].xbnd[2] = 0.0;
+  chn[0].xbnd[3] = 0.2;
+  //}
+
   initializeChain ( cdp, chn );
 
   if ( vrb ) {
@@ -55,9 +62,9 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  initializeRandomForStreach ( cdp, chn );
+  //initializeRandomForStreach ( cdp, chn );
   //initializeRandomForWalk ( cdp, chn );
-  //initializeRandomForMetropolis ( cdp, chn );
+  initializeRandomForMetropolis ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
@@ -65,20 +72,20 @@ int main ( int argc, char *argv[] ) {
     statisticMetropolis ( cdp, chn );
     metropolisUpdate ( cdp, chn );*/
     chn[0].isb = 0;
-    while ( chn[0].isb < 2 ) {
+    while ( chn[0].isb < chn[0].dim ) {
       //walkMove ( cdp, chn );
-      streachMove ( cdp, chn );
-      //metropolisMove ( cdp, chn );
+      //streachMove ( cdp, chn );
+      metropolisMove ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
-      statistic ( cdp, chn );
-      //statisticMetropolis ( cdp, chn );
+      //statistic ( cdp, chn );
+      statisticMetropolis ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
       //printMove ( chn );
       //walkUpdate ( cdp, chn );
-      streachUpdate ( cdp, chn );
-      //metropolisUpdate ( cdp, chn );
+      //streachUpdate ( cdp, chn );
+      metropolisUpdate ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisUpdate ( chn );
       //printUpdate ( chn );

@@ -82,6 +82,9 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nbm, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].mt, incyy );
   arrayOfStat <<< grid1D ( chn[0].nbm-1 ), THRDS >>> ( chn[0].nbm, chn[0].mt, chn[0].mstt );
   cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt );
+  arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
+  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
   return 0;
 }
 
