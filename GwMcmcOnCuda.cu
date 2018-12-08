@@ -33,7 +33,7 @@ int main ( int argc, char *argv[] ) {
   }
 
   Chain chn[1];
-  chn[0].dfl = argv[2]
+  chn[0].dfl = argv[2];
   chn[0].name = argv[3];
   chn[0].nwl = atoi ( argv[4] );
   chn[0].nst = atoi ( argv[5] );
