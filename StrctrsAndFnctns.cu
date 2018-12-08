@@ -69,7 +69,7 @@ __global__ void arrayOfMultiplicity ( const int nph, const int nbm, const float 
 __global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nbm - 1 ) {
-    mstt[i] = - 2. * mt[1+i] / mt[0];
+    mstt[i] = - 2. * mt[1+i];
   }
 }
 
