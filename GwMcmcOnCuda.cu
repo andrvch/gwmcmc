@@ -40,7 +40,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[6] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
-  chn[0].nbm = 2;
+  chn[0].nbm = 6;
 
   readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
 
@@ -90,7 +90,7 @@ int main ( int argc, char *argv[] ) {
       cudaDeviceSynchronize ();
       printMetropolisMove ( chn );
       //statistic ( cdp, chn );
-      statisticMetropolis ( cdp, chn );
+      //statisticMetropolis ( cdp, chn );
       modelStatistic1 ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );

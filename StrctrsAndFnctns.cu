@@ -49,7 +49,7 @@ __global__ void arrayOfBinTimes ( const int nph, const int nbm, const float *xx,
   int k = threadIdx.z + blockDim.z * blockIdx.z;
   int t = i + (j+k*nbm) * nph;
   if ( i < nph && j < nbm && k < nbm ) {
-    nn[t] = binNumber ( at[i], k+1, xx[0], xx[1] );
+    nn[t] = ( j + 1 == binNumber ( k+1, at[i], xx[0], xx[1] ) );
   }
 }
 
@@ -83,7 +83,7 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nbm ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nt, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nbm, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].mt, incyy );
   arrayOfStat <<< grid1D ( chn[0].nbm-1 ), THRDS >>> ( chn[0].nbm, chn[0].mt, chn[0].mstt );
-  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt0 );
+  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
   arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
@@ -100,7 +100,7 @@ __host__ int modelStatistic1 ( const Cupar *cdp, Chain *chn ) {
   arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nbm ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nt, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nbm, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].mt, incyy );
   arrayOfStat <<< grid1D ( chn[0].nbm-1 ), THRDS >>> ( chn[0].nbm, chn[0].mt, chn[0].mstt );
-  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt0 );
+  cublasSdot ( cdp[0].cublasHandle, chn[0].nbm-1, chn[0].mstt, incxx, chn[0].bcnst, incyy, chn[0].stt1 );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
   arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
@@ -527,7 +527,7 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
   if ( chn[0].indx == 0 ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
-    statistic0 ( cdp, chn );
+    //statistic0 ( cdp, chn );
     modelStatistic ( cdp, chn );
   } else {
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
@@ -933,12 +933,18 @@ __host__ int printMetropolisUpdate ( const Chain *chn ) {
     printf ( " %2.4f ", chn[0].stt1[i] );
   }
   printf ( "\n" );
+  printf ( " atms -- "  );
+  printf ( "\n" );
+  for ( int i = 0; i < 10; i++ ) {
+    printf ( " %2.4f ", chn[0].atms[i] );
+  }
+  printf ( "\n" );
   printf ( " nnt -- "  );
   printf ( "\n" );
   for ( int i = 0; i < chn[0].nbm; i++ ) {
     for ( int j = 0; j < chn[0].nbm; j++ ) {
-      for ( int k = 0; k < 20; k++ ) {
-        printf ( " %2.4f ", chn[0].nnt[k+(i+j*chn[0].nbm)*chn[0].nph] );
+      for ( int k = 0; k < 10; k++ ) {
+        printf ( " %2.4f ", chn[0].nnt[k+(j+i*chn[0].nbm)*chn[0].nph] );
       }
       printf ( "\n" );
     }
