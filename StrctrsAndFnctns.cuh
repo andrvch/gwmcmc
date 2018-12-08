@@ -10,7 +10,7 @@
 #define BETA  0e0f
 #define INCXX 1
 #define INCYY 1
-#define THRDSPERBLCK 32
+#define THRDS 32
 #define RANK 1
 #define NPRS 2 // Number of parameters
 #define ACONST 2.0f // Goodman-Weare "a" constant
@@ -41,7 +41,10 @@ struct Chain {
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
   cufftComplex *ftOfChn;
   int mmm;
+  int nph, nbm;
+  float *atms, *nnt, *nt, *mmt, *mt, *mstt, *prr, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
 };
+
 
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
@@ -78,6 +81,15 @@ __global__ void testChainFunction ( const int, const int, const int, float*, Com
 __global__ void chainFunction ( const int, const int, const int, const int, const float*, float* );
 __global__ void normArray ( const int, float* );
 __global__ void metropolisPoposal2 ( const int, const int, const int, const float*, const float*, float* );
+
+__global__ void arrayOf2DConditions ( const int, const int, const float*, const float*, float* );
+__global__ void arrayOfPriors ( const int, const int, const float*, const float*, float* );
+__host__ __device__ int binNumber ( const int, const float, const float, const float );
+__global__ void arrayOfBinTimes ( const int, const int, const float*, const float*, float* );
+__global__ void arrayOfMultiplicity ( const int, const int, const float*, float* );
+__global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt );
+__host__ int modelStatistic ( const Cupar *cdp, Chain *chn );
+__host__ dim3 grid3D ( const int, const int, const int, const dim3 );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
