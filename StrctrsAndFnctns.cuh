@@ -44,7 +44,7 @@ struct Chain {
   cufftComplex *ftOfChn;
   int mmm;
   int nph, nbm;
-  float *atms, *nnt, *nt, *mmt, *mt, *mstt, *prr, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
+  float *atms, *nnt, *nt, *mmt, *mt, *mstt, *prr, *prr1, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
 };
 
 
@@ -68,7 +68,7 @@ __global__ void setStatisticAtLast ( const int, const int, const float*, float* 
 __global__ void shiftWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void addWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void returnQ ( const int, const int, const float*, const float*, const float*, float* );
-__global__ void returnQM ( const int, const int, const float*, const float*, float* );
+__global__ void returnQM ( const int, const int, const float*, const float*, const float*, const float*, float* );
 __global__ void updateWalkers ( const int, const int, const float*, const float*, const float*, float* );
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );
@@ -94,6 +94,7 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn );
 __host__ dim3 grid3D ( const int, const int, const int, const dim3 );
 __host__ int readTimesInfo ( const char*, int*, float* );
 __host__ int readTimesData ( const char*, const int, float* );
+__host__ int modelStatistic1 ( const Cupar*, Chain* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );

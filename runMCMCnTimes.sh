@@ -1,10 +1,15 @@
 #!/bin/bash
 CUDAID=0
-DATAFILE=""
+DATAFILE="pn_barycen_0.3-10.0_cl.fits"
+#SPECFILE1="pn_barycen_0.3-2.0.fits"
+#SPECFILE1="PNclean_bary1.fits"
+#SPECFILE1="pn_barycen_0.3-10.0_cl.fits"
+#SPECFILE1="pn_barycen_0.3-2.0_cl.fits"
+#SPECFILE1="pn_barycen.fits"
 CHAINFILE=$1
 LOGFILE="LogMetro"
 NWALK=1
-LSTEP=8192
+LSTEP=10
 i=$2
 NCHAINS=$3
 let NCHAINS=NCHAINS+i

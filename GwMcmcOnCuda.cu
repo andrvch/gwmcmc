@@ -40,16 +40,18 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[6] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
+  chn[0].nbm = 10;
 
-  readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+  //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
 
   allocateChain ( chn );
 
-  readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
+  //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
 
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    chn[0].x0[i] = 1.;
-  }
+  //for ( int i = 0; i < chn[0].dim; i++ ) {
+  chn[0].x0[0] = 3.0;
+  chn[0].x0[1] = 0.1;
+  //}
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].xbnd[0] = 2.0;
@@ -64,6 +66,10 @@ int main ( int argc, char *argv[] ) {
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
   }
+
+  cudaDeviceSynchronize ();
+
+  printMetropolisMove ( chn );
 
   cudaEventRecord ( cdp[0].start, 0 );
 
@@ -85,6 +91,7 @@ int main ( int argc, char *argv[] ) {
       //printMetropolisMove ( chn );
       //statistic ( cdp, chn );
       statisticMetropolis ( cdp, chn );
+      //modelStatistic1 ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
       //printMove ( chn );
