@@ -68,6 +68,9 @@ int main ( int argc, char *argv[] ) {
     printf ( " Start ...                                                  \n" );
   }
 
+  chn[0].sigma[0] = 1.E-6;
+  chn[0].sigma[1] = 0.01;
+
   //cudaDeviceSynchronize ();
   //printMetropolisMove ( chn );
 
@@ -87,8 +90,8 @@ int main ( int argc, char *argv[] ) {
       //walkMove ( cdp, chn );
       //streachMove ( cdp, chn );
       metropolisMove ( cdp, chn );
-      cudaDeviceSynchronize ();
-      printMetropolisMove ( chn );
+      //cudaDeviceSynchronize ();
+      //printMetropolisMove ( chn );
       //statistic ( cdp, chn );
       //statisticMetropolis ( cdp, chn );
       modelStatistic1 ( cdp, chn );
@@ -98,8 +101,8 @@ int main ( int argc, char *argv[] ) {
       //walkUpdate ( cdp, chn );
       //streachUpdate ( cdp, chn );
       metropolisUpdate ( cdp, chn );
-      cudaDeviceSynchronize ();
-      printMetropolisUpdate ( chn );
+      //cudaDeviceSynchronize ();
+      //sprintMetropolisUpdate ( chn );
       //printUpdate ( chn );
       chn[0].isb += 1;
     }

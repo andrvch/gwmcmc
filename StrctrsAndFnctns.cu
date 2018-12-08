@@ -438,6 +438,16 @@ __global__ void metropolisPoposal2 ( const int dim, const int nwl, const int isb
   }
 }
 
+__global__ void metropolisPoposal3 ( const int dim, const int nwl, const int isb, const float *sigma, const float *xx, const float *rr, float *xx1 ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    xx1[t] = xx[t] + ( i == isb ) * sigma[isb] * rr[j];
+  }
+}
+
+
 __host__ int initializeCuda ( Cupar *cdp ) {
   cudaRuntimeGetVersion ( cdp[0].runtimeVersion );
   cudaDriverGetVersion ( cdp[0].driverVersion );
@@ -515,6 +525,7 @@ __host__ int allocateTimes ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].mstt, chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].bcnst, chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].pcnst, chn[0].nph * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sigma, chn[0].dim * sizeof ( float ) );
   return 0;
 }
 
@@ -609,7 +620,7 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn ) {
   int iRu = chn[0].isb * chn[0].nwl + chn[0].ist * chn[0].dim * chn[0].nwl;
   sliceArray <<< grid1D ( nrn ), THRDS >>> ( nrn, iRn, chn[0].stn1, chn[0].rr );
   sliceArray <<< grid1D ( nru ), THRDS >>> ( nru, iRu, chn[0].uni, chn[0].ru );
-  metropolisPoposal2 <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].isb, chn[0].xx, chn[0].rr, chn[0].xx1 );
+  metropolisPoposal3 <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].isb, chn[0].sigma, chn[0].xx, chn[0].rr, chn[0].xx1 );
   return 0;
 }
 
@@ -817,6 +828,7 @@ __host__ void freeTimes ( const Chain *chn ) {
   cudaFree ( chn[0].mstt );
   cudaFree ( chn[0].pcnst );
   cudaFree ( chn[0].bcnst );
+  cudaFree ( chn[0].sigma );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {

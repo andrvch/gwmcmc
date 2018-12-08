@@ -45,6 +45,7 @@ struct Chain {
   int mmm;
   int nph, nbm;
   float *atms, *nnt, *nt, *mmt, *mt, *mstt, *prr, *prr1, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
+  float *sigma;
 };
 
 
@@ -84,6 +85,7 @@ __global__ void testChainFunction ( const int, const int, const int, float*, Com
 __global__ void chainFunction ( const int, const int, const int, const int, const float*, float* );
 __global__ void normArray ( const int, float* );
 __global__ void metropolisPoposal2 ( const int, const int, const int, const float*, const float*, float* );
+__global__ void metropolisPoposal3 ( const int, const int, const int, const float*, const float*, const float*, float* );
 
 __global__ void arrayOf2DConditions ( const int, const int, const float*, const float*, float* );
 __global__ void arrayOfPriors ( const int, const int, const float*, const float*, float* );
