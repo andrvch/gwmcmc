@@ -40,7 +40,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[6] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-6;
-  chn[0].nbm = 6;
+  chn[0].nbm = 5;
 
   readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
 
@@ -50,8 +50,8 @@ int main ( int argc, char *argv[] ) {
   readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].x0[0] = 3.0;
-  chn[0].x0[1] = 0.1;
+  chn[0].x0[0] = 3.3625;
+  chn[0].x0[1] = 0.0;
   //}
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
@@ -69,7 +69,7 @@ int main ( int argc, char *argv[] ) {
   }
 
   chn[0].sigma[0] = 1.E-6;
-  chn[0].sigma[1] = 0.01;
+  chn[0].sigma[1] = 1.E-2;
 
   //cudaDeviceSynchronize ();
   //printMetropolisMove ( chn );

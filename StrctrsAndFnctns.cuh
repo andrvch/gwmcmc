@@ -90,8 +90,8 @@ __global__ void metropolisPoposal3 ( const int, const int, const int, const floa
 __global__ void arrayOf2DConditions ( const int, const int, const float*, const float*, float* );
 __global__ void arrayOfPriors ( const int, const int, const float*, const float*, float* );
 __host__ __device__ int binNumber ( const int, const float, const float, const float );
-__global__ void arrayOfBinTimes ( const int, const int, const float*, const float*, float* );
-__global__ void arrayOfMultiplicity ( const int, const int, const float*, float* );
+__global__ void arrayOfBinTimes ( const int, const int, const int, const float*, const float*, float* );
+__global__ void arrayOfMultiplicity ( const int, const int, const int, const float*, float* );
 __global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt );
 __host__ int modelStatistic ( const Cupar *cdp, Chain *chn );
 __host__ dim3 grid3D ( const int, const int, const int, const dim3 );
