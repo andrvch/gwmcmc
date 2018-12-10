@@ -8,14 +8,15 @@ DATAFILE="pn_barycen_0.3-10.0_cl.fits"
 #SPECFILE1="pn_barycen.fits"
 CHAINFILE=$1
 LOGFILE="LogMetro"
-NWALK=1
-LSTEP=8388608
-i=$2
-NCHAINS=$3
+NWALK=$2
+LSTEP=$3
+i=$4
+NCHAINS=$5
+NBNS=$6
 let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
-  ./runSFH $CUDAID $DATAFILE $CHAINFILE $NWALK $LSTEP $i > $LOGFILE
+  ./runSFH $CUDAID $DATAFILE $CHAINFILE $NWALK $LSTEP $i $NBNS > $LOGFILE
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"
