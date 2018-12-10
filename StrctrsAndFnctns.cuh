@@ -46,6 +46,7 @@ struct Chain {
   int nph, nbm;
   float *atms, *nnt, *nt, *mmt, *mt, *mstt, *prr, *prr1, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
   float *sigma;
+  int *bnn;
 };
 
 

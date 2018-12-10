@@ -511,6 +511,7 @@ __host__ int allocateChain ( Chain *chn ) {
 __host__ int allocateTimes ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].atms, chn[0].nph * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nnt, chn[0].nph * chn[0].nbm * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].bnn, chn[0].nph * chn[0].nwl * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nt, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mmt, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mt, chn[0].nbm * sizeof ( float ) );
@@ -821,6 +822,7 @@ __host__ void freeTimes ( const Chain *chn ) {
   cudaFree ( chn[0].pcnst );
   cudaFree ( chn[0].bcnst );
   cudaFree ( chn[0].sigma );
+  cudaFree ( chn[0].bnn );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {

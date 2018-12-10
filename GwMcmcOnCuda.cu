@@ -40,7 +40,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[6] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-6;
-  chn[0].nbm = 5;
+  chn[0].nbm = atoi ( argv[7] );
 
   readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
 
