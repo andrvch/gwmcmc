@@ -18,6 +18,13 @@
 #define NSPCTR 12
 #define ATNMR 18
 #define NELMS 30
+#define MNS 1.4e0f
+#define RNS 1.3e1f
+#define PCCM 3.08567802e18f
+#define KMCM 1.0e5f
+#define KMCMPCCM -13.48935060694014384023e0f
+#define LOGPLANCK 26.1787440e0f
+#define NHINDX NPRS-1
 
 typedef float2 Complex;
 
