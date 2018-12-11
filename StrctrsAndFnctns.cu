@@ -21,7 +21,7 @@ __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float 
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    cc[t] = ( bn[0+i*2] < xx[t] ) * ( xx[t] < bn[1+i*2] );
+    cc[t] = ( bn[0+i*2] <= xx[t] ) * ( xx[t] < bn[1+i*2] );
   }
 }
 
@@ -29,7 +29,7 @@ __global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, c
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   float sum = 2. * logf ( 2 * xx[0+i*dim] );
   if ( i < nwl ) {
-    pr[i] = ( cn[i] == 1 ) * sum + ( cn[i] < 1 ) * INF;
+    pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
   }
 }
 
@@ -328,11 +328,10 @@ __global__ void returnQM ( const int dim, const int n, const float *s1, const fl
   }
 }
 
-
-__global__ void returnQM1 ( const int dim, const int n, const float *p1, const float *p0,  const float *s1, const float *s0, float *q ) {
+__global__ void returnQM1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
+    q[i] = expf ( - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) );
   }
 }
 
@@ -655,7 +654,7 @@ __host__ int walkUpdate ( const Cupar *cdp, Chain *chn ) {
 }
 
 __host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn ) {
-  returnQM <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].stt1, chn[0].stt, chn[0].q );
+  returnQM1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].prr1, chn[0].prr, chn[0].stt1, chn[0].stt, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx );
   updateStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt );
   return 0;

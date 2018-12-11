@@ -58,15 +58,15 @@ int main ( int argc, char *argv[] ) {
   chn[0].scale = chn[0].scale + sumsum;
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].x0[0] = 3.3625;
+  chn[0].x0[0] = 3.362332;
   chn[0].x0[1] = 0.0;
   //}
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].xbnd[0] = 2.0;
   chn[0].xbnd[1] = 4.0;
-  chn[0].xbnd[2] = 0.0;
-  chn[0].xbnd[3] = 0.2;
+  chn[0].xbnd[2] = -1./chn[0].nbm;
+  chn[0].xbnd[3] = 1./chn[0].nbm;
   //}
 
   initializeChain ( cdp, chn );
@@ -77,7 +77,7 @@ int main ( int argc, char *argv[] ) {
   }
 
   chn[0].sigma[0] = 1.E-6;
-  chn[0].sigma[1] = 1.E-2;
+  chn[0].sigma[1] = 1. / chn[0].nbm / 10.;
 
   //cudaDeviceSynchronize ();
   //printMetropolisMove ( chn );

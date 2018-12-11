@@ -30,6 +30,6 @@ frqs = samples[0]
 plt.plot(frqs,odds,'o')
 
 oddsN = np.exp(odds)/frqs
-print oddsN.sum()
+print oddsN.sum()/len(oddsN)
 #plt.show()
 plt.savefig(sys.argv[1]+"odds"+".jpg")
