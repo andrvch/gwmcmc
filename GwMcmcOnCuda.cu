@@ -32,34 +32,32 @@ int main ( int argc, char *argv[] ) {
     printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
   }
 
+  Model mdl[NSPCTR];
+  Spectrum spc[NSPCTR];
+
   Chain chn[1];
-  chn[0].dfl = argv[2];
-  chn[0].name = argv[3];
-  chn[0].nwl = atoi ( argv[4] );
-  chn[0].nst = atoi ( argv[5] );
-  chn[0].indx = atoi ( argv[6] );
+
+  //chn[0].dfl = argv[2];
+  const char *spcFl1 = argv[2];
+  const char *spcFl2 = argv[3];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  int NNspec = 2;
+  chn[0].name = argv[NNspec+2];
+  chn[0].nwl = atoi ( argv[NNspec+3] );
+  chn[0].nst = atoi ( argv[NNspec+4] );
+  chn[0].indx = atoi ( argv[NNspec+5] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-6;
-  chn[0].nbm = atoi ( argv[7] );
+  //chn[0].nbm = atoi ( argv[7] );
 
   SpecInfo ( spcLst, verbose, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, verbose, mdl, spc );
 
   allocateChain ( chn );
-  //allocateTimes ( chn );
-  //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
-  /*chn[0].scale = chn[0].nph * logf ( chn[0].nbm ) + chn[0].nph * logf ( chn[0].nph * 1. ) - logf ( chn[0].nph * 1. ) - ( chn[0].nph + chn[0].nbm - 1. ) * logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. ) + logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. );
-  int sumsum = 0;
-  for ( int i = 0; i < chn[0].nbm-2; i++ ) {
-    sumsum += logf ( i + 2 );
-  }
-  chn[0].scale = chn[0].scale + sumsum;*/
 
-  //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].x0[0] = 3.362332;
   chn[0].x0[1] = 0.0;
-  //}
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].xbnd[0] = 2.0;
@@ -74,12 +72,6 @@ int main ( int argc, char *argv[] ) {
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
   }
-
-  chn[0].sigma[0] = 1.E-6;
-  chn[0].sigma[1] = 1. / chn[0].nbm / 10.;
-
-  //cudaDeviceSynchronize ();
-  //printMetropolisMove ( chn );
 
   cudaEventRecord ( cdp[0].start, 0 );
 
