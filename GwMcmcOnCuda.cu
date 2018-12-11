@@ -46,8 +46,6 @@ int main ( int argc, char *argv[] ) {
   SpecAlloc ( chn, spc );
   SpecData ( cdp, verbose, mdl, spc );
 
-  //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
-
   allocateChain ( chn );
   //allocateTimes ( chn );
   //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
