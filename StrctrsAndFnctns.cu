@@ -16,6 +16,142 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr )
+{
+  float flx;
+  if ( fabsf ( 1 - phtnIndx ) > TLR )
+  {
+    flx = powf ( 10, nrmlztn ) * ( powf ( enrgHghr, 1 - phtnIndx ) - powf ( enrgLwr, 1 - phtnIndx ) ) / ( 1 - phtnIndx );
+  }
+  else
+  {
+    flx = powf ( 10, nrmlztn ) * ( logf ( enrgHghr ) - logf ( enrgLwr ) );
+  }
+  return flx;
+}
+
+__host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 )
+{
+  float flx;
+  flx = 0.5 * ( flx1 + flx2 ) * ( en2 - en1 );
+  return flx;
+}
+
+__host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, const float en1, const float en2 )
+{
+  float flx;
+  float gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+  flx = gr * powf ( 10, 26.1787440 ) * 0.5 * ( flx1 / en1 + flx2 / en2 ) * ( en2 - en1 );
+  return flx;
+}
+
+__host__ __device__ float BlackBody ( const float kT, const float logRtD, const float enrgLwr, const float enrgHghr )
+{
+  float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
+  t = kT;
+  tinv = 1. / t;
+  anorm = 1.0344e-3f * 1e8f * powf ( 10, 2 * logRtD ) ;
+  anormh = 0.5 * anorm;
+  elow = enrgLwr;
+  x = elow * tinv;
+  if ( x <= 1.0e-4f )
+  {
+    alow = elow * t;
+  }
+  else if ( x > 60.0 )
+  {
+    flx = 0;
+    return flx;
+  }
+  else
+  {
+    alow = elow * elow / ( expf ( x ) - 1.0e0f );
+  }
+  ehi = enrgHghr;
+  x = ehi * tinv;
+  if ( x <= 1.0e-4f )
+  {
+    ahi = ehi * t;
+  }
+  else if ( x > 60.0 )
+  {
+    flx = 0;
+    return flx;
+  }
+  else
+  {
+    ahi = ehi * ehi / ( expf ( x ) - 1.0e0f );
+  }
+  flx = anormh * ( alow + ahi ) * ( ehi - elow );
+  return flx;
+}
+
+__host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts )
+{
+  float sttstc = 0;
+  if ( scnts != 0 && ts * mdl >= TLR )
+  {
+    sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
+  }
+  else if ( scnts != 0 && ts * mdl < TLR )
+  {
+    sttstc = TLR - scnts * logf ( TLR ) - scnts * ( 1 - logf ( scnts ) );
+  }
+  else
+  {
+    sttstc = ts * mdl;
+  }
+  sttstc = 2 * sttstc;
+  return sttstc;
+}
+
+__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )
+{
+  float sttstc = 0, d, f;
+  float scls = 1;
+  float sclb = backscal_bkg / backscal_src;
+  d = sqrtf ( powf ( ( ts * scls + tb * sclb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts * scls + tb * sclb ) * bcnts * mdl );
+  f = ( scnts + bcnts - ( ts * scls + tb * sclb ) * mdl + d ) / 2 / ( ts * scls + tb * sclb );
+  if ( scnts != 0 && bcnts != 0 )
+  {
+    sttstc = ts * mdl + ts * scls * f  + tb * sclb * f - scnts * logf ( ts * mdl + ts * scls * f ) - bcnts * logf ( tb * sclb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
+  }
+  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts * scls + tb * sclb ) )
+  {
+    sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
+  }
+  else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts * scls + tb * sclb ) )
+  {
+    sttstc = ts * ( 1 - scls ) * mdl - tb * sclb * mdl - scnts * logf ( ts * ( 1 - scls ) * mdl + ts * scls * scnts / ( ts * scls + tb * sclb ) ) + scnts * logf ( scnts );
+  }
+  else if ( scnts == 0 && bcnts != 0 )
+  {
+    sttstc = ts * mdl - bcnts * logf ( tb * sclb / ( ts * scls + tb * sclb ) );
+  }
+  else if ( scnts == 0 && bcnts == 0 )
+  {
+    sttstc = ts * mdl;
+  }
+  sttstc = 2 * sttstc;
+  return sttstc;
+}
+
+__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x )
+{
+  int ju, jm, jl, jres;
+  jl = 0;
+  ju = n;
+  while ( ju - jl > 1 )
+  {
+    jm = floorf ( 0.5 * ( ju + jl ) );
+    if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
+  }
+  jres = jl;
+  if ( x == xx[0] ) jres = 0;
+  if ( x >= xx[n-1] ) jres = n - 1;
+  return jres;
+}
+
 __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const float *wlkrs, float *absrptnFctrs ) {
   int enIndx = threadIdx.x + blockDim.x * blockIdx.x;
   int wlIndx = threadIdx.y + blockDim.y * blockIdx.y;
@@ -30,7 +166,7 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
       prIndx = elIndx + NHINDX;
       crIndx = elIndx + enIndx * nmbrOfElmnts;
       effElIndx = atmcNmbrs[elIndx] - 1;
-      nh = wlkrs[prInd+wlIndx*nmbrOfWlkrs] * 1.E22;
+      nh = wlkrs[prIndx+wlIndx*nmbrOfWlkrs] * 1.E22;
       clmn = abndncs[effElIndx];
       xsctn = clmn * crssctns[crIndx];
       elIndx = 1;
