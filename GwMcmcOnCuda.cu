@@ -53,8 +53,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].dim = NPRS;
   chn[0].dlt = 1.E-6;
 
-  for ( int i = 0; i < NSPCTR; i++ )
-  {
+  for ( int i = 0; i < NSPCTR; i++ ) {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
   }
@@ -175,7 +174,8 @@ int main ( int argc, char *argv[] ) {
 
   destroyCuda ( cdp );
   freeChain ( chn );
-  //freeTimes ( chn );
+  FreeModel ( mdl );
+  FreeSpec ( spc );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While

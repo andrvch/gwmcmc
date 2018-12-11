@@ -208,40 +208,22 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   }
 }
 
-__host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, const int indx, Spectrum spec )
-{
-  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  AssembleArrayOfAbsorptionFactors <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
-  BilinearInterpolationNsmax <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  //BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
-  AssembleArrayOfModelFluxes <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.mdlFlxs );
-  return 0;
-}
-
-__host__ int Stat ( const int nmbrOfWlkrs, Spectrum spec )
-{
-  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
-  dim3 dimGrid = Grid ( spec.nmbrOfChnnls, nmbrOfWlkrs );
-  AssembleArrayOfChannelStatistics <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, spec.srcExptm, spec.bckgrndExptm, spec.backscal_src, spec.backscal_bkg, spec.srcCnts, spec.bckgrndCnts, spec.flddMdlFlxs, spec.chnnlSttstcs );
-  return 0;
-}
-
-__host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *sttstcs, const Spectrum spec )
-{
-  float alpha = ALPHA;
-  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec.chnnlSttstcs, spec.nmbrOfChnnls, spec.ntcdChnnls, INCXX, &beta, sttstcs, INCYY );
-  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
-  return 0;
-}
-
-__host__ int FoldModel ( Cuparam *cdp, const int nmbrOfWlkrs, Spectrum spec )
-{
+__host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc ) {
+  int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
-  cdp[0].cusparseStat = cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spec.nmbrOfChnnls, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.nmbrOfRmfVls, &alpha, cdp[0].MatDescr, spec.rmfVls, spec.rmfPntr, spec.rmfIndx, spec.mdlFlxs, spec.nmbrOfEnrgChnnls, &beta, spec.flddMdlFlxs, spec.nmbrOfChnnls );
-  if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx1, spc[i].absrptnFctrs );
+    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx1, spc[i].nsa1Flxs );
+    AssembleArrayOfModelFluxes <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx1, spc[i].nsa1Flxs, spc[i].mdlFlxs );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfChnnls, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, &alpha, cdp[0].MatDescr, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls );
+    AssembleArrayOfChannelStatistics <<< grid2D ( spc[i].nmbrOfChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfChnnls, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, &beta, chn[0].stt1, INCYY );
+  }
+  arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
+  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
   return 0;
 }
-
 
 __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr )
 {
@@ -621,37 +603,6 @@ __global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt ) {
     mstt[i] = - 2. * mt[1+i];
   }
 }
-
-__host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  dim3 block3 ( 1024, 1, 1 );
-  dim3 grid3 = grid3D ( chn[0].nph, chn[0].nbm, chn[0].nwl, block3 );
-  arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx, chn[0].atms, chn[0].nnt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nph, chn[0].nbm * chn[0].nwl, &alpha, chn[0].nnt, chn[0].nph, chn[0].pcnst, INCXX, &beta, chn[0].nt, INCYY );
-  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].scale, chn[0].nt, chn[0].mmt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nwl, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt, incyy );
-  arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
-  return 0;
-}
-
-__host__ int modelStatistic1 ( const Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  dim3 block3 ( 1024, 1, 1 );
-  dim3 grid3 = grid3D ( chn[0].nph, chn[0].nbm, chn[0].nwl, block3 );
-  arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx1, chn[0].atms, chn[0].nnt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nph, chn[0].nbm * chn[0].nwl, &alpha, chn[0].nnt, chn[0].nph, chn[0].pcnst, INCXX, &beta, chn[0].nt1, INCYY );
-  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].scale, chn[0].nt1, chn[0].mmt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nwl, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt1, incyy );
-  arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
-  return 0;
-}
-
 
 __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block ) {
   dim3 grid ( ( n + block.x - 1 ) / block.x, ( m + block.y - 1 ) / block.y, ( l + block.z - 1 ) / block.z );
