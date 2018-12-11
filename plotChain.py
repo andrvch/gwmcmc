@@ -34,4 +34,4 @@ for i in range(nprmtrs):
         ax[i].errorbar(stps,wlkrs[i,j,:])
 
 #plt.show()
-plt.savefig(sys.argv[1]+".pdf")
+plt.savefig(sys.argv[1]+".jpeg")

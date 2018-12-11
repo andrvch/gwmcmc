@@ -49,6 +49,14 @@ int main ( int argc, char *argv[] ) {
 
   readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
 
+  chn[0].scale = chn[0].nph * logf ( chn[0].nbm ) + chn[0].nph * logf ( chn[0].nph * 1. ) - logf ( chn[0].nph * 1. ) - ( chn[0].nph + chn[0].nbm - 1. ) * logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. ) + logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. );
+
+  int sumsum = 0;
+  for ( int i = 0; i < chn[0].nbm-2; i++ ) {
+    sumsum += logf ( i + 2 );
+  }
+  chn[0].scale = chn[0].scale + sumsum;
+
   //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].x0[0] = 3.3625;
   chn[0].x0[1] = 0.0;

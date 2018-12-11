@@ -53,12 +53,12 @@ __global__ void arrayOfBinTimes ( const int nph, const int nbm, const int nwl, c
   }
 }
 
-__global__ void arrayOfMultiplicity ( const int nph, const int nbm, const int nwl, const float *nTms, float *stt ) {
+__global__ void arrayOfMultiplicity ( const int nph, const int nbm, const int nwl, const float scale, const float *nTms, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * nbm;
   if ( i < nbm && j < nwl ) {
-    stt[t] = -2. * ( nTms[t] * logf ( nTms[t] / nph ) + 0.5 * logf ( nTms[t] ) );
+    stt[t] = -2. * ( scale / nbm + ( nbm - 1 ) * logf ( 2 * PI ) / nbm - 0.5 * logf ( nph ) / nbm + nTms[t] * logf ( nTms[t] / nph ) + 0.5 * logf ( nTms[t] ) );
   }
 }
 
@@ -76,7 +76,7 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   dim3 grid3 = grid3D ( chn[0].nph, chn[0].nbm, chn[0].nwl, block3 );
   arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx, chn[0].atms, chn[0].nnt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nph, chn[0].nbm * chn[0].nwl, &alpha, chn[0].nnt, chn[0].nph, chn[0].pcnst, INCXX, &beta, chn[0].nt, INCYY );
-  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].nt, chn[0].mmt );
+  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].scale, chn[0].nt, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nwl, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt, incyy );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
@@ -91,7 +91,7 @@ __host__ int modelStatistic1 ( const Cupar *cdp, Chain *chn ) {
   dim3 grid3 = grid3D ( chn[0].nph, chn[0].nbm, chn[0].nwl, block3 );
   arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx1, chn[0].atms, chn[0].nnt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nph, chn[0].nbm * chn[0].nwl, &alpha, chn[0].nnt, chn[0].nph, chn[0].pcnst, INCXX, &beta, chn[0].nt, INCYY );
-  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].nt, chn[0].mmt );
+  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].scale, chn[0].nt, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nwl, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt1, incyy );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
