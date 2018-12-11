@@ -16,6 +16,54 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ int SpecData ( Cuparam *cdp, const int verbose, Model *mdl, Spectrum *spc ) {
+  float smOfNtcdChnnls = 0;
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    if ( verbose == 1 ) {
+      printf ( ".................................................................\n" );
+      printf ( " Spectrum number  -- %i\n", i );
+      printf ( " Spectrum table   -- %s\n", spc[i].srcTbl );
+      printf ( " ARF table        -- %s\n", spc[i].arfTbl );
+      printf ( " RMF table        -- %s\n", spc[i].rmfTbl );
+      printf ( " Background table -- %s\n", spc[i].bckgrndTbl );
+    }
+    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls );
+
+    cdp[0].cusparseStat = cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
+    if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: RMF transpose failed " ); return 1; }
+
+    AssembleArrayOfNoticedChannels <<< Blocks ( spc[i].nmbrOfChnnls ), THRDSPERBLCK >>> ( spc[i].nmbrOfChnnls, spc[i].lwrNtcdEnrg, spc[i].hghrNtcdEnrg, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].gdQltChnnls, spc[i].ntcdChnnls );
+    cdp[0].cublasStat = cublasSdot ( cdp[0].cublasHandle, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, spc[i].ntcdChnnls, INCYY, &spc[i].smOfNtcdChnnls );
+    if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: channel summation failed " ); return 1; }
+    cudaDeviceSynchronize ( );
+    smOfNtcdChnnls = smOfNtcdChnnls + spc[i].smOfNtcdChnnls;
+    AssembleArrayOfPhotoelectricCrossections ( spc[i].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[i].enrgChnnls, mdl[0].atmcNmbrs, spc[i].crssctns );
+    if ( verbose == 1 ) {
+      printf ( " Number of energy channels                = %i\n", spc[i].nmbrOfEnrgChnnls );
+      printf ( " Number of instrument channels            = %i\n", spc[i].nmbrOfChnnls );
+      printf ( " Number of nonzero elements of RMF matrix = %i\n", spc[i].nmbrOfRmfVls );
+      printf ( " Exposure time                            = %.8E\n", spc[i].srcExptm );
+      printf ( " Exposure time (background)               = %.8E\n", spc[i].bckgrndExptm );
+      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
+      printf ( " Backscale src -- %4.0f\n", spc[i].backscal_src );
+      printf ( " Backscale bkg -- %4.0f\n", spc[i].backscal_bkg );
+    }
+  }
+  if ( verbose == 1 ) {
+    printf ( ".................................................................\n" );
+    printf ( " Total number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
+    printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
+  }
+  return 0;
+}
+
+__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc ) {
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
+  }
+  return 0;
+}
+
 __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
   for ( int i = 0; i < NSPCTR; i++ ) {
     cudaMallocManaged ( ( void ** ) &spc[i].rmfPntrInCsc, ( spc[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
