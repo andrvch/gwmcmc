@@ -1300,6 +1300,102 @@ __host__ int printUpdate ( const Chain *chn ) {
   return 0;
 }
 
+__host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes ) {
+  FILE *flPntr;
+  float value;
+  int i = 0;
+  flPntr = fopen ( flNm, "r" );
+  while ( fscanf ( flPntr, "%e", &value ) == 1 )
+  {
+    data[i] = value;
+    i += 1;
+  }
+  for (int j = 0; j < numEn; j++)
+  {
+    En[j] = log10f ( data[(j+1)*(numTe+1)] );
+  }
+  for (int j = 0; j < numTe; j++)
+  {
+    Te[j] = data[j+1];
+  }
+  for (int j = 0; j < numEn; j++)
+  {
+    for (int i = 0; i < numTe; i++)
+    {
+      fluxes[j+i*numEn] = log10f ( data[(i+1)+(j+1)*(numTe+1)] );
+    }
+  }
+  fclose ( flPntr );
+}
+
+__host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes ) {
+  FILE *flPntr;
+  float value;
+  int i = 0;
+  flPntr = fopen ( flNm, "r" );
+  while ( fscanf ( flPntr, "%e", &value ) == 1 )
+  {
+    data[i] = value;
+    i += 1;
+  }
+  //numTe = (int*)data[0];
+  for (int j = 0; j < numTe; j++)
+  {
+    Te[j] = data[1+j];
+  }
+  //numEn = (int*)data[17];
+  for (int j = 0; j < numEn; j++)
+  {
+    En[j] = log10f ( data[18+j] );
+  }
+  for (int i = 0; i < numTe; i++)
+  {
+    for (int j = 0; j < numEn; j++)
+    {
+      fluxes[j+i*numEn] = log10f ( data[(18+numEn)+j+i*numEn] );
+    }
+  }
+  fclose ( flPntr );
+}
+
+__host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV, float *errDist, float *errEBV ) {
+  FILE *flPntr;
+  float value;
+  int i = 0;
+  flPntr = fopen ( flNm, "r" );
+  while ( fscanf (flPntr, "%e", &value ) == 1 )
+  {
+    data[i] = value;
+    i += 1;
+  }
+  for ( int j = 0; j < numDist; j++ )
+  {
+    Dist[j] = log10f ( data[5*j] );
+    EBV[j] = log10f ( data[5*j+1] );
+    errDist[j] = log10f ( data[5*j+2] );
+    errEBV[j] = log10f ( data[5*j+3] );
+  }
+  fclose ( flPntr );
+}
+
+__host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV ) {
+  FILE *flPntr;
+  float value;
+  int i = 0;
+  flPntr = fopen ( flNm, "r" );
+  while ( fscanf (flPntr, "%e", &value ) == 1 )
+  {
+    data[i] = value;
+    i += 1;
+  }
+  for ( int j = 0; j < numDist; j++ )
+  {
+    Dist[j] = log10f ( data[2*j] * 1000. );
+    EBV[j] = log10f ( data[2*j+1] );
+  }
+  fclose ( flPntr );
+}
+
 __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] )
 {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
