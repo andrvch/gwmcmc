@@ -88,8 +88,8 @@ int main ( int argc, char *argv[] ) {
   //for ( int i = 0; i < chn[0].dim; i++ ) {s
   chn[0].xbnd[TINDX*2] = 5.5;
   chn[0].xbnd[TINDX*2+1] = 6.5;
-  chn[0].xbnd[RINDX*2] = log10 ( 8. / 13. / 6000. );
-  chn[0].xbnd[RINDX*2+1] = log10f ( 20. / 13. / 100. );
+  chn[0].xbnd[RINDX1*2] = log10 ( 8. / 13. / 6000. );
+  chn[0].xbnd[RINDX1*2+1] = log10f ( 20. / 13. / 100. );
   chn[0].xbnd[2*2] = -INF;
   chn[0].xbnd[2*2+1] = INF;
   chn[0].xbnd[3*2] = -INF;

@@ -26,6 +26,8 @@
 #define LOGPLANCK 26.1787440e0f
 #define NHINDX NPRS-1
 #define RINDX1 1
+#define TINDX 0
+#define GRINDX 1
 
 typedef float2 Complex;
 
