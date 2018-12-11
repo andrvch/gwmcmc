@@ -42,6 +42,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].dlt = 1.E-6;
   chn[0].nbm = atoi ( argv[7] );
 
+  SpecInfo ( spcLst, verbose, spc );
+  SpecAlloc ( chn, spc );
+  SpecData ( cdp, verbose, mdl, spc );
+
   //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
 
   allocateChain ( chn );
