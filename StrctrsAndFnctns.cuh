@@ -188,5 +188,6 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
 __host__ int SpecAlloc ( Chain *chn, Spectrum *spc );
 __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc );
 __host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc );
+__global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
