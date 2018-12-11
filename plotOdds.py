@@ -24,11 +24,12 @@ print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
 
-odds = - 0.5 * samples[-1] + 1717 + 1717 * math.log(9.1917e4) + ( 5. / 2. ) * math.log(9.1917e4) + 1717 * math.log(5) + 4. * math.log(2.*3.14) - 0.5*math.log(1717) - 2.84128601128261974624e1
+#odds = - 0.5 * samples[-1] + 1717 + 1717 * math.log(9.1917e4) + ( 5. / 2. ) * math.log(9.1917e4) + 1717 * math.log(5) + 4. * math.log(2.*3.14) - 0.5*math.log(1717) - 2.84128601128261974624e1
+odds = samples[-1]
+frqs = samples[0]
+plt.plot(np.sort(frqs),odds[np.argsort(frqs)],'o')
 
-plt.plot(np.sort(samples[0]),odds[np.argsort(samples[0])],'o')
-
-oddsN = np.exp(odds)/samples[0]
+oddsN = np.exp(odds)/frqs
 print oddsN.sum()
 #plt.show()
 plt.savefig(sys.argv[1]+"odds"+".jpg")
