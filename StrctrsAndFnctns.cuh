@@ -119,9 +119,8 @@ __global__ void sliceIntArray ( const int, const int, const int*, int* );
 __global__ void insertArray ( const int, const int, const float*, float* );
 __global__ void initializeAtRandom ( const int, const int, const float, const float*, const float*, float* );
 __global__ void returnStatistic ( const int, const int, const float*, float* );
-__global__ void setWalkersAtLast ( const int, const int, const int, const float*, float* );
-__global__ void setStatisticAtLast ( const int, const int, const int, const float*, float* );
-__global__ void setNumbersAtLast ( const int, const int, const int, const float*, float* );
+__global__ void setWalkersAtLast ( const int, const int, const float*, float* );
+__global__ void setStatisticAtLast ( const int, const int, const float*, float* );
 __global__ void shiftWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void addWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void returnQ ( const int, const int, const float*, const float*, const float*, float* );
@@ -155,8 +154,6 @@ __host__ int readTimesInfo ( const char*, int*, float* );
 __host__ int readTimesData ( const char*, const int, float* );
 __host__ int modelStatistic1 ( const Cupar*, Chain* );
 __host__ int allocateTimes ( Chain* );
-__global__ void saveNumbers ( const int, const int, const int, const float*, float* );
-__global__ void updateNumbers ( const int, const int, const float*, const float*, const float*, float* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
@@ -169,8 +166,8 @@ __host__ int statistic ( const Cupar*, Chain* );
 __host__ int walkUpdate ( const Cupar*, Chain* );
 __host__ int streachUpdate ( const Cupar*, Chain* );
 __host__ int saveCurrent ( Chain* );
-__host__ void readLastFromFile ( const char*, const int, const int, const int, const int, float* );
-__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const int, const float*, const float*, const float* );
+__host__ void readLastFromFile ( const char*, const int, const int, const int, float* );
+__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float*, const float* );
 __host__ int destroyCuda ( const Cupar* );
 __host__ void freeChain ( const Chain* );
 __host__ void freeTimes ( const Chain* );
@@ -216,5 +213,10 @@ __host__ __device__ float PoissonWithBackground ( const float scnts, const float
 __host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x );
 __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const float *wlkrs, float *absrptnFctrs );
 __global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs );
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs );
+__global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs );
+__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const float *wlkrs, float *mNh, float *sNh );
+__global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh );
+__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

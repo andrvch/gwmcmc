@@ -16,6 +16,102 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  int v, w;
+  if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
+  {
+    gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+    sa = powf ( RNS, 2. );
+    xxout = log10f ( enrgChnnls[i] / gr );
+    yyout = wlkrs[tIndx+j*NPRS];
+    v = FindElementIndex ( xin, M1, xxout );
+    w = FindElementIndex ( yin, M2, yyout );
+    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
+    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
+    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
+    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
+    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
+    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa;
+  }
+}
+
+__global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  int v, w;
+  if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
+  {
+    gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+    sa = powf ( RNS, 2. );
+    xxout = log10f ( enrgChnnls[i] / gr );
+    yyout = wlkrs[tIndx+j*NPRS];
+    v = FindElementIndex ( xin, M1, xxout );
+    w = FindElementIndex ( yin, M2, yyout );
+    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
+    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
+    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
+    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
+    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
+    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 + 26.1787440 - xxout ) * sa;
+  }
+}
+
+__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const float *wlkrs, float *mNh, float *sNh )
+{
+  int w = threadIdx.x + blockDim.x * blockIdx.x;
+  float xxout, a, dmNh0, dmNh1, dsNh0, dsNh1, tmpMNh, tmpSNh;
+  int v;
+  if ( w < nmbrOfWlkrs )
+  {
+    xxout = wlkrs[dIndx+w*NPRS];
+    v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
+    a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
+    if ( v < nmbrOfDistBins ) dmNh0 = EBV[v]; else dmNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dmNh1 = EBV[v+1]; else dmNh1 = 0;
+    tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
+    if ( v < nmbrOfDistBins ) dsNh0 = errEBV[v]; else dsNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dsNh1 = errEBV[v+1]; else dsNh1 = 0;
+    tmpSNh = a * dsNh1 + ( -dsNh0 * a + dsNh0 );
+    tmpMNh = powf ( 10, tmpMNh );
+    tmpSNh = powf ( 10, tmpSNh );
+    mNh[w] = 0.8 * tmpMNh;
+    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) );
+  }
+}
+
+__global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh )
+{
+  int w = threadIdx.x + blockDim.x * blockIdx.x;
+  float xxout, a, dmNh0, dmNh1, tmpMNh;
+  int v;
+  if ( w < nmbrOfWlkrs )
+  {
+    xxout = wlkrs[dIndx+w*NPRS];
+    v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
+    a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
+    if ( v < nmbrOfDistBins ) dmNh0 = EBV[v]; else dmNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dmNh1 = EBV[v+1]; else dmNh1 = 0;
+    tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
+    tmpMNh = powf ( 10, tmpMNh );
+    mNh[w] = 0.7 * tmpMNh;
+    sNh[w] = 0.7 * tmpMNh * 0.1;
+  }
+}
+
 __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx )
 {
   int e = threadIdx.x + blockDim.x * blockIdx.x;
@@ -526,26 +622,6 @@ __global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt ) {
   }
 }
 
-__global__ void saveNumbers ( const int nbm, const int nwl, const int ist, const float *nt, float *numbers ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i + j * nbm;
-  if ( i < nbm && j < nwl ) {
-    numbers[t+ist*nbm*nwl] = nt[t];
-  }
-}
-
-__global__ void updateNumbers ( const int nbm, const int nwl, const float *nt1, const float *q, const float *r, float *nt0 ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i + j * nbm;
-  if ( i < nbm && j < nwl ) {
-    //if ( q[j] > r[j] ) {
-    nt0[t] = ( q[j] > r[j] ) * nt1[t] + ( q[j] <= r[j] ) * nt0[t];
-    //}
-  }
-}
-
 __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
@@ -713,31 +789,21 @@ __global__ void returnStatistic ( const int dim, const int nwl, const float *xx,
   }
 }
 
-__global__ void setWalkersAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *xx ) {
+__global__ void setWalkersAtLast ( const int dim, const int nwl, const float *lst, float *xx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    xx[t] = lst[i+j*(dim+1+nbm)];
+    xx[t] = lst[i+j*(dim+1)];
   }
 }
 
-__global__ void setStatisticAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *stt ) {
+__global__ void setStatisticAtLast ( const int dim, const int nwl, const float *lst, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    stt[i] = lst[dim+i*(dim+1+nbm)];
+    stt[i] = lst[dim+i*(dim+1)];
   }
 }
-
-__global__ void setNumbersAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *nt ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i + j * nbm;
-  if ( i < nbm && j < nwl ) {
-    nt[t] = lst[dim+1+i+j*(dim+1+nbm)];
-  }
-}
-
 
 __global__ void complexPointwiseMultiplyByConjugateAndScale ( const int nst, const int nwl, const float scl, Complex *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -1022,10 +1088,9 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
     //statistic0 ( cdp, chn );
     modelStatistic ( cdp, chn );
   } else {
-    readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst );
-    setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].xx );
-    setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].stt );
-    setNumbersAtLast <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].nt );
+    readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
+    setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
+    setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].stt );
   }
   return 0;
 }
@@ -1147,7 +1212,6 @@ __host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn ) {
   returnQM1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].prr1, chn[0].prr, chn[0].stt1, chn[0].stt, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx );
   updateStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt );
-  updateNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].nt1, chn[0].q, chn[0].ru, chn[0].nt );
   return 0;
 }
 
@@ -1167,7 +1231,6 @@ __host__ int streachUpdate ( const Cupar *cdp, Chain *chn ) {
 __host__ int saveCurrent ( Chain *chn ) {
   saveWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].ist, chn[0].xx, chn[0].smpls );
   saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].stt, chn[0].stat );
-  saveNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].ist, chn[0].nt, chn[0].numbers );
   return 0;
 }
 
@@ -1197,7 +1260,7 @@ __host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
   return 0;
 }
 
-__host__ void readLastFromFile ( const char *name, const int indx, const int dim, const int nwl, const int nbm, float *lst ) {
+__host__ void readLastFromFile ( const char *name, const int indx, const int dim, const int nwl, float *lst ) {
   FILE *fptr;
   char fl[FLEN_CARD];
   snprintf ( fl, sizeof ( fl ), "%s%i%s", name, indx, ".chain" );
@@ -1213,8 +1276,8 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   i = 0;
   int j;
   while ( fscanf ( fptr, "%e", &value ) == 1 ) {
-    if ( i >= n - ( dim + 1 + nbm ) * nwl ) {
-      j = i - ( n - ( dim + 1 + nbm ) * nwl );
+    if ( i >= n - ( dim + 1 ) * nwl ) {
+      j = i - ( n - ( dim + 1 ) * nwl );
       lst[j] = value;
     }
     i += 1;
@@ -1222,7 +1285,7 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   fclose ( fptr );
 }
 
-__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const int nbm, const float *smpls, const float *stat, const float *numbers ) {
+__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const float *smpls, const float *stat, const float *numbers ) {
   FILE *flPntr;
   char flNm[FLEN_CARD];
   int ttlChnIndx, stpIndx, wlkrIndx, prmtrIndx;
@@ -1236,11 +1299,6 @@ __host__ void writeChainToFile ( const char *name, const int indx, const int dim
       prmtrIndx = 0;
       while ( prmtrIndx < dim ) {
         fprintf ( flPntr, " %.8E ", smpls[prmtrIndx+ttlChnIndx] );
-        prmtrIndx += 1;
-      }
-      int nnn = prmtrIndx;
-      while ( prmtrIndx - nnn < nbm ) {
-        fprintf ( flPntr, " %.8E ", numbers[(prmtrIndx-nnn)+wlkrIndx*nbm+stpIndx*nwl*nbm] );
         prmtrIndx += 1;
       }
       fprintf ( flPntr, " %.8E\n", stat[wlkrIndx+stpIndx*nwl] );

@@ -42,20 +42,17 @@ int main ( int argc, char *argv[] ) {
   chn[0].dlt = 1.E-6;
   chn[0].nbm = atoi ( argv[7] );
 
-  readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+  //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
 
   allocateChain ( chn );
-  allocateTimes ( chn );
-
-  readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
-
-  chn[0].scale = chn[0].nph * logf ( chn[0].nbm ) + chn[0].nph * logf ( chn[0].nph * 1. ) - logf ( chn[0].nph * 1. ) - ( chn[0].nph + chn[0].nbm - 1. ) * logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. ) + logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. );
-
+  //allocateTimes ( chn );
+  //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
+  /*chn[0].scale = chn[0].nph * logf ( chn[0].nbm ) + chn[0].nph * logf ( chn[0].nph * 1. ) - logf ( chn[0].nph * 1. ) - ( chn[0].nph + chn[0].nbm - 1. ) * logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. ) + logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. );
   int sumsum = 0;
   for ( int i = 0; i < chn[0].nbm-2; i++ ) {
     sumsum += logf ( i + 2 );
   }
-  chn[0].scale = chn[0].scale + sumsum;
+  chn[0].scale = chn[0].scale + sumsum;*/
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].x0[0] = 3.362332;
@@ -84,9 +81,9 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  //initializeRandomForStreach ( cdp, chn );
+  initializeRandomForStreach ( cdp, chn );
   //initializeRandomForWalk ( cdp, chn );
-  initializeRandomForMetropolis ( cdp, chn );
+  //initializeRandomForMetropolis ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
@@ -94,10 +91,10 @@ int main ( int argc, char *argv[] ) {
     statisticMetropolis ( cdp, chn );
     metropolisUpdate ( cdp, chn );*/
     chn[0].isb = 0;
-    while ( chn[0].isb < chn[0].dim ) {
+    while ( chn[0].isb < 2 ) {
       //walkMove ( cdp, chn );
-      //streachMove ( cdp, chn );
-      metropolisMove ( cdp, chn );
+      streachMove ( cdp, chn );
+      //metropolisMove ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
       //statistic ( cdp, chn );
@@ -107,8 +104,8 @@ int main ( int argc, char *argv[] ) {
       //printMetropolisMove ( chn );
       //printMove ( chn );
       //walkUpdate ( cdp, chn );
-      //streachUpdate ( cdp, chn );
-      metropolisUpdate ( cdp, chn );
+      streachUpdate ( cdp, chn );
+      //metropolisUpdate ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisUpdate ( chn );
       //printUpdate ( chn );
@@ -153,11 +150,11 @@ int main ( int argc, char *argv[] ) {
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].nbm, chn[0].smpls, chn[0].stat, chn[0].numbers );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].numbers );
 
   destroyCuda ( cdp );
   freeChain ( chn );
-  freeTimes ( chn );
+  //freeTimes ( chn );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While
