@@ -16,6 +16,32 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ void FreeSpec ( const Spectrum *spc ) {
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    cudaFree ( spc[i].rmfVlsInCsc );
+    cudaFree ( spc[i].rmfIndxInCsc );
+    cudaFree ( spc[i].rmfPntrInCsc );
+    cudaFree ( spc[i].rmfVls );
+    cudaFree ( spc[i].rmfIndx );
+    cudaFree ( spc[i].rmfPntr );
+    cudaFree ( spc[i].enrgChnnls );
+    cudaFree ( spc[i].arfFctrs );
+    cudaFree ( spc[i].srcCnts );
+    cudaFree ( spc[i].bckgrndCnts );
+    cudaFree ( spc[i].gdQltChnnls );
+    cudaFree ( spc[i].lwrChnnlBndrs );
+    cudaFree ( spc[i].hghrChnnlBndrs );
+    cudaFree ( spc[i].crssctns );
+    cudaFree ( spc[i].absrptnFctrs );
+    cudaFree ( spc[i].mdlFlxs );
+    cudaFree ( spc[i].nsa1Flxs );
+    cudaFree ( spc[i].nsa2Flxs );
+    cudaFree ( spc[i].flddMdlFlxs );
+    cudaFree ( spc[i].chnnlSttstcs );
+    cudaFree ( spc[i].ntcdChnnls );
+  }
+}
+
 __host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns ) {
   int status = 0, versn = sgFlag, indx;
   for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
