@@ -17,6 +17,7 @@
 #define BACKIN 1
 #define NSPCTR 12
 #define ATNMR 18
+#define NELMS 30
 
 typedef float2 Complex;
 
