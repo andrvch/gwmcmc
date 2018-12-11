@@ -16,6 +16,16 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns ) {
+  int status = 0, versn = sgFlag, indx;
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+    for ( int j = 0; j < nmbrOfElmnts; j++ ) {
+      indx = j + i * nmbrOfElmnts;
+      crssctns[indx] = photo_ ( &enrgChnnls[i], &enrgChnnls[i+1], &atmcNmbrs[j], &versn, &status );
+    }
+  }
+}
+
 __global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls ) {
   int c = threadIdx.x + blockDim.x * blockIdx.x;
   if ( c < nmbrOfChnnls ) {
