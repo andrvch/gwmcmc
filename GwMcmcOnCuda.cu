@@ -48,7 +48,28 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[NNspec+5] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-6;
-  //chn[0].nbm = atoi ( argv[7] );
+  for ( int i = 0; i < 2; i++ )
+  {
+    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
+    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
+  }
+  for ( int i = 2; i < 6; i++ )
+  {
+    spc[i].lwrNtcdEnrg = lwrNtcdEnrg2;
+    spc[i].hghrNtcdEnrg = hghrNtcdEnrg2;
+  }
+  for ( int i = 6; i < 8; i++ )
+  {
+    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
+    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
+  }
+  for ( int i = 8; i < NSPCTR; i++ )
+  {
+    spc[i].lwrNtcdEnrg = lwrNtcdEnrg2;
+    spc[i].hghrNtcdEnrg = hghrNtcdEnrg2;
+  }
+
+  InitializeModel ( mdl );
 
   SpecInfo ( spcLst, verbose, spc );
   SpecAlloc ( chn, spc );
