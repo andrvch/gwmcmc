@@ -69,6 +69,26 @@ __global__ void arrayOfStat ( const int nbm, const float *mt, float *mstt ) {
   }
 }
 
+__global__ void saveNumbers ( const int nbm, const int nwl, const int ist, const float *nt, float *numbers ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * nbm;
+  if ( i < nbm && j < nwl ) {
+    numbers[t+ist*nbm*nwl] = nt[t];
+  }
+}
+
+__global__ void updateNumbers ( const int nbm, const int nwl, const float *nt1, const float *q, const float *r, float *nt0 ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * nbm;
+  if ( i < nbm && j < nwl ) {
+    //if ( q[j] > r[j] ) {
+    nt0[t] = ( q[j] > r[j] ) * nt1[t] + ( q[j] <= r[j] ) * nt0[t];
+    //}
+  }
+}
+
 __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
@@ -90,8 +110,8 @@ __host__ int modelStatistic1 ( const Cupar *cdp, Chain *chn ) {
   dim3 block3 ( 1024, 1, 1 );
   dim3 grid3 = grid3D ( chn[0].nph, chn[0].nbm, chn[0].nwl, block3 );
   arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx1, chn[0].atms, chn[0].nnt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nph, chn[0].nbm * chn[0].nwl, &alpha, chn[0].nnt, chn[0].nph, chn[0].pcnst, INCXX, &beta, chn[0].nt, INCYY );
-  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].scale, chn[0].nt, chn[0].mmt );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nph, chn[0].nbm * chn[0].nwl, &alpha, chn[0].nnt, chn[0].nph, chn[0].pcnst, INCXX, &beta, chn[0].nt1, INCYY );
+  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].scale, chn[0].nt1, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nwl, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt1, incyy );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
@@ -236,21 +256,31 @@ __global__ void returnStatistic ( const int dim, const int nwl, const float *xx,
   }
 }
 
-__global__ void setWalkersAtLast ( const int dim, const int nwl, const float *lst, float *xx ) {
+__global__ void setWalkersAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *xx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    xx[t] = lst[i+j*(dim+1)];
+    xx[t] = lst[i+j*(dim+1+nbm)];
   }
 }
 
-__global__ void setStatisticAtLast ( const int dim, const int nwl, const float *lst, float *stt ) {
+__global__ void setStatisticAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    stt[i] = lst[dim+i*(dim+1)];
+    stt[i] = lst[dim+i*(dim+1+nbm)];
   }
 }
+
+__global__ void setNumbersAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *nt ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * nbm;
+  if ( i < nbm && j < nwl ) {
+    nt[t] = lst[dim+1+i+j*(dim+1+nbm)];
+  }
+}
+
 
 __global__ void complexPointwiseMultiplyByConjugateAndScale ( const int nst, const int nwl, const float scl, Complex *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -512,6 +542,8 @@ __host__ int allocateTimes ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].nnt, chn[0].nph * chn[0].nbm * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].bnn, chn[0].nph * chn[0].nwl * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].nt, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].nt1, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].numbers, chn[0].nbm * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mmt, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mt, chn[0].nbm * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].mstt, chn[0].nbm * sizeof ( float ) );
@@ -533,9 +565,10 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
     //statistic0 ( cdp, chn );
     modelStatistic ( cdp, chn );
   } else {
-    readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
-    setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
-    setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].stt );
+    readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst );
+    setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].xx );
+    setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].stt );
+    setNumbersAtLast <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].nt );
   }
   return 0;
 }
@@ -657,6 +690,7 @@ __host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn ) {
   returnQM1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].prr1, chn[0].prr, chn[0].stt1, chn[0].stt, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx );
   updateStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt );
+  updateNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].nt1, chn[0].q, chn[0].ru, chn[0].nt );
   return 0;
 }
 
@@ -676,6 +710,7 @@ __host__ int streachUpdate ( const Cupar *cdp, Chain *chn ) {
 __host__ int saveCurrent ( Chain *chn ) {
   saveWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].ist, chn[0].xx, chn[0].smpls );
   saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].stt, chn[0].stat );
+  saveNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].ist, chn[0].nt, chn[0].numbers );
   return 0;
 }
 
@@ -705,7 +740,7 @@ __host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
   return 0;
 }
 
-__host__ void readLastFromFile ( const char *name, const int indx, const int dim, const int nwl, float *lst ) {
+__host__ void readLastFromFile ( const char *name, const int indx, const int dim, const int nwl, const int nbm, float *lst ) {
   FILE *fptr;
   char fl[FLEN_CARD];
   snprintf ( fl, sizeof ( fl ), "%s%i%s", name, indx, ".chain" );
@@ -721,8 +756,8 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   i = 0;
   int j;
   while ( fscanf ( fptr, "%e", &value ) == 1 ) {
-    if ( i >= n - ( dim + 1 ) * nwl ) {
-      j = i - ( n - ( dim + 1 ) * nwl );
+    if ( i >= n - ( dim + 1 + nbm ) * nwl ) {
+      j = i - ( n - ( dim + 1 + nbm ) * nwl );
       lst[j] = value;
     }
     i += 1;
@@ -730,7 +765,7 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   fclose ( fptr );
 }
 
-__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const float *smpls, const float *stat ) {
+__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const int nbm, const float *smpls, const float *stat, const float *numbers ) {
   FILE *flPntr;
   char flNm[FLEN_CARD];
   int ttlChnIndx, stpIndx, wlkrIndx, prmtrIndx;
@@ -744,6 +779,11 @@ __host__ void writeChainToFile ( const char *name, const int indx, const int dim
       prmtrIndx = 0;
       while ( prmtrIndx < dim ) {
         fprintf ( flPntr, " %.8E ", smpls[prmtrIndx+ttlChnIndx] );
+        prmtrIndx += 1;
+      }
+      int nnn = prmtrIndx;
+      while ( prmtrIndx - nnn < nbm ) {
+        fprintf ( flPntr, " %.8E ", numbers[(prmtrIndx-nnn)+wlkrIndx*nbm+stpIndx*nwl*nbm] );
         prmtrIndx += 1;
       }
       fprintf ( flPntr, " %.8E\n", stat[wlkrIndx+stpIndx*nwl] );
@@ -815,6 +855,8 @@ __host__ void freeTimes ( const Chain *chn ) {
   cudaFree ( chn[0].atms );
   cudaFree ( chn[0].nnt );
   cudaFree ( chn[0].nt );
+  cudaFree ( chn[0].nt1 );
+  cudaFree ( chn[0].numbers );
   cudaFree ( chn[0].mmt );
   cudaFree ( chn[0].mt );
   cudaFree ( chn[0].mstt );
