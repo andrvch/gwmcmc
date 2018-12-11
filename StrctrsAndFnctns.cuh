@@ -200,5 +200,11 @@ __host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const i
 __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV, float *errDist, float *errEBV );
 __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV );
 __host__ void FreeModel ( const Model *mdl );
-
+__host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr );
+__host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 );
+__host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, const float en1, const float en2 );
+__host__ __device__ float BlackBody ( const float kT, const float logRtD, const float enrgLwr, const float enrgHghr );
+__host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts );
+__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg );
+__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x );
 #endif // _STRCTRSANDFNCTNS_CUH_
