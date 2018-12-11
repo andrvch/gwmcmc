@@ -17,6 +17,11 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
+  const float lwrNtcdEnrg1 = 0.4;
+  const float hghrNtcdEnrg1 = 7.0;
+  const float lwrNtcdEnrg2 = 0.2;
+  const float hghrNtcdEnrg2 = 7.0;
+  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 3., 1.5, -5., 1.5, -5., 0.9, -5., 0.9, -5., 0.9, -5., 0.2 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -41,19 +46,19 @@ int main ( int argc, char *argv[] ) {
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
   const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
-  int NNspec = 2;
-  chn[0].name = argv[NNspec+2];
-  chn[0].nwl = atoi ( argv[NNspec+3] );
-  chn[0].nst = atoi ( argv[NNspec+4] );
-  chn[0].indx = atoi ( argv[NNspec+5] );
-  chn[0].dim = 2;
+  chn[0].name = argv[NSPCTR+2];
+  chn[0].nwl = atoi ( argv[NSPCTR+3] );
+  chn[0].nst = atoi ( argv[NSPCTR+4] );
+  chn[0].indx = atoi ( argv[NSPCTR+5] );
+  chn[0].dim = NPRS;
   chn[0].dlt = 1.E-6;
-  for ( int i = 0; i < 2; i++ )
+
+  for ( int i = 0; i < NSPCTR; i++ )
   {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
   }
-  for ( int i = 2; i < 6; i++ )
+  /*for ( int i = 2; i < 6; i++ )
   {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg2;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg2;
@@ -67,18 +72,19 @@ int main ( int argc, char *argv[] ) {
   {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg2;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg2;
-  }
+  }*/
 
   InitializeModel ( mdl );
 
-  SpecInfo ( spcLst, verbose, spc );
+  SpecInfo ( spcLst, vrb, spc );
   SpecAlloc ( chn, spc );
-  SpecData ( cdp, verbose, mdl, spc );
+  SpecData ( cdp, vrb, mdl, spc );
 
   allocateChain ( chn );
 
-  chn[0].x0[0] = 3.362332;
-  chn[0].x0[1] = 0.0;
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    chn[0].x0[i] = phbsPwrlwInt[i];
+  }
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].xbnd[0] = 2.0;
