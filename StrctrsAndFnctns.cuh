@@ -189,5 +189,8 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc );
 __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc );
 __host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc );
 __global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls );
+extern "C" float photo_ ( float*, float*, int*, int*, int* );
+extern "C" float gphoto_ ( float*, float*, int*, int* );
+__host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
