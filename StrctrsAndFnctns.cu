@@ -16,6 +16,112 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx )
+{
+  int e = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = e + w * nmbrOfEnrgChnnls;
+  float f = 0, Norm, intNsaFlx;
+  float scl = backscal_src / backscal_bkg;
+  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
+  {
+    if ( spIndx == 0 )
+    {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      Norm = powf ( 10., 2. * ( wlk[RINDX1+w*NPRS] + KMCMPCCM ) );
+      f = f + Norm * intNsaFlx;
+      f = f + PowerLaw ( wlk[3+w*NPRS], wlk[4+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[7+w*NPRS], wlk[8+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 1 )
+    {
+      f = f + PowerLaw ( wlk[7+w*NPRS], wlk[8+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 2 )
+    {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      Norm = powf ( 10., 2. * ( wlk[RINDX1+w*NPRS] + KMCMPCCM ) );
+      f = f + Norm * intNsaFlx;
+      f = f + PowerLaw ( wlk[3+w*NPRS], wlk[4+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk9+w*NPRS], wlk[10+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 3 )
+    {
+      f = f + PowerLaw ( wlk[9+w*NPRS], wlk[10+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 4 )
+    {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., 2. * ( wlk[w].par[RINDX1] - log10f ( RNS ) - wlk[w].par[DINDX1] + KMCMPCCM ) );
+      Norm = powf ( 10., 2. * ( wlk[RINDX1+w*NPRS] + KMCMPCCM ) );
+      f = f + Norm * intNsaFlx;
+      f = f + PowerLaw ( wlk[3+w*NPRS], wlk[4+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[11+w*NPRS], wlk[12+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 5 )
+    {
+      f = f + PowerLaw ( wlk[11+w*NPRS], wlk[12+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 6 )
+    {
+      f = f + PowerLaw ( wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[7+w*NPRS], wlk[8+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 7 )
+    {
+      f = f + PowerLaw ( wlk[7+w*NPRS], wlk[8+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 8 )
+    {
+      f = f + PowerLaw ( wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[9+w*NPRS], wlk[10+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 9 )
+    {
+      f = f + PowerLaw ( wlk[9+w*NPRS], wlk[10+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 10 )
+    {
+      f = f + PowerLaw ( wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[11+w*NPRS], wlk[12+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 11 )
+    {
+      f = f + PowerLaw ( wlk[11+w*NPRS], wlk[12+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+  }
+}
+
+__host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker *wlkrs, const int indx, Spectrum spec )
+{
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  AssembleArrayOfAbsorptionFactors <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, ATNMR, spec.crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, wlkrs, spec.absrptnFctrs );
+  BilinearInterpolationNsmax <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  //BilinearInterpolation <<< Grid ( spec.nmbrOfEnrgChnnls+1, nmbrOfWlkrs ), dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spec.enrgChnnls, wlkrs, spec.nsa1Flxs );
+  AssembleArrayOfModelFluxes <<< Grid ( spec.nmbrOfEnrgChnnls, nmbrOfWlkrs ), dimBlock >>> ( indx, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.backscal_src, spec.backscal_bkg, spec.enrgChnnls, spec.arfFctrs, spec.absrptnFctrs, wlkrs, spec.nsa1Flxs, spec.mdlFlxs );
+  return 0;
+}
+
 __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr )
 {
   float flx;
@@ -166,7 +272,7 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
       prIndx = elIndx + NHINDX;
       crIndx = elIndx + enIndx * nmbrOfElmnts;
       effElIndx = atmcNmbrs[elIndx] - 1;
-      nh = wlkrs[prIndx+wlIndx*nmbrOfWlkrs] * 1.E22;
+      nh = wlkrs[prIndx+wlIndx*NPRS] * 1.E22;
       clmn = abndncs[effElIndx];
       xsctn = clmn * crssctns[crIndx];
       elIndx = 1;
