@@ -199,5 +199,6 @@ __host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int 
 __host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes );
 __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV, float *errDist, float *errEBV );
 __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV );
+__host__ void FreeModel ( const Model *mdl );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
