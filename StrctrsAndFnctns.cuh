@@ -207,4 +207,7 @@ __host__ __device__ float BlackBody ( const float kT, const float logRtD, const 
 __host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts );
 __host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg );
 __host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x );
+__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const float *wlkrs, float *absrptnFctrs );
+__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs );
+
 #endif // _STRCTRSANDFNCTNS_CUH_

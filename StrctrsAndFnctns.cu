@@ -16,6 +16,71 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const float *wlkrs, float *absrptnFctrs ) {
+  int enIndx = threadIdx.x + blockDim.x * blockIdx.x;
+  int wlIndx = threadIdx.y + blockDim.y * blockIdx.y;
+  int ttIndx = enIndx + wlIndx * nmbrOfEnrgChnnls;
+  int elIndx, effElIndx, crIndx, prIndx;
+  float xsctn, clmn, nh;
+  if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) )
+  {
+    if ( NHINDX == NPRS-1 )
+    {
+      elIndx = 0;
+      prIndx = elIndx + NHINDX;
+      crIndx = elIndx + enIndx * nmbrOfElmnts;
+      effElIndx = atmcNmbrs[elIndx] - 1;
+      nh = wlkrs[prInd+wlIndx*nmbrOfWlkrs] * 1.E22;
+      clmn = abndncs[effElIndx];
+      xsctn = clmn * crssctns[crIndx];
+      elIndx = 1;
+      while ( elIndx < nmbrOfElmnts )
+      {
+        prIndx = elIndx + NHINDX;
+        crIndx = elIndx + enIndx * nmbrOfElmnts;
+        effElIndx = atmcNmbrs[elIndx] - 1;
+        clmn = abndncs[effElIndx]; // * powf ( 10, wlkrs[wlIndx].par[prIndx] );
+        xsctn = xsctn + clmn * crssctns[crIndx];
+        elIndx += 1;
+      }
+      absrptnFctrs[ttIndx] = expf ( - nh * xsctn );
+    }
+    else if ( NHINDX == NPRS )
+    {
+      absrptnFctrs[ttIndx] = 1;
+    }
+  }
+}
+
+__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
+{
+  int c = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = c + w * nmbrOfChnnls;
+  if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
+  {
+    //chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
+    chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
+  }
+}
+
+__host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns ) {
+  int status = 0, versn = sgFlag, indx;
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+    for ( int j = 0; j < nmbrOfElmnts; j++ ) {
+      indx = j + i * nmbrOfElmnts;
+      crssctns[indx] = photo_ ( &enrgChnnls[i], &enrgChnnls[i+1], &atmcNmbrs[j], &versn, &status );
+    }
+  }
+}
+
+__global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls ) {
+  int c = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( c < nmbrOfChnnls ) {
+    ntcdChnnls[c] = ( lwrChnnlBndrs[c] > lwrNtcdEnrg ) * ( hghrChnnlBndrs[c] < hghrNtcdEnrg ) * ( 1 - gdQltChnnls[c] );
+  }
+}
+
 __host__ int InitializeModel ( Model *mdl ) {
   cudaMallocManaged ( ( void ** ) &mdl[0].atmcNmbrs, ATNMR * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].abndncs, ( NELMS + 1 ) * sizeof ( float ) );
@@ -67,23 +132,6 @@ __host__ void FreeSpec ( const Spectrum *spc ) {
     cudaFree ( spc[i].flddMdlFlxs );
     cudaFree ( spc[i].chnnlSttstcs );
     cudaFree ( spc[i].ntcdChnnls );
-  }
-}
-
-__host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns ) {
-  int status = 0, versn = sgFlag, indx;
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
-    for ( int j = 0; j < nmbrOfElmnts; j++ ) {
-      indx = j + i * nmbrOfElmnts;
-      crssctns[indx] = photo_ ( &enrgChnnls[i], &enrgChnnls[i+1], &atmcNmbrs[j], &versn, &status );
-    }
-  }
-}
-
-__global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls ) {
-  int c = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( c < nmbrOfChnnls ) {
-    ntcdChnnls[c] = ( lwrChnnlBndrs[c] > lwrNtcdEnrg ) * ( hghrChnnlBndrs[c] < hghrNtcdEnrg ) * ( 1 - gdQltChnnls[c] );
   }
 }
 
