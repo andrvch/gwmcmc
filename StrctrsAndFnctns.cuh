@@ -51,6 +51,18 @@ struct Chain {
   int *bnn;
 };
 
+struct Spectrum {
+  char *spcLst[NSPCTR];
+  char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
+  float lwrNtcdEnrg, hghrNtcdEnrg;
+  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
+  float srcExptm, bckgrndExptm;
+  float backscal_src, backscal_bkg;
+  int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
+  float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
+  float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
+  float *nsa1Flxs, *nsa2Flxs;
+};
 
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
