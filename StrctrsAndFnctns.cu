@@ -122,6 +122,31 @@ __host__ int ModelFluxes ( const Model *mdl, const int nmbrOfWlkrs, const Walker
   return 0;
 }
 
+__host__ int Stat ( const int nmbrOfWlkrs, Spectrum spec )
+{
+  dim3 dimBlock ( THRDSPERBLCK, THRDSPERBLCK );
+  dim3 dimGrid = Grid ( spec.nmbrOfChnnls, nmbrOfWlkrs );
+  AssembleArrayOfChannelStatistics <<< dimGrid, dimBlock >>> ( nmbrOfWlkrs, spec.nmbrOfChnnls, spec.srcExptm, spec.bckgrndExptm, spec.backscal_src, spec.backscal_bkg, spec.srcCnts, spec.bckgrndCnts, spec.flddMdlFlxs, spec.chnnlSttstcs );
+  return 0;
+}
+
+__host__ int SumUpStat ( Cuparam *cdp, const float beta, const int nmbrOfWlkrs, float *sttstcs, const Spectrum spec )
+{
+  float alpha = ALPHA;
+  cdp[0].cublasStat = cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spec.nmbrOfChnnls, nmbrOfWlkrs, &alpha, spec.chnnlSttstcs, spec.nmbrOfChnnls, spec.ntcdChnnls, INCXX, &beta, sttstcs, INCYY );
+  if ( cdp[0].cublasStat != CUBLAS_STATUS_SUCCESS ) { fprintf ( stderr, " CUBLAS error: Matrix-vector multiplication failed 0 " ); return 1; }
+  return 0;
+}
+
+__host__ int FoldModel ( Cuparam *cdp, const int nmbrOfWlkrs, Spectrum spec )
+{
+  float alpha = ALPHA, beta = BETA;
+  cdp[0].cusparseStat = cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spec.nmbrOfChnnls, nmbrOfWlkrs, spec.nmbrOfEnrgChnnls, spec.nmbrOfRmfVls, &alpha, cdp[0].MatDescr, spec.rmfVls, spec.rmfPntr, spec.rmfIndx, spec.mdlFlxs, spec.nmbrOfEnrgChnnls, &beta, spec.flddMdlFlxs, spec.nmbrOfChnnls );
+  if ( cdp[0].cusparseStat != CUSPARSE_STATUS_SUCCESS ) { fprintf ( stderr, " CUSPARSE error: Matrix-matrix multiplication failed yes " ); return 1; }
+  return 0;
+}
+
+
 __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr )
 {
   float flx;
