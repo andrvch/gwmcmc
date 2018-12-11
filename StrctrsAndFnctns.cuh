@@ -12,7 +12,7 @@
 #define INCYY 1
 #define THRDS 32
 #define RANK 1
-#define NPRS 2 // Number of parameters
+#define NPRS 7 // Number of parameters
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
 #define NSPCTR 12
@@ -25,6 +25,7 @@
 #define KMCMPCCM -13.48935060694014384023e0f
 #define LOGPLANCK 26.1787440e0f
 #define NHINDX NPRS-1
+#define RINDX1 1
 
 typedef float2 Complex;
 
