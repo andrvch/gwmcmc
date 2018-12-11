@@ -16,6 +16,28 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ void FreeModel ( const Model *mdl )
+{
+  cudaFree ( mdl[0].atmcNmbrs );
+  cudaFree ( mdl[0].abndncs );
+  cudaFree ( mdl[0].RedData );
+  cudaFree ( mdl[0].Dist );
+  cudaFree ( mdl[0].EBV );
+  cudaFree ( mdl[0].errDist );
+  cudaFree ( mdl[0].errEBV );
+  cudaFree ( mdl[0].RedData1 );
+  cudaFree ( mdl[0].Dist1 );
+  cudaFree ( mdl[0].EBV1 );
+  cudaFree ( mdl[0].nsaDt );
+  cudaFree ( mdl[0].nsaT );
+  cudaFree ( mdl[0].nsaE );
+  cudaFree ( mdl[0].nsaFlxs );
+  cudaFree ( mdl[0].nsmaxgDt );
+  cudaFree ( mdl[0].nsmaxgT );
+  cudaFree ( mdl[0].nsmaxgE );
+  cudaFree ( mdl[0].nsmaxgFlxs );
+}
+
 __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs )
 {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
