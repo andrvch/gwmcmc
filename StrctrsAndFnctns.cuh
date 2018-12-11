@@ -66,6 +66,36 @@ struct Spectrum {
   float *nsa1Flxs, *nsa2Flxs;
 };
 
+struct Model
+{
+  int sgFlg = 3; // Xset.xsect = "bcmc"
+  const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
+  //const char *abndncsFl = "WilmAbundances.dat"; // Xset.abund = "wilm"
+  const int atNm[ATNMR] = { 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 20, 24, 26, 27, 28 };
+  int *atmcNmbrs;
+  float *abndncs;
+  const char *rddnngFl = "reddeningJ0633.dat";
+  const int nmbrOfDistBins = 442;
+  const int numRedCol = 4;
+  float *RedData, *Dist, *EBV, *errDist, *errEBV;
+  const char *rddnngFl1 = "Green15.dat";
+  const int nmbrOfDistBins1 = 1000;
+  const int numRedCol1 = 2;
+  float *RedData1, *Dist1, *EBV1;
+  const char *nsaFl = "nsa_spec_B_1e12G.dat";
+  int numNsaE = 1000;
+  int numNsaT = 14;
+  float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
+  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
+  int numNsmaxgE = 117;
+  int numNsmaxgT = 14;
+  float *nsmaxgDt, *nsmaxgE, *nsmaxgT, *nsmaxgFlxs;
+};
+
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
 __host__ dim3 block2D ();
