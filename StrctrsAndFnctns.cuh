@@ -158,7 +158,7 @@ __host__ int allocateTimes ( Chain* );
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
-__host__ int initializeChain ( Cupar*, Chain* );
+__host__ int initializeChain ( Cupar*, Chain*, Model *mdl, Spectrum *spc );
 __host__ int initializeRandomForWalk ( Cupar*, Chain* );
 __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
@@ -220,5 +220,7 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
 __global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh );
 __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx );
 __global__ void returnQ1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, const float *zr, float *q );
+__host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc );
+__host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
