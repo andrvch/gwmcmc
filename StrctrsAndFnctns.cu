@@ -1305,21 +1305,11 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int t = e + w * nmbrOfEnrgChnnls;
   float f = 0, Norm, intNsaFlx;
   float scl = backscal_src / backscal_bkg;
-  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
-  {
-    if ( spIndx == 0 )
-    {
+  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) ) {
+    if ( spIndx == 0 ) {
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., 2. * ( wlk[RINDX1+w*NPRS] + KMCMPCCM ) );
-      f = f + Norm * intNsaFlx;
-      f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 1 )
-    {
-      f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
@@ -1725,6 +1715,20 @@ __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int num
     EBV[j] = log10f ( data[2*j+1] );
   }
   fclose ( flPntr );
+}
+
+
+__host__ int printSpec ( const Spectrum *spc ) {
+  printf ( " spectra -- "  );
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    printf ( " -- "  );
+    printf ( "\n" );
+    for ( int j = 0; j < spc[0].nmbrOfEnrgChnnls; j++ ) {
+        printf ( " %2.4f ", spc[i].mdlFlxs[j] );
+    }
+    printf ( "\n" );
+  }
+  return 0;
 }
 
 

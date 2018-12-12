@@ -104,15 +104,16 @@ int main ( int argc, char *argv[] ) {
       //statistic ( cdp, chn );
       modelStatistic1 ( cdp, mdl, chn, spc );
       //statisticMetropolis ( cdp, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
-      //printMove ( chn );
+      printMove ( chn );
+      printSpec ( spc );
       //walkUpdate ( cdp, chn );
       streachUpdate ( cdp, chn );
       //metropolisUpdate ( cdp, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
       //printMetropolisUpdate ( chn );
-      //printUpdate ( chn );
+      printUpdate ( chn );
       chn[0].isb += 1;
     }
     saveCurrent ( chn );
