@@ -17,9 +17,9 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
-  const float lwrNtcdEnrg1 = 0.3;
+  const float lwrNtcdEnrg1 = 0.4;
   const float hghrNtcdEnrg1 = 7.0;
-  const float phbsPwrlwInt[NPRS] = { 5.6, 3.0, 1.1, -5.5, 1.1, -5.5, 1.75, -4.75, 3.0, 0.19 };
+  const float phbsPwrlwInt[NPRS] = { 5.6, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 0.19 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -72,8 +72,8 @@ int main ( int argc, char *argv[] ) {
   //for ( int i = 0; i < chn[0].dim; i++ ) {s
   chn[0].xbnd[0] = 5.55;
   chn[0].xbnd[1] = 6.5;
-  chn[0].xbnd[2] = 1.;
-  chn[0].xbnd[3] = 4.;
+  chn[0].xbnd[2] = -10.; //log10f ( 0.5 );
+  chn[0].xbnd[3] = 10; //log10f ( 1.3 );
   chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
   chn[0].xbnd[6] = -25.;
@@ -86,10 +86,8 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[13] = 25.;
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
-  chn[0].xbnd[16] = 1.;
-  chn[0].xbnd[17] = 4.;
-  chn[0].xbnd[18] = 0.01;
-  chn[0].xbnd[19] = 2.0;
+  chn[0].xbnd[16] = 0.0;
+  chn[0].xbnd[17] = 2.0;
 
   //}
 
@@ -126,7 +124,7 @@ int main ( int argc, char *argv[] ) {
       //printMove ( chn );
       //printSpec ( spc );
       //walkUpdate ( cdp, chn );
-      streachUpdate ( cdp, chn );
+      streachUpdate ( cdp, chn, mdl );
       //metropolisUpdate ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisUpdate ( chn );
@@ -172,7 +170,7 @@ int main ( int argc, char *argv[] ) {
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors, chn[0].dist );
 
   destroyCuda ( cdp );
   freeChain ( chn );

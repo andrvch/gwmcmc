@@ -12,7 +12,7 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 10 // Number of parameters
+#define NPRS 9 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 1.5f // Goodman-Weare "a" constant
@@ -61,6 +61,7 @@ struct Chain {
   float *atms, *nnt, *nt, *nt1, *numbers, *mmt, *mt, *mstt, *prr, *prr1, *prr0, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
   float *sigma;
   int *bnn;
+  float *didi, *didi0, *dist, *didi1;
 };
 
 struct Spectrum {
@@ -97,8 +98,8 @@ struct Model
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
   //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
-  const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
-  //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
   int numNsmaxgE = 117;
@@ -151,10 +152,10 @@ __host__ int walkMove ( const Cupar*, Chain* );
 __host__ int streachMove ( const Cupar*, Chain* );
 __host__ int statistic ( const Cupar*, Chain* );
 __host__ int walkUpdate ( const Cupar*, Chain* );
-__host__ int streachUpdate ( const Cupar*, Chain* );
+__host__ int streachUpdate ( const Cupar*, Chain*, Model* );
 __host__ int saveCurrent ( Chain* );
 __host__ void readLastFromFile ( const char*, const int, const int, const int, float* );
-__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float*, const float* );
+__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float*, const float*, const float* );
 __host__ int destroyCuda ( const Cupar* );
 __host__ void freeChain ( const Chain* );
 __host__ void simpleReadDataFloat ( const char*, float* );
@@ -185,7 +186,7 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
 __global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs );
 __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const float *wlkrs, float *mNh, float *sNh );
 __global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh );
-__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx );
+__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float* );
 __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc );
 __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc );
 __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr );
@@ -214,5 +215,7 @@ __host__ int printSpec ( const Spectrum *spc );
 __global__ void returnQ1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, const float *zr, float *q );
 __global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, const float *nhMd, const float *nhSg, const float *xx, float *pr );
 __global__ void setPriorAtLast ( const int dim, const int nwl, const float *lst, float *prr );
+__global__ void ReverseLinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *dist );
+__global__ void setDistanceAtLast ( const int dim, const int nwl, const float *lst, float *didi );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
