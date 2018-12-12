@@ -19,7 +19,7 @@ int main ( int argc, char *argv[] ) {
   const int vrb = 1;
   const float lwrNtcdEnrg1 = 0.3;
   const float hghrNtcdEnrg1 = 7.0;
-  const float phbsPwrlwInt[NPRS] = { 5.6, 3.0, 1.1, -5.5, 1.75, -4.75, 3.0, 0.19 };
+  const float phbsPwrlwInt[NPRS] = { 5.6, 3.0, 1.1, -5.5, 1.1, -5.5, 1.75, -4.75, 3.0, 0.19 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -38,7 +38,9 @@ int main ( int argc, char *argv[] ) {
   Chain chn[1];
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  const char *spcFl3 = argv[4];
+  const char *spcFl4 = argv[5];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 };
   //spcLst[0] = spcFl1;
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
@@ -80,10 +82,14 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[9] = 25.;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
-  chn[0].xbnd[12] = 1.;
-  chn[0].xbnd[13] = 4.;
-  chn[0].xbnd[14] = 0.01;
-  chn[0].xbnd[15] = 2.0;
+  chn[0].xbnd[12] = -25.;
+  chn[0].xbnd[13] = 25.;
+  chn[0].xbnd[14] = -25.;
+  chn[0].xbnd[15] = 25.;
+  chn[0].xbnd[16] = 1.;
+  chn[0].xbnd[17] = 4.;
+  chn[0].xbnd[18] = 0.01;
+  chn[0].xbnd[19] = 2.0;
 
   //}
 

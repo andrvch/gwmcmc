@@ -1361,12 +1361,24 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
     if ( spIndx == 1 )
     {
+      f = f + PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 2 )
+    {
       f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 3 )
+    {
+      f = f + PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }
