@@ -18,7 +18,7 @@
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 2
+#define NSPCTR 1
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
@@ -54,7 +54,7 @@ struct Chain {
   char *name;
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
-  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt;
+  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt, *priors;
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
   cufftComplex *ftOfChn;
   int mmm;
@@ -154,7 +154,7 @@ __host__ int walkUpdate ( const Cupar*, Chain* );
 __host__ int streachUpdate ( const Cupar*, Chain* );
 __host__ int saveCurrent ( Chain* );
 __host__ void readLastFromFile ( const char*, const int, const int, const int, float* );
-__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float* );
+__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float*, const float* );
 __host__ int destroyCuda ( const Cupar* );
 __host__ void freeChain ( const Chain* );
 __host__ void simpleReadDataFloat ( const char*, float* );
@@ -211,5 +211,6 @@ __host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const i
 __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV, float *errDist, float *errEBV );
 __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV );
 __host__ int printSpec ( const Spectrum *spc );
+__global__ void returnQ1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, const float *zr, float *q );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

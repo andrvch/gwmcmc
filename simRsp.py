@@ -13,8 +13,8 @@ Xset.xsect = "bcmc"
 name = sys.argv[1]
 time = float(sys.argv[2])
 num = int(sys.argv[3])
-AllModels += "nsmax*phabs"
-pars = (6.0, 1.21, 1230, (15/1)**2, 0.15)
+AllModels += "powerlaw*phabs"
+pars = (1.5, 1.E-3, 0.15)
 AllModels(1).setPars(pars)
 for i in range(num):
     fs1 = FakeitSettings(response=name+".rmf", arf=name+".arf", fileName=name+"_"+"%1i"%(i)+".fak", exposure=time)

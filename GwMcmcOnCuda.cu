@@ -19,7 +19,7 @@ int main ( int argc, char *argv[] ) {
   const int vrb = 1;
   const float lwrNtcdEnrg1 = 0.4;
   const float hghrNtcdEnrg1 = 7.0;
-  const float phbsPwrlwInt[NPRS] = { 6.0, 1., 0.2 };
+  const float phbsPwrlwInt[NPRS] = { 1.9, -1., 0.5 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -37,14 +37,15 @@ int main ( int argc, char *argv[] ) {
 
   Chain chn[1];
   const char *spcFl1 = argv[2];
-  const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  //const char *spcFl2 = argv[3];
+  const char *spcLst[NSPCTR];
+  spcLst[0] = spcFl1;
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
   chn[0].nst = atoi ( argv[NSPCTR+4] );
   chn[0].indx = atoi ( argv[NSPCTR+5] );
   chn[0].dim = NPRS;
-  chn[0].dlt = 1.E-2;
+  chn[0].dlt = 1.E-3;
 
   Model mdl[1];
   Spectrum spc[NSPCTR];
@@ -67,12 +68,12 @@ int main ( int argc, char *argv[] ) {
   }
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {s
-  chn[0].xbnd[TINDX*2] = 5.5;
-  chn[0].xbnd[TINDX*2+1] = 6.5;
-  chn[0].xbnd[RINDX1*2] = -INF;
-  chn[0].xbnd[RINDX1*2+1] = INF;
-  chn[0].xbnd[NHINDX*2] = 0;
-  chn[0].xbnd[NHINDX*2+1] = INF;
+  chn[0].xbnd[0] = 0.0;
+  chn[0].xbnd[1] = 6.5;
+  chn[0].xbnd[2] = -INF;
+  chn[0].xbnd[3] = INF;
+  chn[0].xbnd[4] = 0.0;
+  chn[0].xbnd[5] = INF;
 
   //}
 
@@ -104,16 +105,16 @@ int main ( int argc, char *argv[] ) {
       //statistic ( cdp, chn );
       modelStatistic1 ( cdp, mdl, chn, spc );
       //statisticMetropolis ( cdp, chn );
-      cudaDeviceSynchronize ();
+      //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
-      printMove ( chn );
-      printSpec ( spc );
+      //printMove ( chn );
+      //printSpec ( spc );
       //walkUpdate ( cdp, chn );
       streachUpdate ( cdp, chn );
       //metropolisUpdate ( cdp, chn );
-      cudaDeviceSynchronize ();
+      //cudaDeviceSynchronize ();
       //printMetropolisUpdate ( chn );
-      printUpdate ( chn );
+      //printUpdate ( chn );
       chn[0].isb += 1;
     }
     saveCurrent ( chn );
@@ -155,7 +156,7 @@ int main ( int argc, char *argv[] ) {
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors );
 
   destroyCuda ( cdp );
   freeChain ( chn );
