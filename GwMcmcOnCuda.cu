@@ -17,6 +17,9 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
+  const float lwrNtcdEnrg1 = 0.4;
+  const float hghrNtcdEnrg1 = 7.0;
+  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 1.5, -5., 1.5, -5., 0.2 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -42,7 +45,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[NSPCTR+5] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
-  
+
   Model mdl[1];
   Spectrum spc[NSPCTR];
 
@@ -50,7 +53,6 @@ int main ( int argc, char *argv[] ) {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
     spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
   }
-
 
   InitializeModel ( mdl );
 
@@ -145,6 +147,8 @@ int main ( int argc, char *argv[] ) {
 
   destroyCuda ( cdp );
   freeChain ( chn );
+  FreeModel ( mdl );
+  FreeSpec ( spc );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While
