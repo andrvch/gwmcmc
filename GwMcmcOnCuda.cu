@@ -19,8 +19,6 @@ int main ( int argc, char *argv[] ) {
   const int vrb = 1;
   const float lwrNtcdEnrg1 = 0.4;
   const float hghrNtcdEnrg1 = 7.0;
-  const float lwrNtcdEnrg2 = 0.2;
-  const float hghrNtcdEnrg2 = 7.0;
   const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 1.5, -5., 1.5, -5., 0.2 };
 
   Cupar cdp[1];
@@ -75,9 +73,9 @@ int main ( int argc, char *argv[] ) {
 
   InitializeModel ( mdl );
 
-  SpecInfo ( spcLst, vrb, spc );
-  SpecAlloc ( chn, spc );
-  SpecData ( cdp, vrb, mdl, spc );
+  //SpecInfo ( spcLst, vrb, spc );
+  //SpecAlloc ( chn, spc );
+  //SpecData ( cdp, vrb, mdl, spc );
 
   allocateChain ( chn );
 
@@ -85,7 +83,7 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0[i] = phbsPwrlwInt[i];
   }
 
-  //for ( int i = 0; i < chn[0].dim; i++ ) {s
+  /*//for ( int i = 0; i < chn[0].dim; i++ ) {s
   chn[0].xbnd[TINDX*2] = 5.5;
   chn[0].xbnd[TINDX*2+1] = 6.5;
   chn[0].xbnd[RINDX1*2] = log10 ( 8. / 13. / 6000. );
@@ -99,7 +97,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[5*2] = -INF;
   chn[0].xbnd[5*2+1] = INF;
   chn[0].xbnd[NHINDX*2] = 0;
-  chn[0].xbnd[NHINDX*2+1] = INF;
+  chn[0].xbnd[NHINDX*2+1] = INF;*/
 
   //}
 
@@ -116,30 +114,15 @@ int main ( int argc, char *argv[] ) {
   //initializeRandomForWalk ( cdp, chn );
   //initializeRandomForMetropolis ( cdp, chn );
 
+
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
-    /*metropolisMove ( cdp, chn );
-    statisticMetropolis ( cdp, chn );
-    metropolisUpdate ( cdp, chn );*/
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
-      //walkMove ( cdp, chn );
       streachMove ( cdp, chn );
-      //metropolisMove ( cdp, chn );
-      //cudaDeviceSynchronize ();
-      //printMetropolisMove ( chn );
-      //statistic ( cdp, chn );
-      //statisticMetropolis ( cdp, chn );
-      modelStatistic1 ( cdp, mdl, chn, spc );
-      //cudaDeviceSynchronize ();
-      //printMetropolisMove ( chn );
-      //printMove ( chn );
-      //walkUpdate ( cdp, chn );
+      statistic ( cdp, chn );
+      //modelStatistic1 ( cdp, mdl, chn, spc );
       streachUpdate ( cdp, chn );
-      //metropolisUpdate ( cdp, chn );
-      //cudaDeviceSynchronize ();
-      //printMetropolisUpdate ( chn );
-      //printUpdate ( chn );
       chn[0].isb += 1;
     }
     saveCurrent ( chn );
@@ -162,7 +145,7 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  averagedAutocorrelationFunction ( cdp, chn );
+  //averagedAutocorrelationFunction ( cdp, chn );
 
   cudaEventRecord ( cdp[0].stop, 0 );
   cudaEventSynchronize ( cdp[0].stop );
@@ -179,14 +162,14 @@ int main ( int argc, char *argv[] ) {
   }
 
   /* Write results to a file */
-  simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
-  simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].numbers );
+  //simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
+  //simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
 
   destroyCuda ( cdp );
   freeChain ( chn );
   FreeModel ( mdl );
-  FreeSpec ( spc );
+  //FreeSpec ( spc );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While
