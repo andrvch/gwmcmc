@@ -261,14 +261,14 @@ __global__ void setWalkersAtLast ( const int dim, const int nwl, const int nbm, 
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    xx[t] = lst[i+j*(dim+1+nbm)];
+    xx[t] = lst[i+j*(dim+1+nbm+1)];
   }
 }
 
 __global__ void setStatisticAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    stt[i] = lst[dim+i*(dim+1+nbm)];
+    stt[i] = lst[dim+nbm+i*(dim+1+nbm+1)];
   }
 }
 
@@ -277,9 +277,17 @@ __global__ void setNumbersAtLast ( const int dim, const int nwl, const int nbm, 
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * nbm;
   if ( i < nbm && j < nwl ) {
-    nt[t] = lst[dim+1+i+j*(dim+1+nbm)];
+    nt[t] = lst[dim+i+j*(dim+1+nbm+1)];
   }
 }
+
+__global__ void setPriorAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *prr ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nwl ) {
+    prr[i] = lst[dim+nbm+1+i*(dim+1+nbm+1)];
+  }
+}
+
 
 
 __global__ void complexPointwiseMultiplyByConjugateAndScale ( const int nst, const int nwl, const float scl, Complex *a ) {
@@ -361,7 +369,11 @@ __global__ void returnQM ( const int dim, const int n, const float *s1, const fl
 __global__ void returnQM1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    q[i] = expf ( - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) );
+    if ( p1[i] == INF ) {
+      q[i] = 0.0;
+    } else {
+      q[i] = expf ( - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) );
+    }
   }
 }
 
@@ -531,6 +543,7 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prr, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].prr1, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].prior, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xbnd, chn[0].dim * 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cnd, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
@@ -569,6 +582,7 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].xx );
     setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].stt );
     setNumbersAtLast <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].nt );
+    setPriorAtLast <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst, chn[0].prr );
   }
   return 0;
 }
@@ -691,6 +705,7 @@ __host__ int metropolisUpdate ( const Cupar *cdp, Chain *chn ) {
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx );
   updateStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt );
   updateNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].nt1, chn[0].q, chn[0].ru, chn[0].nt );
+  updateStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].prr1, chn[0].q, chn[0].ru, chn[0].prr );
   return 0;
 }
 
@@ -711,6 +726,7 @@ __host__ int saveCurrent ( Chain *chn ) {
   saveWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].ist, chn[0].xx, chn[0].smpls );
   saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].stt, chn[0].stat );
   saveNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].ist, chn[0].nt, chn[0].numbers );
+  saveNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].ist, chn[0].prr, chn[0].prior );
   return 0;
 }
 
@@ -756,8 +772,8 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   i = 0;
   int j;
   while ( fscanf ( fptr, "%e", &value ) == 1 ) {
-    if ( i >= n - ( dim + 1 + nbm ) * nwl ) {
-      j = i - ( n - ( dim + 1 + nbm ) * nwl );
+    if ( i >= n - ( dim + 1 + nbm + 1 ) * nwl ) {
+      j = i - ( n - ( dim + 1 + nbm + 1 ) * nwl );
       lst[j] = value;
     }
     i += 1;
@@ -765,7 +781,7 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   fclose ( fptr );
 }
 
-__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const int nbm, const float *smpls, const float *stat, const float *numbers ) {
+__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const int nbm, const float *smpls, const float *stat, const float *numbers, const float *prr ) {
   FILE *flPntr;
   char flNm[FLEN_CARD];
   int ttlChnIndx, stpIndx, wlkrIndx, prmtrIndx;
@@ -786,7 +802,9 @@ __host__ void writeChainToFile ( const char *name, const int indx, const int dim
         fprintf ( flPntr, " %.8E ", numbers[(prmtrIndx-nnn)+wlkrIndx*nbm+stpIndx*nwl*nbm] );
         prmtrIndx += 1;
       }
-      fprintf ( flPntr, " %.8E\n", stat[wlkrIndx+stpIndx*nwl] );
+      fprintf ( flPntr, " %.8E ", stat[wlkrIndx+stpIndx*nwl] );
+      prmtrIndx += 1;
+      fprintf ( flPntr, " %.8E\n", prr[wlkrIndx+stpIndx*nwl] );
       wlkrIndx += 1;
     }
     stpIndx += 1;
@@ -846,6 +864,7 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].sstt );
   cudaFree ( chn[0].prr );
   cudaFree ( chn[0].prr1 );
+  cudaFree ( chn[0].prior );
   cudaFree ( chn[0].cnd );
   cudaFree ( chn[0].ccnd );
   cudaFree ( chn[0].xbnd );

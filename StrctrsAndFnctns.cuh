@@ -45,7 +45,7 @@ struct Chain {
   cufftComplex *ftOfChn;
   int mmm;
   int nph, nbm;
-  float *atms, *nnt, *nt, *nt1, *numbers, *mmt, *mt, *mstt, *prr, *prr1, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
+  float *atms, *nnt, *nt, *nt1, *numbers, *mmt, *mt, *mstt, *prr, *prr1, *xbnd, *ccnd, *cnd, *bcnst, *pcnst, *prior;
   float *sigma;
   int *bnn;
 };
@@ -117,7 +117,7 @@ __host__ int walkUpdate ( const Cupar*, Chain* );
 __host__ int streachUpdate ( const Cupar*, Chain* );
 __host__ int saveCurrent ( Chain* );
 __host__ void readLastFromFile ( const char*, const int, const int, const int, const int, float* );
-__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const int, const float*, const float*, const float* );
+__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const int, const float*, const float*, const float*, const float *prr );
 __host__ int destroyCuda ( const Cupar* );
 __host__ void freeChain ( const Chain* );
 __host__ void freeTimes ( const Chain* );
@@ -137,5 +137,6 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn );
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
+__global__ void setPriorAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *prr );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
