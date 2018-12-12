@@ -212,5 +212,6 @@ __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, fl
 __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV );
 __host__ int printSpec ( const Spectrum *spc );
 __global__ void returnQ1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, const float *zr, float *q );
+__global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, const float *nhMd, const float *nhSg, const float *xx, float *pr );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

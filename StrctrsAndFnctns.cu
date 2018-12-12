@@ -1374,7 +1374,8 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
+  arrayOfPriors  <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
+  arrayOfPriors1 <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, const float *nhMd, const float *nhSg, chn[0].xx1, chn[0].prr1 );
   return 0;
 }
 
@@ -1667,6 +1668,17 @@ __global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, c
     pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
   }
 }
+
+__global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, const float *nhMd, const float *nhSg, const float *xx, float *pr ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  float sum;
+  if ( i < nwl ) {
+    sum = powf ( ( xx[NHINDX+i*nwl] - nhMd[i] ) / nhSg[i], 2 )
+    pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
+  }
+}
+
+sum = sum + powf ( ( wlkr.par[NHINDX] - nhMd ) / nhSg, 2 );
 
 __host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes ) {
   FILE *flPntr;
