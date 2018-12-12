@@ -27,9 +27,9 @@ __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float 
 
 __global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, const float *xx, float *pr ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  float sum = 2. * logf ( 2 * xx[0+i*dim] );
+  float sum = 0;
   if ( i < nwl ) {
-    pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
+    pr[i] = ( cn[i] == dim ) * sum * 1. + ( cn[i] < dim ) * INF;
   }
 }
 
@@ -726,7 +726,7 @@ __host__ int saveCurrent ( Chain *chn ) {
   saveWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].ist, chn[0].xx, chn[0].smpls );
   saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].stt, chn[0].stat );
   saveNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].ist, chn[0].nt, chn[0].numbers );
-  saveNumbers <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nbm, chn[0].nwl, chn[0].ist, chn[0].prr, chn[0].prior );
+  saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].prr, chn[0].prior );
   return 0;
 }
 
