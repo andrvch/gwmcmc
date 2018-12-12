@@ -202,4 +202,7 @@ __host__ void FreeSpec ( const Spectrum *spc );
 extern "C" float photo_ ( float*, float*, int*, int*, int* );
 extern "C" float gphoto_ ( float*, float*, int*, int* );
 
+__global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *bn, const float *xx, float *cc );
+__global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, const float *xx, float *pr );
+
 #endif // _STRCTRSANDFNCTNS_CUH_
