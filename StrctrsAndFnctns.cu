@@ -1342,9 +1342,9 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   float scl = backscal_src / backscal_bkg;
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) ) {
     if ( spIndx == 0 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., 2. * ( wlk[RINDX1+w*NPRS] + KMCMPCCM ) );
-      f = f + PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //Norm * intNsaFlx;
+      //intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., 2. * ( wlk[RINDX1+w*NPRS] + KMCMPCCM ) );
+      f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //Norm * intNsaFlx;
       f = f * absrptn[t];
       flx[t] = f * arf[e];
     }
@@ -1420,7 +1420,7 @@ __host__ __device__ float BlackBody ( const float kT, const float logRtD, const 
   float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
   t = kT;
   tinv = 1. / t;
-  anorm = 1.0344e-3f * 1e8f * powf ( 10, 2 * logRtD ) ;
+  anorm = 1.0344e-3f  * powf ( 10, logRtD ) ;//* 1e8f
   anormh = 0.5 * anorm;
   elow = enrgLwr;
   x = elow * tinv;
