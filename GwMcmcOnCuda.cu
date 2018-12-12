@@ -43,7 +43,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
 
-  
+
 
   allocateChain ( chn );
 
