@@ -1374,7 +1374,8 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  arrayOfPriors  <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
+  //arrayOfPriors  <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
+  LinearInterpolationNoErrors <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].nwl/2, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx1, nhMd, nhSg );
   arrayOfPriors1 <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, const float *nhMd, const float *nhSg, chn[0].xx1, chn[0].prr1 );
   return 0;
 }
