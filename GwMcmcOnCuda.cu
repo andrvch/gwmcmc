@@ -19,7 +19,7 @@ int main ( int argc, char *argv[] ) {
   const int vrb = 1;
   const float lwrNtcdEnrg1 = 0.4;
   const float hghrNtcdEnrg1 = 7.0;
-  const float phbsPwrlwInt[NPRS] = { 6.0, log10f ( 1. / 1000. ), 1.5, -5., 1.5, -5., 0.2 };
+  const float phbsPwrlwInt[NPRS] = { 6.0, 1., 0.2 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -69,22 +69,14 @@ int main ( int argc, char *argv[] ) {
   //for ( int i = 0; i < chn[0].dim; i++ ) {s
   chn[0].xbnd[TINDX*2] = 5.5;
   chn[0].xbnd[TINDX*2+1] = 6.5;
-  chn[0].xbnd[RINDX1*2] = log10 ( 8. / 13. / 6000. );
-  chn[0].xbnd[RINDX1*2+1] = log10f ( 20. / 13. / 100. );
-  chn[0].xbnd[2*2] = -INF;
-  chn[0].xbnd[2*2+1] = INF;
-  chn[0].xbnd[3*2] = -INF;
-  chn[0].xbnd[3*2+1] = INF;
-  chn[0].xbnd[4*2] = -INF;
-  chn[0].xbnd[4*2+1] = INF;
-  chn[0].xbnd[5*2] = -INF;
-  chn[0].xbnd[5*2+1] = INF;
+  chn[0].xbnd[RINDX1*2] = -INF;
+  chn[0].xbnd[RINDX1*2+1] = INF;
   chn[0].xbnd[NHINDX*2] = 0;
   chn[0].xbnd[NHINDX*2+1] = INF;
 
   //}
 
-  initializeChain ( cdp, chn );
+  initializeChain ( cdp, chn, mdl, spc );
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
@@ -109,7 +101,8 @@ int main ( int argc, char *argv[] ) {
       //metropolisMove ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
-      statistic ( cdp, chn );
+      //statistic ( cdp, chn );
+      modelStatistic1 ( cdp, mdl, chn, spc );
       //statisticMetropolis ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );

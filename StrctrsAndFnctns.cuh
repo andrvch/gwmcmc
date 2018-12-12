@@ -12,13 +12,13 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 7 // Number of parameters
+#define NPRS 3 // Number of parameters
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 2
+#define NSPCTR 1
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
@@ -144,7 +144,7 @@ __global__ void metropolisPoposal2 ( const int, const int, const int, const floa
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
-__host__ int initializeChain ( Cupar*, Chain* );
+__host__ int initializeChain ( Cupar*, Chain*, Model *mdl, Spectrum *spc );
 __host__ int initializeRandomForWalk ( Cupar*, Chain* );
 __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
