@@ -18,8 +18,8 @@
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
   const float lwrNtcdEnrg1 = 0.3;
-  const float hghrNtcdEnrg1 = 3.0;
-  const float phbsPwrlwInt[NPRS] = { 5.7, -6., 0.1 };
+  const float hghrNtcdEnrg1 = 7.0;
+  const float phbsPwrlwInt[NPRS] = { 5.7, -6., 1.5, -5., 1.5, -5., 0.1 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -72,8 +72,16 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[1] = 6.5;
   chn[0].xbnd[2] = -25.;
   chn[0].xbnd[3] = 25.;
-  chn[0].xbnd[4] = 0.0;
-  chn[0].xbnd[5] = 2.0;
+  chn[0].xbnd[4] = -25.;
+  chn[0].xbnd[5] = 25.;
+  chn[0].xbnd[6] = -25.;
+  chn[0].xbnd[7] = 25.;
+  chn[0].xbnd[8] = -25.;
+  chn[0].xbnd[9] = 25.;
+  chn[0].xbnd[10] = -25.;
+  chn[0].xbnd[11] = 25.;
+  chn[0].xbnd[12] = 0.0;
+  chn[0].xbnd[13] = 2.0;
 
   //}
 
