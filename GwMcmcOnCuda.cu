@@ -43,7 +43,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
   chn[0].nst = atoi ( argv[NSPCTR+4] );
   chn[0].indx = atoi ( argv[NSPCTR+5] );
-  chn[0].dim = 2;
+  chn[0].dim = NPRS;
   chn[0].dlt = 1.E-2;
 
   Model mdl[1];
@@ -63,8 +63,26 @@ int main ( int argc, char *argv[] ) {
   allocateChain ( chn );
 
   for ( int i = 0; i < chn[0].dim; i++ ) {
-    chn[0].x0[i] = 1.;
+    chn[0].x0[i] = phbsPwrlwInt[i];
   }
+
+  //for ( int i = 0; i < chn[0].dim; i++ ) {s
+  chn[0].xbnd[TINDX*2] = 5.5;
+  chn[0].xbnd[TINDX*2+1] = 6.5;
+  chn[0].xbnd[RINDX1*2] = log10 ( 8. / 13. / 6000. );
+  chn[0].xbnd[RINDX1*2+1] = log10f ( 20. / 13. / 100. );
+  chn[0].xbnd[2*2] = -INF;
+  chn[0].xbnd[2*2+1] = INF;
+  chn[0].xbnd[3*2] = -INF;
+  chn[0].xbnd[3*2+1] = INF;
+  chn[0].xbnd[4*2] = -INF;
+  chn[0].xbnd[4*2+1] = INF;
+  chn[0].xbnd[5*2] = -INF;
+  chn[0].xbnd[5*2+1] = INF;
+  chn[0].xbnd[NHINDX*2] = 0;
+  chn[0].xbnd[NHINDX*2+1] = INF;
+
+  //}
 
   initializeChain ( cdp, chn );
 
