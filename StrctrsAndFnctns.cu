@@ -1172,4 +1172,439 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   return 0;
 }
 
+__host__ void FreeModel ( const Model *mdl )
+{
+  cudaFree ( mdl[0].atmcNmbrs );
+  cudaFree ( mdl[0].abndncs );
+  cudaFree ( mdl[0].RedData );
+  cudaFree ( mdl[0].Dist );
+  cudaFree ( mdl[0].EBV );
+  cudaFree ( mdl[0].errDist );
+  cudaFree ( mdl[0].errEBV );
+  cudaFree ( mdl[0].RedData1 );
+  cudaFree ( mdl[0].Dist1 );
+  cudaFree ( mdl[0].EBV1 );
+  cudaFree ( mdl[0].nsaDt );
+  cudaFree ( mdl[0].nsaT );
+  cudaFree ( mdl[0].nsaE );
+  cudaFree ( mdl[0].nsaFlxs );
+  cudaFree ( mdl[0].nsmaxgDt );
+  cudaFree ( mdl[0].nsmaxgT );
+  cudaFree ( mdl[0].nsmaxgE );
+  cudaFree ( mdl[0].nsmaxgFlxs );
+}
+
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  int v, w;
+  if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
+  {
+    gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+    sa = powf ( RNS, 2. );
+    xxout = log10f ( enrgChnnls[i] / gr );
+    yyout = wlkrs[tIndx+j*NPRS];
+    v = FindElementIndex ( xin, M1, xxout );
+    w = FindElementIndex ( yin, M2, yyout );
+    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
+    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
+    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
+    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
+    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
+    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa;
+  }
+}
+
+__global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs )
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  int v, w;
+  if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
+  {
+    gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+    sa = powf ( RNS, 2. );
+    xxout = log10f ( enrgChnnls[i] / gr );
+    yyout = wlkrs[tIndx+j*NPRS];
+    v = FindElementIndex ( xin, M1, xxout );
+    w = FindElementIndex ( yin, M2, yyout );
+    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
+    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
+    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
+    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
+    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
+    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 + 26.1787440 - xxout ) * sa;
+  }
+}
+
+__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const float *wlkrs, float *mNh, float *sNh )
+{
+  int w = threadIdx.x + blockDim.x * blockIdx.x;
+  float xxout, a, dmNh0, dmNh1, dsNh0, dsNh1, tmpMNh, tmpSNh;
+  int v;
+  if ( w < nmbrOfWlkrs )
+  {
+    xxout = wlkrs[dIndx+w*NPRS];
+    v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
+    a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
+    if ( v < nmbrOfDistBins ) dmNh0 = EBV[v]; else dmNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dmNh1 = EBV[v+1]; else dmNh1 = 0;
+    tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
+    if ( v < nmbrOfDistBins ) dsNh0 = errEBV[v]; else dsNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dsNh1 = errEBV[v+1]; else dsNh1 = 0;
+    tmpSNh = a * dsNh1 + ( -dsNh0 * a + dsNh0 );
+    tmpMNh = powf ( 10, tmpMNh );
+    tmpSNh = powf ( 10, tmpSNh );
+    mNh[w] = 0.8 * tmpMNh;
+    sNh[w] = 0.8 * tmpMNh * ( powf ( tmpSNh / tmpMNh, 2 ) + powf ( 0.3 / 0.8, 2 ) );
+  }
+}
+
+__global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh )
+{
+  int w = threadIdx.x + blockDim.x * blockIdx.x;
+  float xxout, a, dmNh0, dmNh1, tmpMNh;
+  int v;
+  if ( w < nmbrOfWlkrs )
+  {
+    xxout = wlkrs[dIndx+w*NPRS];
+    v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
+    a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
+    if ( v < nmbrOfDistBins ) dmNh0 = EBV[v]; else dmNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dmNh1 = EBV[v+1]; else dmNh1 = 0;
+    tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
+    tmpMNh = powf ( 10, tmpMNh );
+    mNh[w] = 0.7 * tmpMNh;
+    sNh[w] = 0.7 * tmpMNh * 0.1;
+  }
+}
+
+__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx )
+{
+  int e = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = e + w * nmbrOfEnrgChnnls;
+  float f = 0, Norm, intNsaFlx;
+  float scl = backscal_src / backscal_bkg;
+  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) )
+  {
+    if ( spIndx == 0 )
+    {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      Norm = powf ( 10., 2. * ( wlk[RINDX1+w*NPRS] + KMCMPCCM ) );
+      f = f + Norm * intNsaFlx;
+      f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 1 )
+    {
+      f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+  }
+}
+
+__host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA, beta1 = 1.;
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx1, spc[i].absrptnFctrs );
+    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx1, spc[i].nsa1Flxs );
+    AssembleArrayOfModelFluxes <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl/2 ), block2D () >>> ( i, chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx1, spc[i].nsa1Flxs, spc[i].mdlFlxs );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfChnnls, chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, &alpha, cdp[0].MatDescr, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls );
+    AssembleArrayOfChannelStatistics <<< grid2D ( spc[i].nmbrOfChnnls, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfChnnls, chn[0].nwl/2, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, &beta1, chn[0].stt1, INCYY );
+  }
+  arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
+  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
+  return 0;
+}
+
+__host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA, beta1 = 1.;
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx, spc[i].absrptnFctrs );
+    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, TINDX, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
+    AssembleArrayOfModelFluxes <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].mdlFlxs );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfChnnls, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfRmfVls, &alpha, cdp[0].MatDescr, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls );
+    AssembleArrayOfChannelStatistics <<< grid2D ( spc[i].nmbrOfChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfChnnls, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, &beta1, chn[0].stt, INCYY );
+  }
+  arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
+  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
+  return 0;
+}
+
+__host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr )
+{
+  float flx;
+  if ( fabsf ( 1 - phtnIndx ) > TLR )
+  {
+    flx = powf ( 10, nrmlztn ) * ( powf ( enrgHghr, 1 - phtnIndx ) - powf ( enrgLwr, 1 - phtnIndx ) ) / ( 1 - phtnIndx );
+  }
+  else
+  {
+    flx = powf ( 10, nrmlztn ) * ( logf ( enrgHghr ) - logf ( enrgLwr ) );
+  }
+  return flx;
+}
+
+__host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 )
+{
+  float flx;
+  flx = 0.5 * ( flx1 + flx2 ) * ( en2 - en1 );
+  return flx;
+}
+
+__host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, const float en1, const float en2 )
+{
+  float flx;
+  float gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+  flx = gr * powf ( 10, 26.1787440 ) * 0.5 * ( flx1 / en1 + flx2 / en2 ) * ( en2 - en1 );
+  return flx;
+}
+
+__host__ __device__ float BlackBody ( const float kT, const float logRtD, const float enrgLwr, const float enrgHghr )
+{
+  float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
+  t = kT;
+  tinv = 1. / t;
+  anorm = 1.0344e-3f * 1e8f * powf ( 10, 2 * logRtD ) ;
+  anormh = 0.5 * anorm;
+  elow = enrgLwr;
+  x = elow * tinv;
+  if ( x <= 1.0e-4f )
+  {
+    alow = elow * t;
+  }
+  else if ( x > 60.0 )
+  {
+    flx = 0;
+    return flx;
+  }
+  else
+  {
+    alow = elow * elow / ( expf ( x ) - 1.0e0f );
+  }
+  ehi = enrgHghr;
+  x = ehi * tinv;
+  if ( x <= 1.0e-4f )
+  {
+    ahi = ehi * t;
+  }
+  else if ( x > 60.0 )
+  {
+    flx = 0;
+    return flx;
+  }
+  else
+  {
+    ahi = ehi * ehi / ( expf ( x ) - 1.0e0f );
+  }
+  flx = anormh * ( alow + ahi ) * ( ehi - elow );
+  return flx;
+}
+
+__host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts )
+{
+  float sttstc = 0;
+  if ( scnts != 0 && ts * mdl >= TLR )
+  {
+    sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
+  }
+  else if ( scnts != 0 && ts * mdl < TLR )
+  {
+    sttstc = TLR - scnts * logf ( TLR ) - scnts * ( 1 - logf ( scnts ) );
+  }
+  else
+  {
+    sttstc = ts * mdl;
+  }
+  sttstc = 2 * sttstc;
+  return sttstc;
+}
+
+__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )
+{
+  float sttstc = 0, d, f;
+  float scls = 1;
+  float sclb = backscal_bkg / backscal_src;
+  d = sqrtf ( powf ( ( ts * scls + tb * sclb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts * scls + tb * sclb ) * bcnts * mdl );
+  f = ( scnts + bcnts - ( ts * scls + tb * sclb ) * mdl + d ) / 2 / ( ts * scls + tb * sclb );
+  if ( scnts != 0 && bcnts != 0 )
+  {
+    sttstc = ts * mdl + ts * scls * f  + tb * sclb * f - scnts * logf ( ts * mdl + ts * scls * f ) - bcnts * logf ( tb * sclb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
+  }
+  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts * scls + tb * sclb ) )
+  {
+    sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
+  }
+  else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts * scls + tb * sclb ) )
+  {
+    sttstc = ts * ( 1 - scls ) * mdl - tb * sclb * mdl - scnts * logf ( ts * ( 1 - scls ) * mdl + ts * scls * scnts / ( ts * scls + tb * sclb ) ) + scnts * logf ( scnts );
+  }
+  else if ( scnts == 0 && bcnts != 0 )
+  {
+    sttstc = ts * mdl - bcnts * logf ( tb * sclb / ( ts * scls + tb * sclb ) );
+  }
+  else if ( scnts == 0 && bcnts == 0 )
+  {
+    sttstc = ts * mdl;
+  }
+  sttstc = 2 * sttstc;
+  return sttstc;
+}
+
+__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x )
+{
+  int ju, jm, jl, jres;
+  jl = 0;
+  ju = n;
+  while ( ju - jl > 1 )
+  {
+    jm = floorf ( 0.5 * ( ju + jl ) );
+    if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
+  }
+  jres = jl;
+  if ( x == xx[0] ) jres = 0;
+  if ( x >= xx[n-1] ) jres = n - 1;
+  return jres;
+}
+
+__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const float *wlkrs, float *absrptnFctrs ) {
+  int enIndx = threadIdx.x + blockDim.x * blockIdx.x;
+  int wlIndx = threadIdx.y + blockDim.y * blockIdx.y;
+  int ttIndx = enIndx + wlIndx * nmbrOfEnrgChnnls;
+  int elIndx, effElIndx, crIndx, prIndx;
+  float xsctn, clmn, nh;
+  if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) )
+  {
+    if ( NHINDX == NPRS-1 )
+    {
+      elIndx = 0;
+      prIndx = elIndx + NHINDX;
+      crIndx = elIndx + enIndx * nmbrOfElmnts;
+      effElIndx = atmcNmbrs[elIndx] - 1;
+      nh = wlkrs[prIndx+wlIndx*NPRS] * 1.E22;
+      clmn = abndncs[effElIndx];
+      xsctn = clmn * crssctns[crIndx];
+      elIndx = 1;
+      while ( elIndx < nmbrOfElmnts )
+      {
+        prIndx = elIndx + NHINDX;
+        crIndx = elIndx + enIndx * nmbrOfElmnts;
+        effElIndx = atmcNmbrs[elIndx] - 1;
+        clmn = abndncs[effElIndx]; // * powf ( 10, wlkrs[wlIndx].par[prIndx] );
+        xsctn = xsctn + clmn * crssctns[crIndx];
+        elIndx += 1;
+      }
+      absrptnFctrs[ttIndx] = expf ( - nh * xsctn );
+    }
+    else if ( NHINDX == NPRS )
+    {
+      absrptnFctrs[ttIndx] = 1;
+    }
+  }
+}
+
+__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
+{
+  int c = threadIdx.x + blockDim.x * blockIdx.x;
+  int w = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = c + w * nmbrOfChnnls;
+  if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
+  {
+    //chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
+    chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
+  }
+}
+
+__host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns ) {
+  int status = 0, versn = sgFlag, indx;
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+    for ( int j = 0; j < nmbrOfElmnts; j++ ) {
+      indx = j + i * nmbrOfElmnts;
+      crssctns[indx] = photo_ ( &enrgChnnls[i], &enrgChnnls[i+1], &atmcNmbrs[j], &versn, &status );
+    }
+  }
+}
+
+__global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls ) {
+  int c = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( c < nmbrOfChnnls ) {
+    ntcdChnnls[c] = ( lwrChnnlBndrs[c] > lwrNtcdEnrg ) * ( hghrChnnlBndrs[c] < hghrNtcdEnrg ) * ( 1 - gdQltChnnls[c] );
+  }
+}
+
+__host__ int InitializeModel ( Model *mdl ) {
+  cudaMallocManaged ( ( void ** ) &mdl[0].atmcNmbrs, ATNMR * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].abndncs, ( NELMS + 1 ) * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].RedData, mdl[0].nmbrOfDistBins * mdl[0].numRedCol * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].Dist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].EBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].RedData1, mdl[0].nmbrOfDistBins1 * mdl[0].numRedCol1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].Dist1, mdl[0].nmbrOfDistBins1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].EBV1, mdl[0].nmbrOfDistBins1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].errDist, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].errEBV, mdl[0].nmbrOfDistBins * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaE, mdl[0].numNsaE * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaT, mdl[0].numNsaT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsaFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgE, mdl[0].numNsaE * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgT, mdl[0].numNsaT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
+  for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
+  simpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
+  SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
+  SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl1, mdl[0].nmbrOfDistBins1, mdl[0].RedData1, mdl[0].Dist1, mdl[0].EBV1 );
+  SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
+  SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
+  return 0;
+}
+
+__host__ void FreeSpec ( const Spectrum *spc ) {
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    cudaFree ( spc[i].rmfVlsInCsc );
+    cudaFree ( spc[i].rmfIndxInCsc );
+    cudaFree ( spc[i].rmfPntrInCsc );
+    cudaFree ( spc[i].rmfVls );
+    cudaFree ( spc[i].rmfIndx );
+    cudaFree ( spc[i].rmfPntr );
+    cudaFree ( spc[i].enrgChnnls );
+    cudaFree ( spc[i].arfFctrs );
+    cudaFree ( spc[i].srcCnts );
+    cudaFree ( spc[i].bckgrndCnts );
+    cudaFree ( spc[i].gdQltChnnls );
+    cudaFree ( spc[i].lwrChnnlBndrs );
+    cudaFree ( spc[i].hghrChnnlBndrs );
+    cudaFree ( spc[i].crssctns );
+    cudaFree ( spc[i].absrptnFctrs );
+    cudaFree ( spc[i].mdlFlxs );
+    cudaFree ( spc[i].nsa1Flxs );
+    cudaFree ( spc[i].nsa2Flxs );
+    cudaFree ( spc[i].flddMdlFlxs );
+    cudaFree ( spc[i].chnnlSttstcs );
+    cudaFree ( spc[i].ntcdChnnls );
+  }
+}
+
+
 #endif // _STRCTRSANDFNCTNS_CU_
