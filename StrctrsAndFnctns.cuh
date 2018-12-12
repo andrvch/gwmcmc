@@ -59,6 +59,9 @@ struct Chain {
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
   cufftComplex *ftOfChn;
   int mmm;
+  float *atms, *nnt, *nt, *nt1, *numbers, *mmt, *mt, *mstt, *prr, *prr1, *prr0, *xbnd, *ccnd, *cnd, *bcnst, *pcnst;
+  float *sigma;
+  int *bnn;
 };
 
 struct Spectrum {
