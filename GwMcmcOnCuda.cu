@@ -42,16 +42,21 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[NSPCTR+5] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
-
+  
   Model mdl[1];
   Spectrum spc[NSPCTR];
+
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
+    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
+  }
+
 
   InitializeModel ( mdl );
 
   SpecInfo ( spcLst, vrb, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, vrb, mdl, spc );
-
 
   allocateChain ( chn );
 
