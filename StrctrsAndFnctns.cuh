@@ -199,5 +199,7 @@ __host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChn
 __global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls );
 __host__ int InitializeModel ( Model *mdl );
 __host__ void FreeSpec ( const Spectrum *spc );
+extern "C" float photo_ ( float*, float*, int*, int*, int* );
+extern "C" float gphoto_ ( float*, float*, int*, int* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
