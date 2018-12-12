@@ -21,7 +21,7 @@ __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float 
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    cc[t] = ( bn[0+i*2] <= xx[t] ) * ( xx[t] < bn[1+i*2] );
+    cc[t] = ( bn[0+i*2] < xx[t] ) * ( xx[t] < bn[1+i*2] );
   }
 }
 
@@ -369,10 +369,8 @@ __global__ void returnQM ( const int dim, const int n, const float *s1, const fl
 __global__ void returnQM1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    if ( p1[i] == INF || - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) < -10. ) {
+    if ( p1[i] == INF ) {
       q[i] = 0.0;
-    } else if ( - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) > 10. ) {
-      q[i] = 1.E10;
     } else {
       q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
     }

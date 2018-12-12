@@ -58,13 +58,13 @@ int main ( int argc, char *argv[] ) {
   chn[0].scale = chn[0].scale + sumsum;
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].x0[0] = 3.362332;
+  chn[0].x0[0] = 3.3625;
   chn[0].x0[1] = 0.5*1./chn[0].nbm;
   //}
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].xbnd[0] = 2.0;
-  chn[0].xbnd[1] = 4.0;
+  chn[0].xbnd[0] = 0.0;
+  chn[0].xbnd[1] = 10.0;
   chn[0].xbnd[2] = 0.0;
   chn[0].xbnd[3] = 1./chn[0].nbm;
   //}
