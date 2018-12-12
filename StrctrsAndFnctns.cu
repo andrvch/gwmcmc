@@ -1606,5 +1606,21 @@ __host__ void FreeSpec ( const Spectrum *spc ) {
   }
 }
 
+__global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *bn, const float *xx, float *cc ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    cc[t] = ( bn[0+i*2] <= xx[t] ) * ( xx[t] < bn[1+i*2] );
+  }
+}
+
+__global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, const float *xx, float *pr ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  float sum = 2. * logf ( 2 * xx[0+i*dim] );
+  if ( i < nwl ) {
+    pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
+  }
+}
 
 #endif // _STRCTRSANDFNCTNS_CU_
