@@ -19,7 +19,7 @@ int main ( int argc, char *argv[] ) {
   const int vrb = 1;
   const float lwrNtcdEnrg1 = 0.3;
   const float hghrNtcdEnrg1 = 7.0;
-  const float phbsPwrlwInt[NPRS] = { 5.7, -6., 1.5, -5., 1.5, -5., 0.1 };
+  const float phbsPwrlwInt[NPRS] = { 5.6, 3.0, 1.1, -5.5, 1.75, -4.75, 3.0, 0.19 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -45,7 +45,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nst = atoi ( argv[NSPCTR+4] );
   chn[0].indx = atoi ( argv[NSPCTR+5] );
   chn[0].dim = NPRS;
-  chn[0].dlt = 1.E-3;
+  chn[0].dlt = 1.E-6;
 
   Model mdl[1];
   Spectrum spc[NSPCTR];
@@ -70,8 +70,8 @@ int main ( int argc, char *argv[] ) {
   //for ( int i = 0; i < chn[0].dim; i++ ) {s
   chn[0].xbnd[0] = 5.55;
   chn[0].xbnd[1] = 6.5;
-  chn[0].xbnd[2] = -25.;
-  chn[0].xbnd[3] = 25.;
+  chn[0].xbnd[2] = 1.;
+  chn[0].xbnd[3] = 4.;
   chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
   chn[0].xbnd[6] = -25.;
@@ -80,8 +80,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[9] = 25.;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
-  chn[0].xbnd[12] = 0.0;
-  chn[0].xbnd[13] = 2.0;
+  chn[0].xbnd[12] = 1.;
+  chn[0].xbnd[13] = 4.;
+  chn[0].xbnd[14] = 0.01;
+  chn[0].xbnd[15] = 2.0;
 
   //}
 

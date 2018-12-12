@@ -121,6 +121,13 @@ __global__ void setStatisticAtLast ( const int dim, const int nwl, const float *
   }
 }
 
+__global__ void setPriorAtLast ( const int dim, const int nwl, const float *lst, float *prr ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nwl ) {
+    prr[i] = lst[dim+1+i*(dim+1+1)];
+  }
+}
+
 __global__ void complexPointwiseMultiplyByConjugateAndScale ( const int nst, const int nwl, const float scl, Complex *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -193,14 +200,15 @@ __global__ void returnQ ( const int dim, const int n, const float *s1, const flo
 __global__ void returnQ1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, const float *zr, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    if ( p1[i] == INF ) {
+    if ( p1[i] == INF || - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) < -10. ) {
       q[i] = 0.0;
+    } else if ( - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) > 10. ) {
+      q[i] = 1.E10;
     } else {
       q[i] = expf ( - 0.5 * ( s1[i] + p1[i] - s0[i] - p0[i] ) ) * powf ( zr[i], dim - 1 );
     }
   }
 }
-
 
 __global__ void returnQM ( const int dim, const int n, const float *s1, const float *s0, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -370,6 +378,8 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].xbnd, chn[0].dim * 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cnd, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].nhMd, chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].nhSg, chn[0].nwl * sizeof ( float ) );
   return 0;
 }
 
@@ -386,6 +396,7 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn, Model *mdl, Spectrum *spc
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
     setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].stt );
+    setPriorAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].prr );
   }
   return 0;
 }
@@ -660,6 +671,8 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].stn1 );
   cudaFree ( chn[0].rr );
   cudaFree ( chn[0].sstt );
+  cudaFree ( chn[0].nhMd );
+  cudaFree ( chn[0].nhSg );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
@@ -1343,7 +1356,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) ) {
     if ( spIndx == 0 ) {
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      Norm = powf ( 10., - 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
       //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
@@ -1375,8 +1388,8 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
   //arrayOfPriors  <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
-  LinearInterpolationNoErrors <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].nwl/2, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx1, nhMd, nhSg );
-  arrayOfPriors1 <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, const float *nhMd, const float *nhSg, chn[0].xx1, chn[0].prr1 );
+  LinearInterpolationNoErrors <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].nwl/2, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx1, chn[0].nhMd, chn[0].nhSg );
+  arrayOfPriors1 <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].nhMd, chn[0].nhSg, chn[0].xx1, chn[0].prr1 );
   return 0;
 }
 
@@ -1394,7 +1407,10 @@ __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
+  //arrayOfPriors  <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
+  LinearInterpolationNoErrors <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx, chn[0].nhMd, chn[0].nhSg );
+  arrayOfPriors1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].nhMd, chn[0].nhSg, chn[0].xx, chn[0].prr );
+  //constantArray <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, 0., chn[0].prr );
   return 0;
 }
 
@@ -1674,12 +1690,10 @@ __global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, 
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   float sum;
   if ( i < nwl ) {
-    sum = powf ( ( xx[NHINDX+i*nwl] - nhMd[i] ) / nhSg[i], 2 )
+    sum = powf ( ( xx[NHINDX+i*nwl] - nhMd[i] ) / nhSg[i], 2 );
     pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
   }
 }
-
-sum = sum + powf ( ( wlkr.par[NHINDX] - nhMd ) / nhSg, 2 );
 
 __host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes ) {
   FILE *flPntr;
@@ -1751,7 +1765,7 @@ __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, fl
   }
   for ( int j = 0; j < numDist; j++ )
   {
-    Dist[j] = log10f ( data[5*j] );
+    Dist[j] = log10f ( data[5*j] * 1.E3 );
     EBV[j] = log10f ( data[5*j+1] );
     errDist[j] = log10f ( data[5*j+2] );
     errEBV[j] = log10f ( data[5*j+3] );

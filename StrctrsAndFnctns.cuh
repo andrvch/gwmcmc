@@ -12,11 +12,10 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 7 // Number of parameters
-#define ACONST 2.0f // Goodman-Weare "a" constant
+#define NPRS 8 // Number of parameters
 #define THRDS 32
 #define RANK 1
-#define ACONST 2.0f // Goodman-Weare "a" constant
+#define ACONST 1.5f // Goodman-Weare "a" constant
 #define BACKIN 1
 #define NSPCTR 2
 #define ATNMR 18
@@ -31,6 +30,7 @@
 #define RINDX1 1
 #define TINDX 0
 #define GRINDX 1
+#define DINDX1 NPRS-2
 
 typedef float2 Complex;
 
@@ -54,7 +54,7 @@ struct Chain {
   char *name;
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
-  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt, *priors;
+  float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt, *priors, *nhMd, *nhSg;
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
   cufftComplex *ftOfChn;
   int mmm;
@@ -96,8 +96,8 @@ struct Model
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
-  //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
@@ -213,5 +213,6 @@ __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int num
 __host__ int printSpec ( const Spectrum *spc );
 __global__ void returnQ1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, const float *zr, float *q );
 __global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, const float *nhMd, const float *nhSg, const float *xx, float *pr );
+__global__ void setPriorAtLast ( const int dim, const int nwl, const float *lst, float *prr );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
