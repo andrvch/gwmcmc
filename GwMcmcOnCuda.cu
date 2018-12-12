@@ -37,9 +37,9 @@ int main ( int argc, char *argv[] ) {
 
   Chain chn[1];
   const char *spcFl1 = argv[2];
-  //const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR];
-  spcLst[0] = spcFl1;
+  const char *spcFl2 = argv[3];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  //spcLst[0] = spcFl1;
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
   chn[0].nst = atoi ( argv[NSPCTR+4] );

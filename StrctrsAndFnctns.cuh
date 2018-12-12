@@ -18,7 +18,7 @@
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 1
+#define NSPCTR 2
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
