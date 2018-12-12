@@ -43,6 +43,14 @@ int main ( int argc, char *argv[] ) {
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
 
+  Model mdl[1];
+  Spectrum spc[NSPCTR];
+
+  InitializeModel ( mdl );
+
+  SpecInfo ( spcLst, vrb, spc );
+  SpecAlloc ( chn, spc );
+  SpecData ( cdp, vrb, mdl, spc );
 
 
   allocateChain ( chn );
