@@ -31,6 +31,7 @@ samples = samples[:samples.shape[0]-1,:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
+samples[1] = samples[-3] - samples[1]
 
 npars = len(samples)
 
