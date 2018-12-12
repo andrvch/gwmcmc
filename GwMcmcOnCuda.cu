@@ -33,12 +33,17 @@ int main ( int argc, char *argv[] ) {
   }
 
   Chain chn[1];
-  chn[0].name = argv[2];
-  chn[0].nwl = atoi ( argv[3] );
-  chn[0].nst = atoi ( argv[4] );
-  chn[0].indx = atoi ( argv[5] );
+  const char *spcFl1 = argv[2];
+  const char *spcFl2 = argv[3];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  chn[0].name = argv[NSPCTR+2];
+  chn[0].nwl = atoi ( argv[NSPCTR+3] );
+  chn[0].nst = atoi ( argv[NSPCTR+4] );
+  chn[0].indx = atoi ( argv[NSPCTR+5] );
   chn[0].dim = 2;
   chn[0].dlt = 1.E-2;
+
+  
 
   allocateChain ( chn );
 
