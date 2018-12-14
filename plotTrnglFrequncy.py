@@ -49,9 +49,9 @@ xi,zi = kde_gauss_cuda1d(samples[0],nbins1D)
 zin,eqh_inter[0,:] = prc(xi,zi,0.01*qlevel)
 plt.plot(xi,zin,color='blue')
 xqu = [eqh_inter[0,0],eqh_inter[0,-1],eqh_inter[0,-1],eqh_inter[0,0]]
-yqu = [zin.min(),zin.min(),zin.max()+3*(zin.max()-zin.min()),zin.max()+3*(zin.max()-zin.min())]
+yqu = [zin.min(),zin.min(),zin.max()+0.1*(zin.max()-zin.min()),zin.max()+0.1*(zin.max()-zin.min())]
 plt.fill(xqu,yqu,color='0.75')
 plt.plot([eqh_inter[0,1],eqh_inter[0,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".pdf")
+plt.savefig(sys.argv[1]+"trnglFreq"+".pdf")
