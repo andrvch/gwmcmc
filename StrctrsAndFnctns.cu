@@ -369,11 +369,11 @@ __global__ void returnQM ( const int dim, const int n, const float *s1, const fl
 __global__ void returnQM1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    if ( p1[i] == INF ) {
-      q[i] = 0.0;
-    } else {
-      q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
-    }
+    //if ( p1[i] == INF ) {
+    //  q[i] = 0.0;
+    //} else {
+    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) );
+    //}
   }
 }
 
@@ -471,12 +471,15 @@ __global__ void metropolisPoposal2 ( const int dim, const int nwl, const int isb
   }
 }
 
-__global__ void metropolisPoposal3 ( const int dim, const int nwl, const int isb, const float *sigma, const float *xx, const float *rr, float *xx1 ) {
+__global__ void metropolisPoposal3 ( const int dim, const int nwl, const int nbm, const int isb, const float *sigma, const float *xx, const float *rr, float *xx1 ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
     xx1[t] = xx[t] + ( i == isb ) * sigma[isb] * rr[j];
+    if ( i == 1 ) {
+      xx1[t] = fmodf ( xx1[t], 1./4./nbm );
+    }
   }
 }
 
@@ -659,7 +662,7 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn ) {
   int iRu = chn[0].isb * chn[0].nwl + chn[0].ist * chn[0].dim * chn[0].nwl;
   sliceArray <<< grid1D ( nrn ), THRDS >>> ( nrn, iRn, chn[0].stn1, chn[0].rr );
   sliceArray <<< grid1D ( nru ), THRDS >>> ( nru, iRu, chn[0].uni, chn[0].ru );
-  metropolisPoposal3 <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].isb, chn[0].sigma, chn[0].xx, chn[0].rr, chn[0].xx1 );
+  metropolisPoposal3 <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].isb, chn[0].sigma, chn[0].xx, chn[0].rr, chn[0].xx1 );
   return 0;
 }
 
