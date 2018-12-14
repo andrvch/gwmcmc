@@ -471,7 +471,7 @@ __global__ void metropolisPoposal2 ( const int dim, const int nwl, const int isb
   }
 }
 
-__global__ void metropolisPoposal3 ( const int dim, const int nwl, const int nbm, const int isb, const float *sigma, const float *xx, const float *rr, float *xx1 ) {
+__global__ void metropolisPoposal3 ( const int dim, const int nwl, const int nbm, const float texp, const int isb, const float *sigma, const float *xx, const float *rr, float *xx1 ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;

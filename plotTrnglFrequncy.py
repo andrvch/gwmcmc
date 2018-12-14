@@ -27,10 +27,7 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[:samples.shape[0],:]
-print samples.shape
-#samples = samples[:,np.where(samples[-1,:]<14000)[0]]
-#print samples.shape
+#samples = samples[:samples.shape[0],:]
 
 npars = len(samples)
 
@@ -40,7 +37,6 @@ qlevel = float(sys.argv[2]) # percent
 quont = [0.999,0.99,0.90,0.68,0.40]
 eqh_inter = np.empty([npars,3])
 
-#fig, ax = plt.subplots(ncols=npars, nrows=npars)
 zizi = []
 
 xii,yii = np.mgrid[-5.:5.:nbins2D*1j,-5.:5.:nbins2D*1j]
@@ -58,4 +54,4 @@ plt.fill(xqu,yqu,color='0.75')
 plt.plot([eqh_inter[0,1],eqh_inter[0,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trnglFrequency"+".pdf")
+plt.savefig(sys.argv[1]+"trngl"+".pdf")
