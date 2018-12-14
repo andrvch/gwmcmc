@@ -471,14 +471,14 @@ __global__ void metropolisPoposal2 ( const int dim, const int nwl, const int isb
   }
 }
 
-__global__ void metropolisPoposal3 ( const int dim, const int nwl, const int nbm, const float texp, const int isb, const float *sigma, const float *xx, const float *rr, float *xx1 ) {
+__global__ void metropolisPoposal3 ( const int dim, const int nwl, const int nbm, const int isb, const float *sigma, const float *xx, const float *rr, float *xx1 ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
     xx1[t] = xx[t] + ( i == isb ) * sigma[isb] * rr[j];
     if ( i == 1 ) {
-      xx1[t] = fmodf ( xx1[t], 1./4./nbm );
+      xx1[t] = fmodf ( xx1[t], 1./nbm );
     }
   }
 }

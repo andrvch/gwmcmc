@@ -45,13 +45,23 @@ def gauss(x,y):
 zii = gauss(xii,yii)
 levi,ziin = comp_lev(zii.flatten(),quont)
 
+fig, ax = plt.subplots()
+
 xi,zi = kde_gauss_cuda1d(samples[0],nbins1D)
 zin,eqh_inter[0,:] = prc(xi,zi,0.01*qlevel)
-plt.plot(xi,zin,color='blue')
+ax.plot(xi,zin,color='blue')
 xqu = [eqh_inter[0,0],eqh_inter[0,-1],eqh_inter[0,-1],eqh_inter[0,0]]
-yqu = [zin.min(),zin.min(),zin.max()+0.1*(zin.max()-zin.min()),zin.max()+0.1*(zin.max()-zin.min())]
-plt.fill(xqu,yqu,color='0.75')
-plt.plot([eqh_inter[0,1],eqh_inter[0,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
+yqu = [zin.min(),zin.min(),zin.max()+0.16*(zin.max()-zin.min()),zin.max()+0.16*(zin.max()-zin.min())]
+ax.fill(xqu,yqu,color='0.75')
+ax.plot([eqh_inter[0,1],eqh_inter[0,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
+
+ax.set_xlim(3.362327,3.362337)
+ax.set_ylim(0.0,0.1)
+
+ax.set_xlabel("frequency",fontsize=11)
+ax.set_ylabel("p.d.f.",fontsize=11)
+plt.setp(ax.get_yticklabels(), fontsize=11)
+plt.setp(ax.get_xticklabels(), fontsize=11)
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trnglFreq"+".pdf")
+plt.savefig(sys.argv[1]+"trnglFreq"+".eps")

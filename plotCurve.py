@@ -39,10 +39,24 @@ ppp = np.concatenate((pp,pp[:,::-1]),axis=1)
 ppp1 = np.concatenate((pp1,pp1[:,::-1]),axis=1)
 nnn = np.concatenate((nn1,nn2),axis=1)
 
-for i in range(m):
-    plt.fill(ppp[i],nnn[i],color='gray')
-    plt.plot(pp[i],nn0[i],color='black')
-    plt.fill(ppp1[i],nnn[i],color='gray')
-    plt.plot(pp1[i],nn0[i],color='black')
+fig, ax = plt.subplots()
 
-plt.savefig(sys.argv[1]+"curve"+".jpg")
+#for i in range(m):
+    #plt.fill(ppp[i],nnn[i],color='gray')
+    #plt.plot(pp[i],nn0[i],color='black')
+    #plt.fill(ppp1[i],nnn[i],color='gray')
+#    plt.plot(pp1[i],nn0[i],color='black')
+ax.plot(pp[0],nn0[0],color='black')
+phase = np.concatenate((ph[:-1],ph1[:-1]))
+
+ss = np.concatenate((samples[1,2:2+m],samples[1,2:2+m]))
+ss1 = np.concatenate((samples[1,2:2+m]-samples[0,2:2+m],samples[1,2:2+m]-samples[0,2:2+m]))
+ss2 = np.concatenate((samples[2,2:2+m]-samples[1,2:2+m],samples[2,2:2+m]-samples[1,2:2+m]))
+
+ax.step(phase+1./float(m),ss,color='black')
+ax.errorbar(phase+1./float(m)/2.,ss,yerr=[ss1,ss2],fmt=' ',color='black')
+ax.set_xlabel("phase bins",fontsize=14)
+ax.set_ylabel("number of photons",fontsize=14)
+plt.setp(ax.get_yticklabels(), fontsize=14)
+plt.setp(ax.get_xticklabels(), fontsize=14)
+plt.savefig(sys.argv[1]+"curve"+".eps")

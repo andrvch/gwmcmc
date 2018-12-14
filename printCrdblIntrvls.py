@@ -17,6 +17,7 @@ gr = math.sqrt(1 - 2.952 * Mns / Rns)
 nbins = 100
 
 samples = read_data(sys.argv[1])
+samples = samples[:-1,:]
 print samples.shape
 
 qqlevel = float(sys.argv[2])   # percent

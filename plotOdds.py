@@ -25,10 +25,10 @@ print samples.shape
 #print samples.shape
 
 #odds = - 0.5 * samples[-1] + 1717 + 1717 * math.log(9.1917e4) + ( 5. / 2. ) * math.log(9.1917e4) + 1717 * math.log(5) + 4. * math.log(2.*3.14) - 0.5*math.log(1717) - 2.84128601128261974624e1
-odds = -0.5 * samples[-1]
+odds = -0.5 * samples[-2]
 frqs = samples[0]
-plt.plot(frqs,odds,'o')
-
+plt.plot(frqs,np.exp(odds)/frqs,'o')
+plt.xlim(3.362327,3.362337)
 oddsN = np.exp(odds)/frqs
 print oddsN.sum()/len(oddsN)
 #plt.show()
