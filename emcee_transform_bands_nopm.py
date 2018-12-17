@@ -27,7 +27,7 @@ nwalkers = 1000
 
 def parse_input(in_file):
     f = open(in_file)
-    lines = f.readlines()  
+    lines = f.readlines()
     n = len(lines)
     #print n
     coords = []
@@ -35,12 +35,12 @@ def parse_input(in_file):
         coords.append([float(x) for x in lines[i].split()])
     coords_1 = np.empty([len(coords),6])
     for i in range(len(coords)):
-        coords_1[i] = np.array([coords[i]])  
+        coords_1[i] = np.array([coords[i]])
     return coords_1
 
 coords = parse_input(Crds_file)
 
-coords_1 = np.array([coords[:4],coords[4:8],coords[8:12]]) 
+coords_1 = np.array([coords[:4],coords[4:8],coords[8:12]])
 #print coords_1
 print len(coords_1)
 print shape(coords_1)
@@ -65,7 +65,7 @@ def lnprior(th):
     if th[-2] >= 0. and th[-1] <= 2*pi and th[-1] >= 0.:
         return 0.0
     return -np.inf
-    
+
 def lnprob(th):
     lp = lnprior(th)
     trsf = np.empty([N_im,3])
@@ -76,7 +76,7 @@ def lnprob(th):
     for i in range(N_stars):
         xs1[i,0] = th[3*(N_im-1)+2*i]
         xs1[i,1] = th[3*(N_im-1)+2*i+1]
-    xs   = xs1[:,0]+1j*xs1[:,1] 
+    xs   = xs1[:,0]+1j*xs1[:,1]
     prob = np.empty([N_im,N_stars])
     for i in range(N_im):
         for k in range(N_stars):
@@ -103,12 +103,12 @@ pos = [p0 + 1e-7*np.random.randn(ndim) for i in range(nwalkers)]
 
 if firstrun == "N":
     inf   = open(LastPos)
-    lines = inf.readlines()  
+    lines = inf.readlines()
     nsmpl = len(lines)
     prepos = []
     for i in range(nsmpl):
         prepos.append([float(x) for x in lines[i].split()])
-    inf.close()  
+    inf.close()
 
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(), threads=10)
 
@@ -174,6 +174,6 @@ n1, n2 = shape(samples)
 for i in range(n1):
     for j in range(n2):
         f.write("%.15E "%(samples[i,j]))
-    f.write("%.15E "%(likely[i] ))  
+    f.write("%.15E "%(likely[i] ))
     f.write("\n")
 f.close()
