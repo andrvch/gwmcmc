@@ -1,0 +1,188 @@
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 1.47E-04 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  1, Object type: point
+  Peak value:                 2.8912E-03 +/-  2.0870E-04
+  Offset Position (arcsec):    -410.687   890.131
+  Positional errors (arcsec):     0.150     0.218
+  Pos error ellipse (arcsec):     0.218     0.150     6.51
+  Right Ascension:                17:31:01.385
+  Declination:                    -47:29:44.369
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 1.19E-04 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  2, Object type: point
+  Peak value:                 3.3477E-03 +/-  1.6868E-04
+  Offset Position (arcsec):    -552.817   789.719
+  Positional errors (arcsec):     0.106     0.153
+  Pos error ellipse (arcsec):     0.153     0.105     6.54
+  Right Ascension:                17:30:47.294
+  Declination:                    -47:31:24.781
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 1.30E-04 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  3, Object type: point
+  Peak value:                 2.3006E-03 +/-  1.8414E-04
+  Offset Position (arcsec):     391.173   148.461
+  Positional errors (arcsec):     0.168     0.242
+  Pos error ellipse (arcsec):     0.242     0.166     6.70
+  Right Ascension:                17:32:20.880
+  Declination:                    -47:42:06.039
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 8.87E-05 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  5, Object type: point
+  Peak value:                 2.2247E-03 +/-  1.2583E-04
+  Offset Position (arcsec):     570.568   -97.528
+  Positional errors (arcsec):     0.118     0.168
+  Pos error ellipse (arcsec):     0.168     0.117     6.61
+  Right Ascension:                17:32:38.665
+  Declination:                    -47:46:12.028
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 3.61E-04 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  8, Object type: point
+  Peak value:                 1.5043E-02 +/-  5.1031E-04
+  Offset Position (arcsec):      -7.273   257.910
+  Positional errors (arcsec):     0.069     0.102
+  Pos error ellipse (arcsec):     0.102     0.069     6.04
+  Right Ascension:                17:31:41.379
+  Declination:                    -47:40:16.590
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 5.67E-05 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  10, Object type: point
+  Peak value:                 5.6237E-04 +/-  8.1961E-05
+  Offset Position (arcsec):    -330.405  -260.387
+  Positional errors (arcsec):     0.313     0.474
+  Pos error ellipse (arcsec):     0.478     0.306     9.31
+  Right Ascension:                17:31:09.344
+  Declination:                    -47:48:54.887
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 1.75E-04 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  11, Object type: point
+  Peak value:                 5.9609E-03 +/-  2.4817E-04
+  Offset Position (arcsec):     158.129  -615.175
+  Positional errors (arcsec):     0.088     0.125
+  Pos error ellipse (arcsec):     0.126     0.087     6.83
+  Right Ascension:                17:31:57.777
+  Declination:                    -47:54:49.675
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 1.76E-04 (theoretical image noise is 4.71E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  12, Object type: point
+  Peak value:                 5.4930E-03 +/-  2.4917E-04
+  Offset Position (arcsec):     892.053  -467.994
+  Positional errors (arcsec):     0.101     0.136
+  Pos error ellipse (arcsec):     0.137     0.100     7.71
+  Right Ascension:                17:33:10.537
+  Declination:                    -47:52:22.494
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744
+RMS residual is 2.36E-04 (theoretical image noise is 8.09E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.00     3.46
+  Beam Position angle (degrees):       6.4
+
+Scaling error estimates by  8.9 to account for
+noise correlation between pixels
+
+Source  PSR, Object type: point
+  Peak value:                 7.3756E-03 +/-  3.3473E-04
+  Offset Position (arcsec):       1.161    -2.552
+  Positional errors (arcsec):     0.095     0.138
+  Pos error ellipse (arcsec):     0.138     0.094     6.48
+  Right Ascension:                17:31:42.215
+  Declination:                    -47:44:37.052
+-------------------------------------------------

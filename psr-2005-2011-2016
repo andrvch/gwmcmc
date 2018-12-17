@@ -1,0 +1,65 @@
+-------------------------------------------------
+Object b1727-47-2005
+RMS residual is 1.31E-04 (theoretical image noise is 4.05E-04)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):    32.67     4.10
+  Beam Position angle (degrees):     -61.8
+
+Scaling error estimates by 24.6 to account for
+noise correlation between pixels
+
+Source  PSR, Object type: point
+  Peak value:                 2.1725E-02 +/-  1.8506E-04
+  Offset Position (arcsec):       0.201    -1.640
+  Positional errors (arcsec):     0.147     0.081
+  Pos error ellipse (arcsec):     0.167     0.021   -61.81
+  Right Ascension:                17:31:42.123
+  Declination:                    -47:44:36.200
+-------------------------------------------------
+
+-------------------------------------------------
+Object j1731-4744-2011
+RMS residual is 2.34E-04 (theoretical image noise is 8.16E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):     5.82     3.71
+  Beam Position angle (degrees):       4.9
+
+Scaling error estimates by  9.9 to account for
+noise correlation between pixels
+
+Source  PSR, Object type: point
+  Peak value:                 7.9747E-03 +/-  3.3126E-04
+  Offset Position (arcsec):       1.080    -2.529
+  Positional errors (arcsec):     0.093     0.146
+  Pos error ellipse (arcsec):     0.147     0.093     5.08
+  Right Ascension:                17:31:42.207
+  Declination:                    -47:44:37.029
+-------------------------------------------------
+
+-------------------------------------------------
+Object psr-2016
+RMS residual is 1.09E-04 (theoretical image noise is 2.00E-05)
+
+Using the following beam parameters when
+deconvolving and converting to integrated flux
+  Beam Major, minor axes (arcsec):    13.06     2.29
+  Beam Position angle (degrees):      26.9
+
+Scaling error estimates by  5.8 to account for
+noise correlation between pixels
+
+Source  PSR, Object type: point
+  Peak value:                 1.3887E-02 +/-  1.5493E-04
+  Offset Position (arcsec):       1.593    -4.293
+  Positional errors (arcsec):     0.042     0.078
+  Pos error ellipse (arcsec):     0.087     0.015    26.85
+  Right Ascension:                17:31:42.261
+  Declination:                    -47:44:38.293
+-------------------------------------------------
+
+
+
