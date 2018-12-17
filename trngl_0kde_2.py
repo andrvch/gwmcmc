@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import math
 import numpy as np
@@ -27,7 +29,7 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 
 #labels = [r'$ N_{\rm H} \rm \, [\, 10^{21} \, cm^{-2} \,] $',r'$ T^{\infty} \rm \, [\, 10^{6} \, K \,] $',r'$\rm redshift $',r'$ R/D \, [ \, \rm km/kpc \, ] $',r'$ D \, \rm [ \, kpc \, ] $',r'$-\chi^{2}$']
 
-nsm = 50000
+#nsm = 50000
 
 #pars = read_data_nsmpl(sys.argv[1],nsm)
 pars = read_data(sys.argv[1])
@@ -35,6 +37,14 @@ pars = read_data(sys.argv[1])
 npars   = shape(pars)[0]
 print npars
 #exit()
+
+#pars[0] = pars[-3]
+#pars[1] = pars[-2]
+#pars[2] = pars[-4]
+#pars[3] = pars[-5]
+#pars[4] = pars[-1]
+
+#npars = 5
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
 #plt.subplots_adjust(left=0.125, bottom=.9, right=.15, top=.95, wspace=.2, hspace=.5)
@@ -52,7 +62,7 @@ for j in range(npars):
             xqu = [eqh_inter[i,0],eqh_inter[i,-1],eqh_inter[i,-1],eqh_inter[i,0]]
             yqu = [zin.min(),zin.min(),zin.max()+3*(zin.max()-zin.min()),zin.max()+3*(zin.max()-zin.min())]
             ax[i,i].fill(xqu,yqu,color='0.75')
-            ax[i,i].plot([eqh_inter[i,1],eqh_inter[i,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)                
+            ax[i,i].plot([eqh_inter[i,1],eqh_inter[i,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
             zizi.append(zin)
         elif i > j:
             xi,yi,zi = kde_gauss_cuda2d(pars[j],pars[i],nbins2D)
@@ -82,18 +92,18 @@ for i in range(npars):
         setp(ax[i,j].get_xticklabels(), rotation=45)
 
 ax[0,0].yaxis.tick_right()
-setp([a.get_xticklabels() for a in ax[:npars-1,0]], visible=False)  
+setp([a.get_xticklabels() for a in ax[:npars-1,0]], visible=False)
 
 for i in range(npars):
     print eqh_inter[i,:]
-        
+
 cred_int = np.empty([npars,len(quantiles)])
 for j in range(len(quantiles)):
     for i in range(npars):
-        cred_int[i,j] = np.percentile(pars[i],quantiles[j])    
+        cred_int[i,j] = np.percentile(pars[i],quantiles[j])
 
 #for i in range(npars):
-#    print cred_int[i,:]  
+#    print cred_int[i,:]
 
 for j in range(npars):
     for i in range(npars):
@@ -103,4 +113,5 @@ for j in range(npars):
         elif i > j:
             ax[i,j].set_ylim(pars[i].min()-0.05*(pars[i].max()-pars[i].min()), pars[i].max()+0.05*(pars[i].max()-pars[i].min()))
 
-plt.show()
+plt.savefig("trngl.pdf")
+#plt.show()
