@@ -27,10 +27,17 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[:samples.shape[0],:]
+samples = samples[samples.shape[0]-3:samples.shape[0]-1,:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
+
+pipi = 3.14159265359
+
+mumu = np.sqrt(samples[0]**2+samples[1]**2)/8.*80.*1.E3/3600.*pipi/180.
+
+samples[0] = 98.43458788 - 180/pipi*np.arcsin(samples[0]/8.*80.*1.E3/3600.*pipi/180.)
+samples[1] = 6.542318409 - 180/pipi*np.arcsin(samples[1]/8.*80.*1.E3/3600.*pipi/180.)
 
 npars = len(samples)
 
@@ -48,7 +55,7 @@ def gauss(x,y):
     return np.exp(-0.5*(x**2+y**2))
 zii = gauss(xii,yii)
 levi,ziin = comp_lev(zii.flatten(),quont)
-
+from astropy.io import fits
 
 sttime = time.time()
 for j in range(npars):
@@ -65,11 +72,28 @@ for j in range(npars):
         elif i > j:
             xi,yi,zi = kde_gauss_cuda2d(samples[j],samples[i],nbins2D)
             lev,zin = comp_lev(zi,quont)
+            print lev
             #ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
+            #datain  = np.array(zi.reshape(xi.shape))
+            hdu     = fits.PrimaryHDU(data=zin.reshape(xi.shape))
+            hduhdr  = hdu.header
+            #print hduhdr
+            hduhdr.set('CTYPE1', 'RA---TAN')
+            hduhdr.set('CRVAL1', '%5.7f'% (xi.min()))
+            hduhdr.set('CUNIT1', 'deg ')
+            hduhdr.set('CRPIX1', '%5.7f'% (1.0))
+            hduhdr.set('CDELT1', '%5.7f'% ((xi.max()-xi.min())/nbins2D))
+            hduhdr.set('CTYPE2', 'DEC---TAN')
+            hduhdr.set('CRVAL2', '%5.7f'% (yi.min()))
+            hduhdr.set('CUNIT2', 'deg ')
+            hduhdr.set('CRPIX2', '%5.7f'% (1.0))
+            hduhdr.set('CDELT2', '%5.7f'% ((yi.max()-yi.min())/nbins2D))
+            #print hduhdr
+            hdu.writeto('new_CCO.fits')
             #ax[i,j].contourf(xii,yii,ziin.reshape(xii.shape), lev, alpha=.35, cmap=plt.cm.Greens)
-            if i < npars-1:
-                ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
+            #if i < npars-1:
+            #    ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
 
         elif j > i:
             ax[i,j].set_visible(False)
@@ -104,4 +128,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".jpg")
+plt.savefig(sys.argv[1]+"trnglANG4"+".jpg")
