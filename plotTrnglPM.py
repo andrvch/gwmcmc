@@ -34,17 +34,18 @@ print samples.shape
 
 pipi = 3.14159265359
 
-mumu = np.sqrt(samples[0]**2+samples[1]**2)/8.*80.*1.E3/3600.*pipi/180.
+mumu = np.sqrt(samples[0]**2+samples[1]**2)/8.*1.E3
+#anan = np.arctan(samples[1]/samples[0])*180./pipi
 
-samples[0] = 98.43458788 - 180/pipi*np.arcsin(samples[0]/8.*80.*1.E3/3600.*pipi/180.)
-samples[1] = 6.542318409 - 180/pipi*np.arcsin(samples[1]/8.*80.*1.E3/3600.*pipi/180.)
+samples[0] = 98.43458788 - 180/pipi*np.arcsin(samples[0]/8.*60.*1.E3/3600.*pipi/180.)
+samples[1] = 6.542318409 - 180/pipi*np.arcsin(samples[1]/8.*60.*1.E3/3600.*pipi/180.)
 
 npars = len(samples)
 
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
 #quont = [0.99,0.95,0.90,0.68,0.40]
-quont = [0.999,0.99,0.90,0.68,0.40]
+quont = [0.99,0.95,0.68,0.40]
 eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
@@ -78,7 +79,6 @@ for j in range(npars):
             #datain  = np.array(zi.reshape(xi.shape))
             hdu     = fits.PrimaryHDU(data=zin.reshape(xi.shape))
             hduhdr  = hdu.header
-            #print hduhdr
             hduhdr.set('CTYPE1', 'RA---TAN')
             hduhdr.set('CRVAL1', '%5.7f'% (xi.min()))
             hduhdr.set('CUNIT1', 'deg ')
@@ -89,12 +89,10 @@ for j in range(npars):
             hduhdr.set('CUNIT2', 'deg ')
             hduhdr.set('CRPIX2', '%5.7f'% (1.0))
             hduhdr.set('CDELT2', '%5.7f'% ((yi.max()-yi.min())/nbins2D))
-            #print hduhdr
-            hdu.writeto('new_CCO.fits')
+            hdu.writeto(sys.argv[1]+'.fits')
             #ax[i,j].contourf(xii,yii,ziin.reshape(xii.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             #if i < npars-1:
             #    ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
-
         elif j > i:
             ax[i,j].set_visible(False)
 print "gpu:"
@@ -104,6 +102,9 @@ for i in range(npars):
     ax[i,i].set_ylabel("p.d.f.")
     ax[i,i].yaxis.set_label_position("right")
 
+ax[1,0].set_ylabel(r'$\mu_{\delta}$')
+ax[1,0].set_xlabel(r'$\mu_{\alpha}\cos{\delta}$')
+
 for i in range(1,npars):
     ax[i,i].yaxis.tick_right()
     setp([a.get_xticklabels() for a in ax[:npars-1,i]], visible=False)
@@ -111,7 +112,7 @@ for i in range(1,npars):
 
 for i in range(npars):
     for j in range(npars):
-        setp(ax[i,j].get_xticklabels(), rotation=45)
+        setp(ax[i,j].get_xticklabels(), rotation=0)
 
 ax[0,0].yaxis.tick_right()
 setp([a.get_xticklabels() for a in ax[:npars-1,0]], visible=False)
