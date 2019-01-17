@@ -77,8 +77,7 @@ struct Spectrum {
   float *nsa1Flxs, *nsa2Flxs;
 };
 
-struct Model
-{
+struct Model {
   int sgFlg = 3; // Xset.xsect = "bcmc"
   const char *abndncsFl = "AngrAbundances.dat"; // Xset.abund = "angr"
   //const char *abndncsFl = "WilmAbundances.dat"; // Xset.abund = "wilm"

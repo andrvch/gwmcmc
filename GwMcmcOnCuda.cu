@@ -17,7 +17,7 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
-  const float lwrNtcdEnrg1 = 0.4;
+  const float lwrNtcdEnrg1 = 0.3;
   const float hghrNtcdEnrg1 = 7.0;
   const float phbsPwrlwInt[NPRS] = { 5.6, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 0.19 };
 

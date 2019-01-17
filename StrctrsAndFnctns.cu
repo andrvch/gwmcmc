@@ -1250,8 +1250,7 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   return 0;
 }
 
-__host__ void FreeModel ( const Model *mdl )
-{
+__host__ void FreeModel ( const Model *mdl ) {
   cudaFree ( mdl[0].atmcNmbrs );
   cudaFree ( mdl[0].abndncs );
   cudaFree ( mdl[0].RedData );
