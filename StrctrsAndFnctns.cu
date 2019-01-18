@@ -1271,14 +1271,12 @@ __host__ void FreeModel ( const Model *mdl ) {
   cudaFree ( mdl[0].nsmaxgFlxs );
 }
 
-__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs )
-{
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
-  if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
-  {
+  if ( i < nmbrOfEnrgChnnls && j < nmbrOfWlkrs ) {
     gr = sqrtf ( 1. - 2.952 * MNS / RNS );
     sa = powf ( RNS, 2. );
     xxout = log10f ( enrgChnnls[i] / gr );
@@ -1298,14 +1296,12 @@ __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfE
   }
 }
 
-__global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs )
-{
+__global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
-  if ( ( i < nmbrOfEnrgChnnls ) && ( j < nmbrOfWlkrs ) )
-  {
+  if ( i < nmbrOfEnrgChnnls && j < nmbrOfWlkrs ) {
     gr = sqrtf ( 1. - 2.952 * MNS / RNS );
     sa = powf ( RNS, 2. );
     xxout = log10f ( enrgChnnls[i] / gr );
@@ -1403,21 +1399,66 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
-    if ( spIndx == 1 )
-    {
+    if ( spIndx == 1 ) {
       f = f + PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
-    if ( spIndx == 2 )
-    {
+    if ( spIndx == 2 ) {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
+      f = f + Norm * intNsaFlx;
+      f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 3 ) {
+      f = f + PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 4 ) {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
+      f = f + Norm * intNsaFlx;
+      f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 5 ) {
+      f = f + PowerLaw ( wlk[10+w*NPRS], wlk[11+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 6 ) {
       f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f = f * absrptn[t];
       f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
-    if ( spIndx == 3 )
-    {
+    if ( spIndx == 7 ) {
       f = f + PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 8 ) {
+      f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 9 ) {
+      f = f + PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 10 ) {
+      f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+      f = f * absrptn[t];
+      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      flx[t] = f * arf[e];
+    }
+    if ( spIndx == 11 ) {
+      f = f + PowerLaw ( wlk[10+w*NPRS], wlk[11+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }

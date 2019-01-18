@@ -17,9 +17,7 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
-  const float lwrNtcdEnrg1 = 0.3;
-  const float hghrNtcdEnrg1 = 7.0;
-  const float phbsPwrlwInt[NPRS] = { 5.6, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 0.19 };
+  const float phbsPwrlwInt[NPRS] = { 5.6, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 1.9, -4.75, 1.9, -4.75, 0.19 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -40,7 +38,15 @@ int main ( int argc, char *argv[] ) {
   const char *spcFl2 = argv[3];
   const char *spcFl3 = argv[4];
   const char *spcFl4 = argv[5];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4 };
+  const char *spcFl5 = argv[6];
+  const char *spcFl6 = argv[7];
+  const char *spcFl7 = argv[8];
+  const char *spcFl8 = argv[9];
+  const char *spcFl9 = argv[10];
+  const char *spcFl10 = argv[11];
+  const char *spcFl11 = argv[12];
+  const char *spcFl12 = argv[13];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
   //spcLst[0] = spcFl1;
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
@@ -51,6 +57,9 @@ int main ( int argc, char *argv[] ) {
 
   Model mdl[1];
   Spectrum spc[NSPCTR];
+
+  const float lwrNtcdEnrg1 = (float) atof ( argv[NSPCTR+6] );
+  const float hghrNtcdEnrg1 = (float) atof ( argv[NSPCTR+7] );
 
   for ( int i = 0; i < NSPCTR; i++ ) {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
@@ -86,8 +95,16 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[13] = 25.;
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
-  chn[0].xbnd[16] = 0.0;
-  chn[0].xbnd[17] = 2.0;
+  chn[0].xbnd[16] = -25.;
+  chn[0].xbnd[17] = 25.;
+  chn[0].xbnd[18] = -25.;
+  chn[0].xbnd[19] = 25.;
+  chn[0].xbnd[20] = -25.;
+  chn[0].xbnd[21] = 25.;
+  chn[0].xbnd[22] = -25.;
+  chn[0].xbnd[23] = 25.;
+  chn[0].xbnd[24] = 0.0;
+  chn[0].xbnd[25] = 2.0;
 
   //}
 
