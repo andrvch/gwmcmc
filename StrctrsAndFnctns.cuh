@@ -62,6 +62,8 @@ struct Chain {
   float *sigma;
   int *bnn;
   float *didi, *didi0, *dist, *didi1;
+  float *didi01, *didi02, *didi03, *didi11, *didi12, *didi13;
+  int *kex;
 };
 
 struct Spectrum {
@@ -92,13 +94,17 @@ struct Model {
   const int nmbrOfDistBins1 = 1000;
   const int numRedCol1 = 2;
   float *RedData1, *Dist1, *EBV1;
+  const char *rddnngFl2 = "Sale14.dat";
+  float *RedData2, *Dist2, *EBV2;
+  const char *rddnngFl3 = "Drimmel03.dat";
+  float *RedData3, *Dist3, *EBV3;
   const char *nsaFl = "nsa_spec_B_1e12G.dat";
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
-  const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
   int numNsmaxgE = 117;
@@ -131,7 +137,7 @@ __global__ void updateWalkers ( const int, const int, const float*, const float*
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );
 __global__ void saveStatistic ( const int, const int, const float*, float* );
-__global__ void mapRandomNumbers ( const int, const int, const int, const float*, float*, int*, float* );
+__global__ void mapRandomNumbers ( const int, const int, const int, const float*, float*, int*, float*, int* );
 __global__ void permuteWalkers ( const int, const int, const int*, const float*, float* );
 __global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP );
 __global__ void substractWalkers ( const int, const int, const float*, const float*, float* );
@@ -216,5 +222,7 @@ __global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, 
 __global__ void setPriorAtLast ( const int dim, const int nwl, const float *lst, float *prr );
 __global__ void ReverseLinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *dist );
 __global__ void setDistanceAtLast ( const int dim, const int nwl, const float *lst, float *didi );
+__global__ void chooseLaw ( const int, const int*, const float*, const float*, const float*, float* );
+__global__ void mapKex ( const int nwl, const float *r, int *kex );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

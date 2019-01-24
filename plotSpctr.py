@@ -43,13 +43,13 @@ def ticks_format(value, index):
 #Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
-Fit.statMethod = "cstat"
+Fit.statMethod = "chi"
 Fit.statTest = "chi"
 
 erange = [0.2, 10.0]
 erange2 = [0.4, 7.0]
 
-SPECNAME = "1:1 PN_J0633_15asec_grp1.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp1.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp1.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp1.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp1.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp1.pi 12:12 M2_pwn_ex_bkg.pi"
+SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
 #SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
 
 nspec = 12
@@ -59,7 +59,7 @@ AllData(SPECNAME)
 for i in range(nspec):
     AllData(i+1).background = " "
 
-AllData.ignore("**-%2.1f %2.1f-**"%(erange[0],erange[1]))
+AllData.ignore("**-%2.1f %2.1f-**"%(erange2[0],erange2[1]))
 AllData.ignore("bad")
 
 scl = [288000. / 2241600., 271732. / 2207424., 286400. / 2241600., 2595200. / 2241600., 2574576. / 2207424., 2465192. / 2241600.]
@@ -178,7 +178,7 @@ if ( psr == 1 ):
     spcminy = spcy[2*spcnum+1]-spcrry[2*spcnum+1]
     spcnum = 0
     spcmaxy = spcy[2*spcnum+1]+spcrry[2*spcnum+1]
-    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+.1*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min())]
     ax[1].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[1].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[1].set_ylim(spcminy.min()+9.e-7,6.e-2)
@@ -207,7 +207,7 @@ else:
     spcminy = spcy[2*spcnum+int(nspec/2.)]-spcrry[2*spcnum+int(nspec/2.)]
     spcnum = 0
     spcmaxy = spcy[2*spcnum+int(nspec/2.)]+spcrry[2*spcnum+int(nspec/2.)]
-    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min())]
     ax[0].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[0].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[0].set_ylim(spcminy.min()+1.e-5,2.e-1)
