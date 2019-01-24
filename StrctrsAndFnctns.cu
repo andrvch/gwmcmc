@@ -1368,8 +1368,7 @@ __global__ void ReverseLinearInterpolationNoErrors ( const int nmbrOfWlkrs, cons
   int w = threadIdx.x + blockDim.x * blockIdx.x;
   float xxout, a, dmNh0, dmNh1, tmpMNh;
   int v;
-  if ( w < nmbrOfWlkrs )
-  {
+  if ( w < nmbrOfWlkrs ) {
     xxout = wlkrs[NHINDX+w*NPRS] / 0.7;
     v = FindElementIndex ( EBV, nmbrOfDistBins, xxout );
     a = ( xxout - EBV[v] ) / ( EBV[v+1] - EBV[v] );
