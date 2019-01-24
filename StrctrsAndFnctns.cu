@@ -269,7 +269,7 @@ __global__ void mapRandomNumbers ( const int nwl, const int ist, const int isb, 
     rr = i + 2 * nwl + isb * 4 * nwl + ist * 4 * 2 * nwl;
     ru[i] = r[rr];
     rr = i + 3 * nwl + isb * 4 * nwl + ist * 4 * 2 * nwl;
-    kex[i] = ( int ) truncf ( r[rr] * ( 2 - 1 + 0.999999 ) );
+    kex[i] = ( int ) truncf ( r[rr] * ( 3 - 1 + 0.999999 ) );
   }
 }
 
@@ -1427,9 +1427,12 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   float scl = backscal_src / backscal_bkg;
   if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) ) {
     if ( spIndx == 0 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      //intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] );
       //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
+      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ) ;
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
       f = f * absrptn[t];
@@ -1441,8 +1444,10 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       flx[t] = f * arf[e];
     }
     if ( spIndx == 2 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      //intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] );
       //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
@@ -1455,8 +1460,10 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
       flx[t] = f * arf[e];
     }
     if ( spIndx == 4 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      //intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
+      intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] );
       //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
@@ -1585,7 +1592,7 @@ __host__ __device__ float BlackBody ( const float kT, const float logRtD, const 
   float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
   t = kT;
   tinv = 1. / t;
-  anorm = 1.0344e-3f  * powf ( 10, logRtD ) ;//* 1e8f
+  anorm = 1.0344e-3f * powf ( RNS, 2. ) * 1.e8f; //  * powf ( 10, logRtD ) ;//* 1e8f
   anormh = 0.5 * anorm;
   elow = enrgLwr;
   x = elow * tinv;
