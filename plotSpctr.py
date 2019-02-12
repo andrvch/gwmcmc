@@ -43,10 +43,11 @@ def ticks_format(value, index):
 #Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
-Fit.statMethod = "cstat"
+Fit.statMethod = "chi"
 Fit.statTest = "chi"
 
 erange = [0.2, 10.0]
+erange2 = [0.4, 7.0]
 
 SPECNAME = "1:1 PN_J0633_15asec_grp1.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp1.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp1.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp1.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp1.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp1.pi 12:12 M2_pwn_ex_bkg.pi"
 #SPECNAME = "1:1 PN_J0633_15asec_grp15.pi 2:2 PN_J0633_15asec_bkg.pi 3:3 M1_J0633_15asec_grp15.pi 4:4 M1_J0633_bkg.pi 5:5 M2_J0633_15asec_grp15.pi 6:6 M2_J0633_15asec_bkg.pi 7:7 PN_pwn_ex_grp15.pi 8:8 PN_pwn_ex_bkg.pi 9:9 M1_pwn_ex_grp15.pi 10:10 M1_pwn_ex_bkg.pi 11:11 M2_pwn_ex_grp15.pi 12:12 M2_pwn_ex_bkg.pi"
@@ -69,19 +70,19 @@ print pars.shape
 Mns = 1.4
 Rns = 13.
 
-nh = pars[1,13]
+nh = pars[1,12]
 Teff = pars[1,0]
 logR = math.log10(Rns)
 logN = pars[1,1]
 mgfld = float(sys.argv[3])
-logD = pars[1,2]
-psrIndx = pars[1,3]
-psrNrm = pars[1,4]
-pwnIndx = pars[1,5]
-pwnNrm = pars[1,6]
+logD = pars[1,13] - 3.0
+psrIndx = pars[1,2]
+psrNrm = pars[1,3]
+pwnIndx = pars[1,4]
+pwnNrm = pars[1,5]
 
-bckIndx = [pars[1,7], pars[1,9], pars[1,11], 0.88, 1.12, 1.13 ]
-bckNrm = [pars[1,8], pars[1,10], pars[1,12], -5.00, -5.08, -5.05]
+bckIndx = [pars[1,6], pars[1,8], pars[1,10], 0.88, 1.12, 1.13 ]
+bckNrm = [pars[1,7], pars[1,9], pars[1,11], -5.00, -5.08, -5.05]
 
 """
 AllModels += "(nsa+powerlaw)*phabs+powerlaw"
@@ -93,10 +94,10 @@ for i in range(int(nspec/2./2.)):
 """
 AllModels += "(nsmaxg+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
-    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 10**(2*(logN+logD)), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
-    AllModels(2*i+2).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
-    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
-    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**(logD-3.0), int(mgfld), 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1).setPars((Teff, Mns, 10**logR, 10**logD, int(mgfld), 10**(2*logN), psrIndx, 10**psrNrm, nh, bckIndx[i], scl[i]*10**bckNrm[i]))
+    AllModels(2*i+2).setPars((Teff, Mns, 10**logR, 10**logD, int(mgfld), 0., psrIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
+    AllModels(2*i+1+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**logD, int(mgfld), 0., pwnIndx, 10**pwnNrm, nh, bckIndx[i], scl[i+int(nspec/2./2.)]*10**bckNrm[i]))
+    AllModels(2*i+2+int(nspec/2.)).setPars((Teff, Mns, 10**logR, 10**logD, int(mgfld), 0., pwnIndx, 0., nh, bckIndx[i], 10**bckNrm[i]))
 """
 AllModels += "(bbodyrad+powerlaw)*phabs+powerlaw"
 for i in range(int(nspec/2./2.)):
@@ -162,8 +163,8 @@ if ( psr == 1 ):
         ax[1].step(np.append(spcx[2*i+1][0]-spcrrx[2*i+1][0],spcx[2*i+1]+spcrrx[2*i+1]),np.append(scl[i]*mod[2*i+1][0],scl[i]*mod[2*i+1]),color=setcolours[i])
         ax[2].errorbar(spcx[2*i],chiy[2*i],xerr=spcrrx[2*i],yerr=chirry[2*i],color=setcolours[i],fmt=' ',capsize=0)
         ax[3].errorbar(spcx[2*i+1],scl[i]*chiy[2*i+1],xerr=spcrrx[2*i+1],yerr=scl[i]*chirry[2*i+1],color=setcolours[i],fmt=' ',capsize=0)
-    xqu1 = [0.1,0.4,0.4,0.1]
-    xqu2 = [7.,12.,12.,7.]
+    xqu1 = [0.1,erange2[0],erange2[0],0.1]
+    xqu2 = [erange2[1],12.,12.,erange2[1]]
     spcnum = 2
     spcminy = spcy[2*spcnum]-spcrry[2*spcnum]
     spcnum = 0
@@ -172,12 +173,12 @@ if ( psr == 1 ):
     ax[0].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[0].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[0].set_ylim(spcminy.min()+7.e-6,spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min()))
-    ax[0].text(2.2,5.e-2,'source+background')
+    ax[0].text(2.2,5.e-2,'psr+background')
     spcnum = 2
     spcminy = spcy[2*spcnum+1]-spcrry[2*spcnum+1]
     spcnum = 0
     spcmaxy = spcy[2*spcnum+1]+spcrry[2*spcnum+1]
-    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+.1*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min())]
     ax[1].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[1].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[1].set_ylim(spcminy.min()+9.e-7,6.e-2)
@@ -200,17 +201,17 @@ else:
         ax[1].step(np.append(spcx[2*i+1+int(nspec/2.)][0]-spcrrx[2*i+1+int(nspec/2.)][0],spcx[2*i+1+int(nspec/2.)]+spcrrx[2*i+1+int(nspec/2.)]),np.append(scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)][0],scl[i+int(nspec/2./2.)]*mod[2*i+1+int(nspec/2.)]),color=setcolours[i+int(nspec/2./2.)])
         ax[2].errorbar(spcx[2*i+int(nspec/2.)],chiy[2*i+int(nspec/2.)],xerr=spcrrx[2*i+int(nspec/2.)],yerr=chirry[2*i+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
         ax[3].errorbar(spcx[2*i+1+int(nspec/2.)],scl[i+int(nspec/2./2.)]*chiy[2*i+1+int(nspec/2.)],xerr=spcrrx[2*i+1+int(nspec/2.)],yerr=scl[i+int(nspec/2./2.)]*chirry[2*i+1+int(nspec/2.)],color=setcolours[i+int(nspec/2./2.)],fmt=' ',capsize=0)
-    xqu1 = [0.1,0.4,0.4,0.1]
-    xqu2 = [7.,12.,12.,7.]
+    xqu1 = [0.1,erange2[0],erange2[0],0.1]
+    xqu2 = [erange2[1],12.,12.,erange2[1]]
     spcnum = 2
     spcminy = spcy[2*spcnum+int(nspec/2.)]-spcrry[2*spcnum+int(nspec/2.)]
     spcnum = 0
     spcmaxy = spcy[2*spcnum+int(nspec/2.)]+spcrry[2*spcnum+int(nspec/2.)]
-    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+1.*(spcmaxy.max()-spcminy.min())]
+    yqu = [spcminy.min(),spcminy.min(),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min()),spcmaxy.max()+3.*(spcmaxy.max()-spcminy.min())]
     ax[0].fill(xqu1,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[0].fill(xqu2,yqu,color='0.4',alpha=0.6, zorder=4)
     ax[0].set_ylim(spcminy.min()+1.e-5,2.e-1)
-    ax[0].text(2.2,5.e-2,'source+background')
+    ax[0].text(2.2,5.e-2,'pwn+background')
     spcnum = 2
     spcminy = spcy[2*spcnum+1+int(nspec/2.)]-spcrry[2*spcnum+1+int(nspec/2.)]
     spcnum = 0
@@ -272,5 +273,8 @@ axwx.set_yticks([])
 
 #ax[3].set_ylabel(r'$ \rm sign(data-model)\Delta\chi^{2} $',fontsize=10)
 
-plt.savefig(sys.argv[4])
+if psr == 1:
+    plt.savefig("psrspec"+sys.argv[2]+".pdf")
+else:
+    plt.savefig("pwnspec"+sys.argv[2]+".pdf")
 #plt.show()

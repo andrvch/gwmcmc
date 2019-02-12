@@ -17,6 +17,7 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
+  const float phbsPwrlwInt[NPRS] = { 0.12, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 1.9, -4.75, 1.9, -4.75, 0.19 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -33,60 +34,92 @@ int main ( int argc, char *argv[] ) {
   }
 
   Chain chn[1];
-  chn[0].dfl = argv[2];
-  chn[0].name = argv[3];
-  chn[0].nwl = atoi ( argv[4] );
-  chn[0].nst = atoi ( argv[5] );
-  chn[0].indx = atoi ( argv[6] );
-  chn[0].dim = 2;
+  const char *spcFl1 = argv[2];
+  const char *spcFl2 = argv[3];
+  const char *spcFl3 = argv[4];
+  const char *spcFl4 = argv[5];
+  const char *spcFl5 = argv[6];
+  const char *spcFl6 = argv[7];
+  const char *spcFl7 = argv[8];
+  const char *spcFl8 = argv[9];
+  const char *spcFl9 = argv[10];
+  const char *spcFl10 = argv[11];
+  const char *spcFl11 = argv[12];
+  const char *spcFl12 = argv[13];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
+  //spcLst[0] = spcFl1;
+  chn[0].name = argv[NSPCTR+2];
+  chn[0].nwl = atoi ( argv[NSPCTR+3] );
+  chn[0].nst = atoi ( argv[NSPCTR+4] );
+  chn[0].indx = atoi ( argv[NSPCTR+5] );
+  chn[0].dim = NPRS;
   chn[0].dlt = 1.E-6;
-  chn[0].nbm = atoi ( argv[7] );
 
-  readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+  Model mdl[1];
+  Spectrum spc[NSPCTR];
+
+  const float lwrNtcdEnrg1 = (float) atof ( argv[NSPCTR+6] );
+  const float hghrNtcdEnrg1 = (float) atof ( argv[NSPCTR+7] );
+
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
+    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
+  }
+
+  InitializeModel ( mdl );
+
+  SpecInfo ( spcLst, vrb, spc );
+  SpecAlloc ( chn, spc );
+  SpecData ( cdp, vrb, mdl, spc );
 
   allocateChain ( chn );
-  allocateTimes ( chn );
 
-  readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
-
-  chn[0].scale = chn[0].nph * logf ( chn[0].nbm ) + chn[0].nph * logf ( chn[0].nph * 1. ) - logf ( chn[0].nph * 1. ) - ( chn[0].nph + chn[0].nbm - 1. ) * logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. ) + logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. );
-
-  int sumsum = 0;
-  for ( int i = 0; i < chn[0].nbm-2; i++ ) {
-    sumsum += logf ( i + 2 );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    chn[0].x0[i] = phbsPwrlwInt[i];
   }
-  chn[0].scale = chn[0].scale + sumsum;
 
-  //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].x0[0] = 3.362332;
-  chn[0].x0[1] = 0.0;
+  //for ( int i = 0; i < chn[0].dim; i++ ) {s
+  chn[0].xbnd[0] = 0.;
+  chn[0].xbnd[1] = 1.5;
+  chn[0].xbnd[2] = -10.; //log10f ( 0.5 );
+  chn[0].xbnd[3] = 10; //log10f ( 1.3 );
+  chn[0].xbnd[4] = -25.;
+  chn[0].xbnd[5] = 25.;
+  chn[0].xbnd[6] = -25.;
+  chn[0].xbnd[7] = 25.;
+  chn[0].xbnd[8] = -25.;
+  chn[0].xbnd[9] = 25.;
+  chn[0].xbnd[10] = -25.;
+  chn[0].xbnd[11] = 25.;
+  chn[0].xbnd[12] = -25.;
+  chn[0].xbnd[13] = 25.;
+  chn[0].xbnd[14] = -25.;
+  chn[0].xbnd[15] = 25.;
+  chn[0].xbnd[16] = -25.;
+  chn[0].xbnd[17] = 25.;
+  chn[0].xbnd[18] = -25.;
+  chn[0].xbnd[19] = 25.;
+  chn[0].xbnd[20] = -25.;
+  chn[0].xbnd[21] = 25.;
+  chn[0].xbnd[22] = -25.;
+  chn[0].xbnd[23] = 25.;
+  chn[0].xbnd[24] = 0.0;
+  chn[0].xbnd[25] = 2.0;
+
   //}
 
-  //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].xbnd[0] = 0.0;
-  chn[0].xbnd[1] = 10.0;
-  chn[0].xbnd[2] = 0.0;
-  chn[0].xbnd[3] = 1./chn[0].nbm;
-  //}
-
-  initializeChain ( cdp, chn );
+  initializeChain ( cdp, chn, mdl, spc );
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
   }
 
-  chn[0].sigma[0] = 1.E-6;
-  chn[0].sigma[1] = 1. / chn[0].nbm / 10.;
-
-  //cudaDeviceSynchronize ();
-  //printMetropolisMove ( chn );
-
   cudaEventRecord ( cdp[0].start, 0 );
 
-  //initializeRandomForStreach ( cdp, chn );
+  initializeRandomForStreach ( cdp, chn );
   //initializeRandomForWalk ( cdp, chn );
-  initializeRandomForMetropolis ( cdp, chn );
+  //initializeRandomForMetropolis ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
@@ -94,21 +127,22 @@ int main ( int argc, char *argv[] ) {
     statisticMetropolis ( cdp, chn );
     metropolisUpdate ( cdp, chn );*/
     chn[0].isb = 0;
-    while ( chn[0].isb < chn[0].dim ) {
+    while ( chn[0].isb < 2 ) {
       //walkMove ( cdp, chn );
-      //streachMove ( cdp, chn );
-      metropolisMove ( cdp, chn );
+      streachMove ( cdp, chn );
+      //metropolisMove ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
       //statistic ( cdp, chn );
+      modelStatistic1 ( cdp, mdl, chn, spc );
       //statisticMetropolis ( cdp, chn );
-      modelStatistic1 ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
       //printMove ( chn );
+      //printSpec ( spc );
       //walkUpdate ( cdp, chn );
-      //streachUpdate ( cdp, chn );
-      metropolisUpdate ( cdp, chn );
+      streachUpdate ( cdp, chn, mdl );
+      //metropolisUpdate ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisUpdate ( chn );
       //printUpdate ( chn );
@@ -153,11 +187,12 @@ int main ( int argc, char *argv[] ) {
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].nbm, chn[0].smpls, chn[0].stat, chn[0].numbers, chn[0].prior );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors, chn[0].dist );
 
   destroyCuda ( cdp );
   freeChain ( chn );
-  freeTimes ( chn );
+  FreeModel ( mdl );
+  FreeSpec ( spc );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While

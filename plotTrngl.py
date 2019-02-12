@@ -31,6 +31,7 @@ samples = samples[:samples.shape[0]-1,:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
+#samples[1] = samples[-2] - samples[1]
 
 npars = len(samples)
 
@@ -103,4 +104,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".jpg")
+plt.savefig(sys.argv[1]+"trngl"+".jpeg")
