@@ -1,19 +1,21 @@
 #!/bin/bash
-CUDAID=0
+CUDAID=$1
 #DATAFILE="pn_barycen_0.3-10.0_cl.fits"
 #SPECFILE1="pn_barycen_0.3-2.0.fits"
 #SPECFILE1="PNclean_bary1.fits"
 #SPECFILE1="pn_barycen_0.3-10.0_cl.fits"
 DATAFILE="pn_barycen_0.3-2.0_cl.fits"
 #SPECFILE1="pn_barycen.fits"
-CHAINFILE=$1
+CHAINFILE="testtest_"
 LOGFILE="LogMetro"
-NWALK=$2
-LSTEP=$3
-i=$4
-NCHAINS=$5
-NBNS=$6
+NWALK=1
+LSTEP=524288
+i=0
+NCHAINS=1
+NBNS=5
 let NCHAINS=NCHAINS+i
+printf "ID=$CUDAID"
+printf "\n"
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
   ./runSFH $CUDAID $DATAFILE $CHAINFILE $NWALK $LSTEP $i $NBNS > $LOGFILE
