@@ -28,7 +28,7 @@ zero     = mwdust.Zero(sf10=True)
 
 #D        = np.array([0.25,0.5,1.,2.,3.,4.,5.,6.])
 Ndist = 1000
-D        = np.linspace(0.05,20.,Ndist)
+D        = np.linspace(0.05,10.,Ndist)
 L        = 205.09 # 54.7
 B        = -0.93 #0.08
 

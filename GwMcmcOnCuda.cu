@@ -17,7 +17,7 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
-  const float phbsPwrlwInt[NPRS] = { 5.6, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 1.9, -4.75, 1.9, -4.75, 0.19 };
+  const float phbsPwrlwInt[NPRS] = { 5.9, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 1.9, -4.75, 1.9, -4.75, 0.19 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -79,7 +79,7 @@ int main ( int argc, char *argv[] ) {
   }
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {s
-  chn[0].xbnd[0] = 5.55;
+  chn[0].xbnd[0] = 5.5;
   chn[0].xbnd[1] = 6.5;
   chn[0].xbnd[2] = -10.; //log10f ( 0.5 );
   chn[0].xbnd[3] = 10; //log10f ( 1.3 );
