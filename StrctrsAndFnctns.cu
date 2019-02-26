@@ -251,7 +251,6 @@ __global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr
   }
 }
 
-
 __global__ void permuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;

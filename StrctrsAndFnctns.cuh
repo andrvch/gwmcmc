@@ -12,7 +12,6 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 2 // Number of parameters
 #define ACONST 2.0f // Goodman-Weare "a" constant
 
 typedef float2 Complex;

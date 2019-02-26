@@ -26,8 +26,8 @@ int main ( int argc, char *argv[] ) {
   if ( vrb ) {
     printf ( "\n" );
     printf ( ".................................................................\n" );
-    printf ( " CUDA device ID: %d\n", cdp[0].dev );
-    printf ( " CUDA device Name: %s\n", cdp[0].prop.name );
+    printf ( " Device ID: %d\n", cdp[0].dev );
+    printf ( " Device name: %s\n", cdp[0].prop.name );
     printf ( " Driver API: v%d \n", cdp[0].driverVersion[0] );
     printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
   }
@@ -99,7 +99,6 @@ int main ( int argc, char *argv[] ) {
   if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
-    printf ( "\n" );
   }
 
   cudaEventRecord ( cdp[0].start, 0 );
@@ -111,13 +110,12 @@ int main ( int argc, char *argv[] ) {
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
   if ( vrb ) {
-    printf ( ".................................................................\n" );
-    printf ( " Autocorrelation time window -- %i\n", chn[0].mmm );
-    printf ( " Autocorrelation time -- %.8E\n", chn[0].atcTime );
-    printf ( " Autocorrelation time threshold -- %.8E\n", chn[0].nst / 5e1f );
-    printf ( " Effective number of independent samples -- %.8E\n", chn[0].nwl * chn[0].nst / chn[0].atcTime );
+    //printf ( ".................................................................\n" );
+    printf ( " Autocorrelation time window: %i\n", chn[0].mmm );
+    printf ( " Autocorrelation time: %.8E\n", chn[0].atcTime );
+    printf ( " Autocorrelation time threshold: %.8E\n", chn[0].nst / 5e1f );
+    printf ( " Effective number of independent samples: %.8E\n", chn[0].nwl * chn[0].nst / chn[0].atcTime );
     printf ( " Time to compute acor time: %3.1f ms\n", chn[0].time );
-    printf ( "\n" );
   }
 
   /* Write results to a file */
