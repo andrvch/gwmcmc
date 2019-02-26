@@ -25,11 +25,11 @@ int main ( int argc, char *argv[] ) {
 
   if ( vrb ) {
     printf ( "\n" );
-    printf ( ".................................................................\n" );
     printf ( " Device ID: %d\n", cdp[0].dev );
     printf ( " Device name: %s\n", cdp[0].prop.name );
     printf ( " Driver API: v%d \n", cdp[0].driverVersion[0] );
     printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
+    printf ( "\n" );
   }
 
   Chain chn[1];
@@ -37,7 +37,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dim = 2;
+  chn[0].dim = atoi ( argv[6] );
   chn[0].dlt = 1.E-2;
 
   allocateChain ( chn );
@@ -49,8 +49,7 @@ int main ( int argc, char *argv[] ) {
   initializeChain ( cdp, chn );
 
   if ( vrb ) {
-    printf ( ".................................................................\n" );
-    printf ( " Start ...                                                  \n" );
+    printf ( " Start ... \n" );
   }
 
   cudaEventRecord ( cdp[0].start, 0 );
@@ -89,7 +88,8 @@ int main ( int argc, char *argv[] ) {
   }
 
   if ( vrb ) {
-    printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
+    printf ( " Done!\n" );
+    printf ( "\n" );
   }
 
   cudaEventRecord ( cdp[0].stop, 0 );
@@ -97,7 +97,6 @@ int main ( int argc, char *argv[] ) {
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
   if ( vrb ) {
-    printf ( ".................................................................\n" );
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
   }
 
@@ -110,15 +109,16 @@ int main ( int argc, char *argv[] ) {
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
   if ( vrb ) {
-    //printf ( ".................................................................\n" );
     printf ( " Autocorrelation time window: %i\n", chn[0].mmm );
     printf ( " Autocorrelation time: %.8E\n", chn[0].atcTime );
     printf ( " Autocorrelation time threshold: %.8E\n", chn[0].nst / 5e1f );
     printf ( " Effective number of independent samples: %.8E\n", chn[0].nwl * chn[0].nst / chn[0].atcTime );
     printf ( " Time to compute acor time: %3.1f ms\n", chn[0].time );
+    printf ( "\n" );
   }
 
   /* Write results to a file */
+  printf ( " Write results to the host memory and clean up ... \n" );
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
   writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat );
@@ -138,6 +138,8 @@ int main ( int argc, char *argv[] ) {
     fprintf ( stderr, "Failed to deinitialize the device! error=%s\n", cudaGetErrorString ( cdp[0].err ) );
     exit ( EXIT_FAILURE );
   }
+
+  printf ( " Done!\n" );
 
   return 0;
 }
