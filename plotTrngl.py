@@ -103,4 +103,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".pdf")
+plt.savefig(sys.argv[1]+"trngl"+".jpg")
