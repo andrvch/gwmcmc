@@ -211,7 +211,7 @@ __global__ void updateWalkers ( const int dim, const int nwl, const float *xx1, 
 __global__ void updateStatistic ( const int nwl, const float *stt1, const float *q, const float *r, float *stt0 ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    stt0[i] = ( q[i] > r[i] ) * stt1[i] + ( q[i] < r[i] ) * stt0[i];
+    stt0[i] = ( q[i] > r[i] ) * stt1[i] + ( q[i] <= r[i] ) * stt0[i];
   }
 }
 
