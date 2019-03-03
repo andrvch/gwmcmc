@@ -43,7 +43,7 @@ int main ( int argc, char *argv[] ) {
   allocateChain ( chn );
 
   for ( int i = 0; i < chn[0].dim; i++ ) {
-    chn[0].x0[i] = 1.;
+    chn[0].x0[i] = -1.;
   }
 
   initializeChain ( cdp, chn );

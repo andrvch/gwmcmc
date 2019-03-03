@@ -13,7 +13,7 @@ from cudakde import *
 samples = read_data(sys.argv[1])
 print samples.shape
 #samples = samples[:samples.shape[0],:]
-samples = samples[:5,:]
+samples = samples[np.r_[0:3, samples.shape[0]-1],:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape

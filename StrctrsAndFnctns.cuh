@@ -40,6 +40,7 @@ struct Chain {
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
   cufftComplex *ftOfChn;
   int mmm;
+  float *cnd, *ccnd;
 };
 
 __host__ int grid1D ( const int );
