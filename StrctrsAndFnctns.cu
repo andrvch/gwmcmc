@@ -119,6 +119,15 @@ __global__ void returnXXStatistic ( const int dim, const int nwl, const float *x
   }
 }
 
+__global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *xx, float *cc ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  if ( i < dim && j < nwl ) {
+    cc[t] = ( xx[t] < 0. );
+  }
+}
+
 __global__ void setWalkersAtLast ( const int dim, const int nwl, const float *lst, float *xx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -197,10 +206,15 @@ __global__ void addWalkers ( const int dim, const int nwl, const float *xx0, con
   }
 }
 
-__global__ void returnQ ( const int dim, const int n, const float *s1, const float *s0, const float *zr, float *q ) {
+__global__ void returnQ ( const int dim, const int n, const float *cnd, const float *s1, const float *s0, const float *zr, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) ) * powf ( zr[i], dim - 1 );
+    if ( cnd < dim ) {
+      q[i] = 0.;
+    }
+    else {
+      q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) ) * powf ( zr[i], dim - 1 );
+    }
   }
 }
 
