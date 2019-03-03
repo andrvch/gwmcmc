@@ -10,11 +10,17 @@ import matplotlib.pyplot as plt
 from pylab import *
 from cudakde import *
 
-smpls = read_data(sys.argv[1])
+samples = read_data(sys.argv[1])
+print samples.shape
+#samples = samples[:samples.shape[0],:]
+samples = samples[:5,:]
+print samples.shape
+#samples = samples[:,np.where(samples[-1,:]<14000)[0]]
+#print samples.shape
 
 nwlkrs = int(sys.argv[2])
-nprmtrs = shape(smpls)[0]
-nstps = int(shape(smpls)[1]/float(nwlkrs))
+nprmtrs = shape(samples)[0]
+nstps = int(shape(samples)[1]/float(nwlkrs))
 
 print nstps, nprmtrs
 
@@ -23,7 +29,7 @@ wlkrs = np.empty([nprmtrs,nwlkrs,nstps])
 for i in range(nstps):
     for j in range(nwlkrs):
         for k in range(nprmtrs):
-            wlkrs[k,j,i] = smpls[k,j+nwlkrs*i]
+            wlkrs[k,j,i] = samples[k,j+nwlkrs*i]
 
 stps = linspace(1,nstps,num=nstps)
 fig, ax = plt.subplots(nrows=nprmtrs)

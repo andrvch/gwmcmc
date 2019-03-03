@@ -110,4 +110,7 @@ __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
 
+__host__ __device__ float funcV ( const float );
+__global__ void returnXXStatistic ( const int, const int, const float*, float* );
+
 #endif // _STRCTRSANDFNCTNS_CUH_

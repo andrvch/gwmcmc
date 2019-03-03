@@ -27,7 +27,8 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[:samples.shape[0],:]
+#samples = samples[:samples.shape[0],:]
+samples = samples[:5,:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
@@ -103,4 +104,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".jpg")
+plt.savefig(sys.argv[1]+".trngl"+".jpg")
