@@ -105,8 +105,8 @@ __global__ void returnStatistic ( const int dim, const int nwl, const float *xx,
   }
 }
 
-__host__ __device__ float funcV ( const float x ) {
-  return powf ( 1 - powf ( x, 2. ), 2. );
+__host__ __device__ double funcVV ( const float x ) {
+  return pow ( 1 - pow ( x, 2. ), 2. );
 }
 
 __global__ void returnXXStatistic ( const int dim, const int nwl, const float *xx, float *s ) {
@@ -115,7 +115,7 @@ __global__ void returnXXStatistic ( const int dim, const int nwl, const float *x
   int t = i + j * dim;
   float d = dim * 1.;
   if ( i < dim - 1 && j < nwl ) {
-    s[t] = d * powf ( xx[t+1] - xx[t], 2. ) + 1. / d * funcV ( xx[t+1] + xx[t] );
+    s[t] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d;
   }
 }
 
@@ -209,12 +209,12 @@ __global__ void addWalkers ( const int dim, const int nwl, const float *xx0, con
 __global__ void returnQ ( const int dim, const int n, const float *cnd, const float *s1, const float *s0, const float *zr, float *q ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
-    if ( cnd[i] < dim ) {
-      q[i] = 0.;
-    }
-    else {
-      q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) ) * powf ( zr[i], dim - 1 );
-    }
+    //if ( cnd[i] < dim ) {
+    //  q[i] = 0.;
+    //}
+    //else {
+    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) ) * powf ( zr[i], dim - 1 );
+    //}
   }
 }
 

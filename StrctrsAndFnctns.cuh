@@ -111,7 +111,7 @@ __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
 
-__host__ __device__ float funcV ( const float );
+__host__ __device__ double funcVV ( const float );
 __global__ void returnXXStatistic ( const int, const int, const float*, float* );
 
 __global__ void arrayOf2DConditions ( const int, const int, const float*, float* );
