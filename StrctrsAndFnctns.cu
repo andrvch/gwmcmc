@@ -115,7 +115,7 @@ __global__ void returnXXStatistic ( const int dim, const int nwl, const float *x
   int t = i + j * dim;
   float d = dim * 1.;
   if ( i < dim - 1 && j < nwl ) {
-    s[t] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d;
+    s[t] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d / 4.;
   }
 }
 
@@ -124,7 +124,7 @@ __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float 
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    cc[t] = ( xx[t] < 0. );
+    cc[t] = ( xx[t] <= 0. );
   }
 }
 
@@ -213,7 +213,7 @@ __global__ void returnQ ( const int dim, const int n, const float *cnd, const fl
     //  q[i] = 0.;
     //}
     //else {
-    q[i] = expf ( - 0.5 * ( s1[i] - s0[i] ) ) * powf ( zr[i], dim - 1 );
+    q[i] = exp ( - 0.5 * ( s1[i] - s0[i] ) ) * powf ( zr[i], dim - 1 );
     //}
   }
 }
@@ -237,7 +237,7 @@ __global__ void updateWalkers ( const int dim, const int nwl, const float *xx1, 
 __global__ void updateStatistic ( const int nwl, const float *stt1, const float *q, const float *r, float *stt0 ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    stt0[i] = ( q[i] > r[i] ) * stt1[i] + ( q[i] < r[i] ) * stt0[i];
+    stt0[i] = ( q[i] > r[i] ) * stt1[i] + ( q[i] <= r[i] ) * stt0[i];
   }
 }
 
