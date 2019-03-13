@@ -113,9 +113,10 @@ __global__ void returnXXStatistic ( const int dim, const int nwl, const float *x
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
+  int t1 = i + j * ( dim - 1 );
   float d = dim * 1.;
   if ( i < dim - 1 && j < nwl ) {
-    s[t] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d / 4.;
+    s[t1] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d;
   }
 }
 

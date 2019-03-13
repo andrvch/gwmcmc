@@ -35,7 +35,7 @@ print samples.shape
 
 xx = np.linspace(0,1,100)
 
-for i in range(100):
+for i in range(5):
     plt.plot(xx,samples[:,i])
 
 plt.show()
