@@ -5,7 +5,7 @@ import os, sys
 import math
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -27,11 +27,11 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[:samples.shape[0]-1,:]
+#samples = samples[:samples.shape[0],:]
+samples = samples[:3,:]
 print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
-#samples[1] = samples[-2] - samples[1]
 
 npars = len(samples)
 
@@ -103,5 +103,5 @@ for j in range(npars):
         elif i > j:
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
-#plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".jpeg")
+plt.show()
+#plt.savefig(sys.argv[1]+".trngl"+".jpg")

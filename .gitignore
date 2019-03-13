@@ -22,3 +22,6 @@ GwMcmcStructuresFunctionsAndKernels.cu
 *.pdf
 ._Log
 .Log*
+*.jpg
+runSFH
+LogSFH
