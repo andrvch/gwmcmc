@@ -492,7 +492,7 @@ __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn ) {
 __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
-  returnStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx, chn[0].sstt );
+  returnXXStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx, chn[0].sstt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
 }
