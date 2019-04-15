@@ -25,3 +25,4 @@ GwMcmcStructuresFunctionsAndKernels.cu
 *.jpg
 runSFH
 LogSFH
+physA*

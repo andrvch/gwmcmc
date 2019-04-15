@@ -26,12 +26,14 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 #samples = read_data_nsmpl(sys.argv[2],nsm)
 samples = read_data(sys.argv[2])
 print samples.shape
-samples = samples[np.r_[0:samples.shape[0]-1],:]
+#samples = samples[np.r_[0:samples.shape[0]-1],:]
 #print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
-print samples.shape
+#print samples.shape
 
-npars = len(samples)
+samples[0] = np.sqrt(samples[-2]**2 + samples[-3]**2)
+
+npars = 1 #len(samples)
 
 #samples[1] = samples[1] + samples[2]
 
