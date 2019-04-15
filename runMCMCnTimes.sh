@@ -1,9 +1,9 @@
 #!/bin/bash
 CUDAID=$1
-CHAINFILE="test4_"
-LOGFILE="LogSFH"
+CHAINFILE="spdeTest1_"
+LOGFILE="LogSpdeTest"
 NWALK=128
-LSTEP=512
+LSTEP=1024
 DIM=100
 i=$2
 NCHAINS=$3

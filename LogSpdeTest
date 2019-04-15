@@ -1,0 +1,18 @@
+
+ Device ID: 0
+ Device name: GeForce GTX 1080 Ti
+ Driver API: v9010 
+ Runtime API: v9010 
+
+ Start ... 
+ Done!
+
+ Time to generate: 413.1 ms
+ Autocorrelation time window: 418
+ Autocorrelation time: 8.36348495E+01
+ Autocorrelation time threshold: 2.04799995E+01
+ Effective number of independent samples: 1.56719360E+03
+ Time to compute acor time: 452.5 ms
+
+ Write results to the host memory and clean up ... 
+ Done!
