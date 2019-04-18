@@ -792,7 +792,6 @@ __host__ int printMetropolisUpdate ( const Chain *chn ) {
   return 0;
 }
 
-
 __host__ int printMove ( const Chain *chn ) {
   printf ( "=========================================\n" );
   printf ( " step - %i ", chn[0].ist );
