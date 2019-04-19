@@ -1023,27 +1023,28 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
     smOfNtcdChnnls = smOfNtcdChnnls + spc[i].smOfNtcdChnnls;
     AssembleArrayOfPhotoelectricCrossections ( spc[i].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[i].enrgChnnls, mdl[0].atmcNmbrs, spc[i].crssctns );
     if ( verbose == 1 ) {
-      printf ( " Number of energy channels                = %i\n", spc[i].nmbrOfEnrgChnnls );
-      printf ( " Number of instrument channels            = %i\n", spc[i].nmbrOfChnnls );
-      printf ( " Number of nonzero elements of RMF matrix = %i\n", spc[i].nmbrOfRmfVls );
-      printf ( " Exposure time                            = %.8E\n", spc[i].srcExptm );
-      printf ( " Exposure time (background)               = %.8E\n", spc[i].bckgrndExptm );
-      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
-      printf ( " Backscale src -- %4.0f\n", spc[i].backscal_src );
-      printf ( " Backscale bkg -- %4.0f\n", spc[i].backscal_bkg );
+      printf ( " Number of energy channels                -- %i\n", spc[i].nmbrOfEnrgChnnls );
+      printf ( " Number of instrument channels            -- %i\n", spc[i].nmbrOfChnnls );
+      printf ( " Number of nonzero elements of RMF matrix -- %i\n", spc[i].nmbrOfRmfVls );
+      printf ( " Number of spectral bins                  -- %i\n", spc[i].nmbrOfBins );
+      printf ( " Exposure time                            -- %.8E\n", spc[i].srcExptm );
+      printf ( " Exposure time (background)               -- %.8E\n", spc[i].bckgrndExptm );
+      printf ( " Number of used instrument channels       -- %4.0f\n", spc[i].smOfNtcdChnnls );
+      printf ( " Backscale src                            -- %4.0f\n", spc[i].backscal_src );
+      printf ( " Backscale bkg                            -- %4.0f\n", spc[i].backscal_bkg );
     }
   }
   if ( verbose == 1 ) {
     printf ( ".................................................................\n" );
-    printf ( " Total number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
-    printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
+    printf ( " Total number of used data channels         -- %4.0f\n", smOfNtcdChnnls );
+    printf ( " Number of degrees of freedom               -- %4.0f\n", smOfNtcdChnnls - NPRS );
   }
   return 0;
 }
 
 __host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc ) {
   for ( int i = 0; i < NSPCTR; i++ ) {
-    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
+    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].nmbrOfBins, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
   }
   return 0;
 }
@@ -1075,7 +1076,7 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
   return 0;
 }
 
-__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] ) {
+__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, int *nmbrOfBins, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, intnull = 0, anynull = 0, colnum;
   char card[FLEN_CARD], colNgr[] = "N_GRP", colGrp[] = "GROUPING", colNch[] = "N_CHAN";
@@ -1096,13 +1097,12 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   int *grp;
   grp = ( int * ) malloc ( *nmbrOfChnnls * sizeof ( int ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colGrp, &colnum, &status );
-  //printf ( " Status -- %i ", status );
   fits_read_col_int ( ftsPntr, colnum, 1, 1, *nmbrOfChnnls, intnull, grp, &anynull, &status );
-  printf ( "GROUPING -- \n" );
+  int sum = 0;
   for ( int i = 0; i < *nmbrOfChnnls; i++ ) {
-    printf ( " %i ", grp[i] );
+    sum += ( grp[i] > 0 );
   }
-  printf ( "\n" );
+  *nmbrOfBins = sum;
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
   if ( status == 0 && BACKIN == 1 ) {
     fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
@@ -1121,7 +1121,7 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   fits_read_col_int ( ftsPntr, colnum, 1, 1, *nmbrOfEnrgChnnls, intnull, n_grp, &anynull, &status );
   int *n_chan_vec;
   n_chan_vec = ( int * ) malloc ( *nmbrOfChnnls * sizeof ( int ) );
-  int sum = 0;
+  sum = 0;
   for ( int i = 0; i < *nmbrOfEnrgChnnls; i++ ) {
     fits_get_colnum ( ftsPntr, CASEINSEN, colNch, &colnum, &status );
     fits_read_col ( ftsPntr, TINT, colnum, i+1, 1, n_grp[i], &floatnull, n_chan_vec, &anynull, &status );
