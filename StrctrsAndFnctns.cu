@@ -1075,11 +1075,10 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
   return 0;
 }
 
-__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] )
-{
+__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, intnull = 0, anynull = 0, colnum;
-  char card[FLEN_CARD], colNgr[] = "N_GRP", colNch[] = "N_CHAN";
+  char card[FLEN_CARD], colNgr[] = "N_GRP", colGrp[] = "GROUPING", colNch[] = "N_CHAN";
   float floatnull;
   /* Open Spectrum  */
   snprintf ( srcTbl, sizeof ( card ), "%s%s", spcFl, "[SPECTRUM]" );
@@ -1094,13 +1093,20 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   /* Open Background file */
   fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
-  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  if ( status == 0 && BACKIN == 1 )
-  {
-    fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+  int *grp;
+  grp = ( int * ) malloc ( *nmbrOfChnnls * sizeof ( int ) );
+  fits_get_colnum ( ftsPntr, CASEINSEN, colGrp, &colnum, &status );
+  //printf ( " Status -- %i ", status );
+  fits_read_col_int ( ftsPntr, colnum, 1, 1, *nmbrOfChnnls, intnull, grp, &anynull, &status );
+  printf ( "GROUPING -- \n" );
+  for ( int i = 0; i < *nmbrOfChnnls; i++ ) {
+    printf ( " %i ", grp[i] );
   }
-  else
-  {
+  printf ( "\n" );
+  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
+  if ( status == 0 && BACKIN == 1 ) {
+    fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+  } else {
     *bckgrndExptm = 0.0;
     status = 0;
   }
@@ -1116,23 +1122,21 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   int *n_chan_vec;
   n_chan_vec = ( int * ) malloc ( *nmbrOfChnnls * sizeof ( int ) );
   int sum = 0;
-  for ( int i = 0; i < *nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < *nmbrOfEnrgChnnls; i++ ) {
     fits_get_colnum ( ftsPntr, CASEINSEN, colNch, &colnum, &status );
     fits_read_col ( ftsPntr, TINT, colnum, i+1, 1, n_grp[i], &floatnull, n_chan_vec, &anynull, &status );
-    for ( int j = 0; j < n_grp[i]; j++ )
-    {
+    for ( int j = 0; j < n_grp[i]; j++ ) {
       sum = sum + n_chan_vec[j];
     }
   }
   *nmbrOfRmfVls = sum;
   free ( n_chan_vec );
   free ( n_grp );
+  free ( grp );
   return 0;
 }
 
-__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls )
-{
+__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
@@ -1152,20 +1156,15 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, arfFctrs, &anynull, &status );
   /* Read Background: */
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  if ( status == 0 && BACKIN == 1 )
-  {
+  if ( status == 0 && BACKIN == 1 ) {
     fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", backscal_bkg, NULL, &status );
     fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
     fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
-  }
-  else
-  {
-    if ( verbose == 1)
-    {
+  } else {
+    if ( verbose == 1) {
       printf ( " Warning: Background table is not used, background exposure and background are set to 0.\n " );
     }
-    for ( int i = 0; i < nmbrOfChnnls; i++ )
-    {
+    for ( int i = 0; i < nmbrOfChnnls; i++ ) {
       bckgrndCnts[i] = 0;
     }
     status = 0;
@@ -1179,8 +1178,7 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, enelo_vec, &anynull, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colEnHi, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, enehi_vec, &anynull, &status );
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     enrgChnnls[i] = enelo_vec[i];
   }
   enrgChnnls[nmbrOfEnrgChnnls] = enehi_vec[nmbrOfEnrgChnnls-1];
@@ -1194,57 +1192,42 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   n_grp = ( int * ) malloc ( nmbrOfEnrgChnnls * sizeof ( int ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colNgr, &colnum, &status );
   fits_read_col_int ( ftsPntr, colnum, 1, 1, nmbrOfEnrgChnnls, intnull, n_grp, &anynull, &status );
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     fits_get_colnum ( ftsPntr, CASEINSEN, colNch, &colnum, &status );
     fits_read_col_int ( ftsPntr, colnum, i+1, 1, n_grp[i], intnull, n_chan_vec, &anynull, &status );
-    for ( int j = 0; j < rep_chan; j++ )
-    {
+    for ( int j = 0; j < rep_chan; j++ ) {
       n_chan[i*rep_chan+j] = n_chan_vec[j];
     }
   }
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     fits_get_colnum ( ftsPntr, CASEINSEN, colFch, &colnum, &status );
     fits_read_col ( ftsPntr, TINT, colnum, i+1, 1, n_grp[i], &floatnull, f_chan_vec, &anynull, &status );
-    for ( int j = 0; j < rep_chan; j++ )
-    {
+    for ( int j = 0; j < rep_chan; j++ ) {
       f_chan[i*rep_chan+j] = f_chan_vec[j];
     }
   }
   int sum = 0;
   rmfPntrInCsc[0] = 0;
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
-    for ( int j = 0; j < n_grp[i]; j++ )
-    {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+    for ( int j = 0; j < n_grp[i]; j++ ) {
       sum = sum + n_chan[rep_chan*i+j];
     }
     rmfPntrInCsc[i+1] = sum;
   }
   int m = 0;
-  if ( nmbrOfChnnls != 1024 )
-  {
-    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-    {
-      for ( int j = 0; j < n_grp[i]; j++ )
-      {
-        for ( int k = f_chan[rep_chan*i+j] ; k < f_chan[rep_chan*i+j] + n_chan[rep_chan*i+j]; k++ )
-        {
+  if ( nmbrOfChnnls != 1024 ) {
+    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+      for ( int j = 0; j < n_grp[i]; j++ ) {
+        for ( int k = f_chan[rep_chan*i+j] ; k < f_chan[rep_chan*i+j] + n_chan[rep_chan*i+j]; k++ ) {
           rmfIndxInCsc[m] = k;
           m = m + 1;
         }
       }
     }
-  }
-  else if ( nmbrOfChnnls == 1024 )
-  {
-    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-    {
-      for ( int j = 0; j < n_grp[i]; j++ )
-      {
-        for ( int k = f_chan[rep_chan*i+j] - 1; k < f_chan[rep_chan*i+j] - 1 + n_chan[rep_chan*i+j]; k++ )
-        {
+  } else if ( nmbrOfChnnls == 1024 ) {
+    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+      for ( int j = 0; j < n_grp[i]; j++ ) {
+        for ( int k = f_chan[rep_chan*i+j] - 1; k < f_chan[rep_chan*i+j] - 1 + n_chan[rep_chan*i+j]; k++ ) {
           rmfIndxInCsc[m] = k;
           m = m + 1;
         }
@@ -1255,12 +1238,10 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   rmf_vec = ( float * ) malloc ( nmbrOfChnnls * sizeof ( float ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colMat, &colnum, &status );
   m = 0;
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     sum = rmfPntrInCsc[i+1] - rmfPntrInCsc[i];
     fits_read_col ( ftsPntr, TFLOAT, colnum, i+1, 1, sum, &floatnull, rmf_vec, &anynull, &status );
-    for ( int k = 0; k < sum; k++ )
-    {
+    for ( int k = 0; k < sum; k++ ) {
       rmfVlsInCsc[m] = rmf_vec[k];
       m = m + 1;
     }
@@ -1944,7 +1925,6 @@ __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int num
   }
   fclose ( flPntr );
 }
-
 
 __host__ int printSpec ( const Spectrum *spc ) {
   printf ( " spectra -- "  );
