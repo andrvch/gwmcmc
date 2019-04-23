@@ -1015,9 +1015,46 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
       printf ( " RMF table        -- %s\n", spc[i].rmfTbl );
       printf ( " Background table -- %s\n", spc[i].bckgrndTbl );
     }
-    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls, spc[i].nmbrOfBns, spc[i].grpVls, spc[i].grpIndx, spc[i].grpPntr );
+    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls, spc[i].nmbrOfBns, spc[i].grpVls, spc[i].grpIndx, spc[i].grpPntr, spc[i].grpng );
+    /*for ( int j = 0; j < spc[i].nmbrOfChnnls; j++ ) {
+      spc[i].grpVls[j] = 1;
+    }
+    int k = 0;
+    for ( int j = 0; j < spc[i].nmbrOfChnnls; j++ ) {
+      if ( spc[i].grpng[j] == 1 ) {
+        spc[i].grpPntr[k] = j;
+        k += 1;
+      }
+    }
+    spc[i].grpPntr[spc[i].nmbrOfBns+1] = spc[i].nmbrOfChnnls;
+    for ( int j = 0; j < spc[i].nmbrOfChnnls; j++ ) {
+      spc[i].grpIndx[j] = j;
+    }*/
     cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     AssembleArrayOfNoticedChannels <<< grid1D ( spc[i].nmbrOfChnnls ), THRDS >>> ( spc[i].nmbrOfChnnls, spc[i].lwrNtcdEnrg, spc[i].hghrNtcdEnrg, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].gdQltChnnls, spc[i].ntcdChnnls );
+    /*int l = 0;
+    while ( spc[i].lwrChnnlBndrs[spc[i].grpPntr[l]] < spc[i].lwrNtcdEnrg ) {
+      l += 1;
+    }
+    int lwrBn = l;
+    while ( spc[i].hghrChnnlBndrs[spc[i].grpPntr[l]] < spc[i].hghrNtcdEnrg ) {
+      l += 1;
+    }
+    int hghrBn = l;
+    /*spc[i].nmbrOfNtcdBns = hghrBn - lwrBn;
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcIndx, spc[i].nmbrOfNtcdBns * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcVls, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcPntr, ( spc[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    /*int nmbrOfNtcdChnnls = spc[i].grpPntr[hghrBn] - spc[i].grpPntr[lwrBn];
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns+1; j++ ) {
+      spc[i].ntcPntr[j] = j;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      spc[i].ntcVls[j] = 1;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      spc[i].ntcIndx[j] = lwrBn + j;
+    }*/
     cublasSdot ( cdp[0].cublasHandle, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, spc[i].ntcdChnnls, INCYY, &spc[i].smOfNtcdChnnls );
     cudaDeviceSynchronize ( );
     smOfNtcdChnnls = smOfNtcdChnnls + spc[i].smOfNtcdChnnls;
@@ -1075,6 +1112,8 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
     cudaMallocManaged ( ( void ** ) &spc[i].grpPntr, ( spc[i].nmbrOfBns + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spc[i].grpIndx, spc[i].nmbrOfChnnls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spc[i].grpVls, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpPntr, ( spc[i].nmbrOfBns + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].bnsbns, spc[i].nmbrOfBns * sizeof ( float ) );
   }
   return 0;
 }
@@ -1139,7 +1178,7 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   return 0;
 }
 
-__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls, const int nmbrOfBns, float *grpVls, int *grpIndx, int *grpPntr ) {
+__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls, const int nmbrOfBns, float *grpVls, int *grpIndx, int *grpPntr, float *grpng ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
@@ -1157,19 +1196,8 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   grp = ( int * ) malloc ( nmbrOfChnnls * sizeof ( int ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colGrp, &colnum, &status );
   fits_read_col_int ( ftsPntr, colnum, 1, 1, nmbrOfChnnls, intnull, grp, &anynull, &status );
-  int k = 0;
   for ( int i = 0; i < nmbrOfChnnls; i++ ) {
-    grpVls[i] = 1.;
-    if ( grp[i] == 1 ) {
-      grpPntr[k] = i;
-      k += 1;
-    }
-  }
-  grpPntr[nmbrOfBns+1] = nmbrOfChnnls;
-  for ( int i = 0; i < nmbrOfBns; i++ ) {
-    for ( int j = grpPntr[i]; j < grpPntr[i+1]; j++ ) {
-      grpIndx[i+j] = j;
-    }
+    grpng[i] = grp[i];
   }
   /* Read ARF FILE: */
   fits_open_file ( &ftsPntr, arfTbl, READONLY, &status );
@@ -1362,13 +1390,11 @@ __global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nm
   }
 }
 
-__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const float *wlkrs, float *mNh, float *sNh )
-{
+__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const float *wlkrs, float *mNh, float *sNh ) {
   int w = threadIdx.x + blockDim.x * blockIdx.x;
   float xxout, a, dmNh0, dmNh1, dsNh0, dsNh1, tmpMNh, tmpSNh;
   int v;
-  if ( w < nmbrOfWlkrs )
-  {
+  if ( w < nmbrOfWlkrs ) {
     xxout = wlkrs[dIndx+w*NPRS];
     v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
     a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
@@ -1385,13 +1411,11 @@ __global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDis
   }
 }
 
-__global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh )
-{
+__global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh ) {
   int w = threadIdx.x + blockDim.x * blockIdx.x;
   float xxout, a, dmNh0, dmNh1, tmpMNh;
   int v;
-  if ( w < nmbrOfWlkrs )
-  {
+  if ( w < nmbrOfWlkrs ) {
     xxout = wlkrs[dIndx+w*NPRS];
     v = FindElementIndex ( Dist, nmbrOfDistBins, xxout );
     a = ( xxout - Dist[v] ) / ( Dist[v+1] - Dist[v] );
@@ -1427,7 +1451,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int t = e + w * nmbrOfEnrgChnnls;
   float f = 0, Norm, intNsaFlx;
   float scl = backscal_src / backscal_bkg;
-  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) ) {
+  if ( e < nmbrOfEnrgChnnls && w < nmbrOfWlkrs ) {
     if ( spIndx == 0 ) {
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
