@@ -1501,6 +1501,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., wlk[1+w*NPRS] + 2 * KMCMPCCM ); //- 2 * didi[w]
       f += Norm * intNsaFlx;
+      //f +=
       f *= absrptn[t];
       f *= arf[e];
       flx[t] = f * arf[e];
