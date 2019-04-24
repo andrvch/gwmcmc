@@ -17,7 +17,7 @@
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 2
+#define NSPCTR 1
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
@@ -208,7 +208,7 @@ __host__ __device__ float BlackBody ( const float, const float, const float, con
 __host__ __device__ float Poisson ( const float, const float, const float );
 __host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
-__host__ __device__ float chisquared ( const float, const float );
+__host__ __device__ float chisquared ( const float, const float, const float, const float );
 
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float* );
