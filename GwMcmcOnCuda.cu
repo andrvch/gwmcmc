@@ -16,7 +16,7 @@
 #include "StrctrsAndFnctns.cuh"
 
 int main ( int argc, char *argv[] ) {
-  const int vrb = 1;
+  const int vrb = 0;
   const float phbsPwrlwInt[NPRS] = { 5.9, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 1.9, -4.75, 1.9, -4.75, 0.19 };
 
   Cupar cdp[1];
@@ -71,6 +71,27 @@ int main ( int argc, char *argv[] ) {
   SpecInfo ( spcLst, vrb, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, vrb, mdl, spc );
+
+  printf ( " Grouping Information --  " );
+  int count = 0;
+  for ( int i = 0; i < spc[0].nmbrOfBns; i++ ) {
+    count += spc[0].grpPntr[i+1] - spc[0].grpPntr[i];
+    printf ( " %i ", i );
+    printf ( " %i ", spc[0].grpPntr[i+1] - spc[0].grpPntr[i] );
+    for ( int j = spc[0].grpPntr[i]; j < spc[0].grpPntr[i+1]; j++ ) {
+      printf ( " %2.0f ", spc[0].grpng[j] );
+    }
+    printf ( "\n" );
+  }
+  printf ( " Number of grouping bins -- %i\n ", count );
+  printf ( " final bin -- %i\n", spc[0].grpPntr[spc[0].nmbrOfBns] - spc[0].grpPntr[spc[0].nmbrOfBns-1] );
+  for ( int i = 0; i < spc[0].nmbrOfChnnls; i++ ) {
+    printf ( " %i ", spc[0].grpIndx[i] );
+  }
+  printf ( "\n" );
+  for ( int i = 0; i < spc[0].nmbrOfChnnls; i++ ) {
+    printf ( " %2.0f ", spc[0].grpVls[i] );
+  }
 
   allocateChain ( chn );
 
