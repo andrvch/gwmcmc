@@ -10,7 +10,7 @@ Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 
-name = "PN_J0633_15asec_grp15"
+name = "PN_J0633_15asec_grp1"
 time = float(sys.argv[1])
 num = int(sys.argv[2])
 AllData(name+".pi")

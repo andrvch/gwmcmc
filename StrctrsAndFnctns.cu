@@ -1505,6 +1505,7 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
       Norm = powf ( 10., - 2. * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //- 2 * didi[w]
       f += Norm * intNsaFlx;
       f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+<<<<<<< HEAD
       f = f * absrptn[t];
       //f += scl * PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f = f * arf[e];
@@ -1514,6 +1515,12 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
       f = f * arf[e];
       flx[t] = f;
     }*/
+=======
+      f *= absrptn[t];
+      f *= arf[e];
+      flx[t] = f * arf[e];
+    }
+>>>>>>> e21463ee90a28f85d240dd90b7580119be62082a
   }
 }
 

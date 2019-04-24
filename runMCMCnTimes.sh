@@ -2,7 +2,11 @@
 CUDAID=1
 #SPECFILE1="pn-thin-5-ao17_0.fak"
 #SPECFILE2="pn-thin-5-ao17_1.fak"
+<<<<<<< HEAD
 SPECFILE1="PN_J0633_15asec_grp15_0.fak"
+=======
+SPECFILE1="PN_J0633_15asec_grp1_0.fak"
+>>>>>>> e21463ee90a28f85d240dd90b7580119be62082a
 #SPECFILE2="PN_J0633_15asec_grp15_1.fak"
 #SPECFILE1="PN_J0633_15asec_bkg.pi"
 #SPECFILE1="PN_J0633_15asec_grp15.pi"
