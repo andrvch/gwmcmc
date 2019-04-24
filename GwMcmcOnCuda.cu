@@ -110,31 +110,6 @@ int main ( int argc, char *argv[] ) {
 
   initializeChain ( cdp, chn, mdl, spc );
 
-
-  float alpha = ALPHA, beta = BETA;
-
-  //cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[0].nmbrOfChnnls, chn[0].nwl, spc[0].nmbrOfBns, spc[0].nmbrOfChnnls, &alpha, cdp[0].MatDescr, spc[0].grpVls, spc[0].grpPntr, spc[0].grpIndx, spc[0].ntcdChnnls, spc[0].nmbrOfBns, &beta, spc[0].bnsbns, spc[0].nmbrOfBns );
-
-  cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[0].nmbrOfBns, spc[0].nmbrOfChnnls, spc[0].nmbrOfChnnls, &alpha, cdp[0].MatDescr, spc[0].grpVls, spc[0].grpPntr, spc[0].grpIndx, spc[0].ntcdChnnls, &beta, spc[0].bnsbns );
-
-  cudaDeviceSynchronize ();
-  printf ( "Bins -- \n" );
-  for ( int i = 0; i < spc[0].nmbrOfBns; i++ ) {
-    printf ( " %2.0f ", spc[0].bnsbns[i] );
-    printf ( " %i ", spc[0].grpPntr[i+1] - spc[0].grpPntr[i] );
-    for ( int j = spc[0].grpPntr[i]; j < spc[0].grpPntr[i+1]; j++ ) {
-      printf ( " %2.0f ", spc[0].grpng[j] );
-    }
-    printf ( "\n" );
-  }
-  printf ( "Bins -- \n" );
-  for ( int i = 0; i < spc[0].nmbrOfNtcdBns; i++ ) {
-    printf ( " %2.0f ", spc[0].grpIgnVls[i] );
-    printf ( " %i ", spc[0].grpIgnPntr[i] );
-    printf ( " %i ", spc[0].grpIgnIndx[i] );
-    printf ( "\n" );
-  }
-
   printf ( " Number Of Noticed Bins --  %i\n ", spc[0].nmbrOfNtcdBns );
 
   for ( int i = 0; i < spc[0].nmbrOfNtcdBns; i++ ) {
