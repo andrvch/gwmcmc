@@ -12,12 +12,12 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 7 // Number of parameters
+#define NPRS 9 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 6
+#define NSPCTR 12
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
@@ -239,6 +239,10 @@ __global__ void ReverseLinearInterpolationNoErrors ( const int, const int, const
 __global__ void setDistanceAtLast ( const int, const int nwl, const float *lst, float *didi );
 __global__ void chooseLaw ( const int, const int*, const float*, const float*, const float*, float* );
 __global__ void mapKex ( const int, const float*, int* );
+
+__host__ __device__ float cstat ( const float d, const float m );
+__global__ void arrayOfCStat ( const int nwl, const int nch, const float t, const float *c, const float *f, float *s );
+__global__ void arrayOfChiSquareds ( const int nwl, const int nch, const float t, const float *c, const float *f, float *s );
 
 __host__ __device__ float chi2 ( const float, const float );
 
