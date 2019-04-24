@@ -30,18 +30,15 @@ def FoldInput(infile):
         pp[1,5] = 10**pp[1,5]/1.e-5
         pp[0,5] = 10**pp[0,5]/1.e-5
         pp[2,5] = 10**pp[2,5]/1.e-5
-        pp[1,13] = 10**pp[1,13]/1.e3
-        pp[0,13] = 10**pp[0,13]/1.e3
-        pp[2,13] = 10**pp[2,13]/1.e3
-        pp[1,12] = pp[1,12]*1.e1
-        pp[0,12] = pp[0,12]*1.e1
-        pp[2,12] = pp[2,12]*1.e1
+        pp[1,7] = 10**pp[1,7]/1.e3
+        pp[0,7] = 10**pp[0,7]/1.e3
+        pp[2,7] = 10**pp[2,7]/1.e3
         pp[1,0] = 10**pp[1,0]*kb/1.6022E-12/redshift
         pp[0,0] = 10**pp[0,0]*kb/1.6022E-12/redshift
         pp[2,0] = 10**pp[2,0]*kb/1.6022E-12/redshift
         pars.append(pp)
     prst = []
-    for j in range(14):
+    for j in range(9):
         lst = []
         for i in range(len(lines)):
             lst.append(r'$%1.2f^{+%1.2f}_{-%1.2f}$'%(pars[i][1,j],pars[i][2,j]-pars[i][1,j],pars[i][1,j]-pars[i][0,j]))
@@ -50,7 +47,7 @@ def FoldInput(infile):
 
 prst = FoldInput(sys.argv[1])
 
-models = ['bbody','1260','123100','123190','130100']
+models = ['1260'] #,'1260','123100','123190','130100']
 
-data = {r'A$Mod.$': models, r'B$N_{\rm H}$': prst[12], r'C$\Gamma_{\rm psr}$': prst[2], r'D$K_{\rm psr}$': prst[3], r'E$T$': prst[0], r'F$R$': prst[1], r'G$D$': prst[13], r'H$\Gamma_{\rm pwn}$': prst[4], r'J$K_{\rm pwn}$': prst[5]}
+data = {r'A$Mod.$': models, r'B$N_{\rm H}$': prst[6], r'C$\Gamma_{\rm psr}$': prst[2], r'D$K_{\rm psr}$': prst[3], r'E$T$': prst[0], r'F$R$': prst[1], r'G$D$': prst[7], r'H$\Gamma_{\rm pwn}$': prst[4], r'J$K_{\rm pwn}$': prst[5]}
 asciitable.write(data, sys.stdout, Writer = asciitable.Latex, latexdict = {'preamble': r'\begin{center}', 'tablefoot': r'\end{center}', 'tabletype': 'table*', 'units':{'$N_{\rm H}$':'$\rm 10^{21} ./ cm^{-2}$'}})
