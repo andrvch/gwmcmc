@@ -1027,6 +1027,18 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
     spc[i].hghrBn = count - 1;
     spc[i].nmbrOfNtcdBns = spc[i].hghrBn - spc[i].lwrBn;
     spc[i].nmbrOfUsdBns = spc[i].hghrBn - spc[i].lwrBn;
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcIndx, spc[i].nmbrOfNtcdBns * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcVls, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcPntr, ( spc[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns+1; j++ ) {
+      spc[i].ntcPntr[j] = j;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      spc[i].ntcVls[j] = 1;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      spc[i].ntcIndx[j] = spc[i].lwrBn + j;
+    }
     cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     AssembleArrayOfNoticedChannels <<< grid1D ( spc[i].nmbrOfChnnls ), THRDS >>> ( spc[i].nmbrOfChnnls, spc[i].lwrNtcdEnrg, spc[i].hghrNtcdEnrg, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].gdQltChnnls, spc[i].ntcdChnnls );
     cublasSdot ( cdp[0].cublasHandle, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, spc[i].ntcdChnnls, INCYY, &spc[i].smOfNtcdChnnls );
@@ -1118,6 +1130,9 @@ __host__ void FreeSpec ( const Spectrum *spc ) {
     cudaFree ( spc[i].grpIndx );
     cudaFree ( spc[i].grpPntr );
     cudaFree ( spc[i].grpng );
+    cudaFree ( spc[i].ntcIndx );
+    cudaFree ( spc[i].ntcPntr );
+    cudaFree ( spc[i].ntcVls );
   }
 }
 
@@ -1462,84 +1477,17 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfW
   int t = e + w * nmbrOfEnrgChnnls;
   float f = 0, Norm, intNsaFlx;
   float scl = backscal_src / backscal_bkg;
-  if ( ( e < nmbrOfEnrgChnnls ) && ( w < nmbrOfWlkrs ) ) {
+  if ( e < nmbrOfEnrgChnnls && w < nmbrOfWlkrs ) {
     if ( spIndx == 0 ) {
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
-      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] );
-      //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
-      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ) ;
       f = f + Norm * intNsaFlx;
       f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
       f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      f = f + scl * PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
-    }
-    if ( spIndx == 1 ) {
-      f = f + PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 2 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
-      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] );
-      //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
-      f = f + Norm * intNsaFlx;
-      f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 3 ) {
-      f = f + PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 4 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
-      //Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] );
-      //f = f + BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] ); //
-      f = f + Norm * intNsaFlx;
-      f = f + PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 5 ) {
-      f = f + PowerLaw ( wlk[10+w*NPRS], wlk[11+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 6 ) {
+    } else if ( spIndx == 1 ) {
       f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 7 ) {
-      f = f + PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 8 ) {
-      f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 9 ) {
-      f = f + PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 10 ) {
-      f = f + PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f = f * absrptn[t];
-      f = f + scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      flx[t] = f * arf[e];
-    }
-    if ( spIndx == 11 ) {
-      f = f + PowerLaw ( wlk[10+w*NPRS], wlk[11+w*NPRS], en[e], en[e+1] );
       flx[t] = f * arf[e];
     }
   }

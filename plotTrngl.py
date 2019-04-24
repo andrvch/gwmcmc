@@ -35,7 +35,7 @@ print samples.shape
 
 npars = len(samples)
 
-qlevel = float(sys.argv[2]) # percent
+qlevel = 95 # percent
 #quont = [0.999,0.99,0.95,0.90]
 #quont = [0.99,0.95,0.90,0.68,0.40]
 quont = [0.999,0.99,0.90,0.68,0.40]
@@ -43,12 +43,6 @@ eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
 zizi = []
-
-xii,yii = np.mgrid[-5.:5.:nbins2D*1j,-5.:5.:nbins2D*1j]
-def gauss(x,y):
-    return np.exp(-0.5*(x**2+y**2))
-zii = gauss(xii,yii)
-levi,ziin = comp_lev(zii.flatten(),quont)
 
 sttime = time.time()
 for j in range(npars):
@@ -67,10 +61,6 @@ for j in range(npars):
             lev,zin = comp_lev(zi,quont)
             #ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
-            #ax[i,j].contourf(xii,yii,ziin.reshape(xii.shape), lev, alpha=.35, cmap=plt.cm.Greens)
-            if i < npars-1:
-                ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
-
         elif j > i:
             ax[i,j].set_visible(False)
 print "gpu:"
@@ -104,4 +94,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".jpeg")
+plt.savefig(sys.argv[1]+".trngl"+".jpeg")

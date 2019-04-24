@@ -17,7 +17,6 @@
 
 int main ( int argc, char *argv[] ) {
   const int vrb = 0;
-  const float phbsPwrlwInt[NPRS] = { 5.9, 0.0, 1.5, -5.5, 1.1, -5.0, 1.9, -4.75, 1.9, -4.75, 1.9, -4.75, 0.19 };
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -36,18 +35,8 @@ int main ( int argc, char *argv[] ) {
   Chain chn[1];
   const char *spcFl1 = argv[2];
   const char *spcFl2 = argv[3];
-  const char *spcFl3 = argv[4];
-  const char *spcFl4 = argv[5];
-  const char *spcFl5 = argv[6];
-  const char *spcFl6 = argv[7];
-  const char *spcFl7 = argv[8];
-  const char *spcFl8 = argv[9];
-  const char *spcFl9 = argv[10];
-  const char *spcFl10 = argv[11];
-  const char *spcFl11 = argv[12];
-  const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
-  //spcLst[0] = spcFl1;
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
   chn[0].nst = atoi ( argv[NSPCTR+4] );
@@ -58,8 +47,8 @@ int main ( int argc, char *argv[] ) {
   Model mdl[1];
   Spectrum spc[NSPCTR];
 
-  const float lwrNtcdEnrg1 = (float) atof ( argv[NSPCTR+6] );
-  const float hghrNtcdEnrg1 = (float) atof ( argv[NSPCTR+7] );
+  const float lwrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR+6] );
+  const float hghrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR+7] );
 
   for ( int i = 0; i < NSPCTR; i++ ) {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
@@ -101,39 +90,33 @@ int main ( int argc, char *argv[] ) {
 
   allocateChain ( chn );
 
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    chn[0].x0[i] = phbsPwrlwInt[i];
-  }
-
-  //for ( int i = 0; i < chn[0].dim; i++ ) {s
+  chn[0].x0[0] = 5.9;
   chn[0].xbnd[0] = 5.5;
   chn[0].xbnd[1] = 6.5;
-  chn[0].xbnd[2] = -10.; //log10f ( 0.5 );
-  chn[0].xbnd[3] = 10; //log10f ( 1.3 );
+
+  chn[0].x0[1] = 0.0;
+  chn[0].xbnd[2] = -10.;
+  chn[0].xbnd[3] = 10;
+
+  chn[0].x0[2] = 1.5;
   chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
+
+  chn[0].x0[3] = -5.5;
   chn[0].xbnd[6] = -25.;
   chn[0].xbnd[7] = 25.;
+
+  chn[0].x0[4] = 1.9;
   chn[0].xbnd[8] = -25.;
   chn[0].xbnd[9] = 25.;
+
+  chn[0].x0[5] = -4.75;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
-  chn[0].xbnd[12] = -25.;
-  chn[0].xbnd[13] = 25.;
-  chn[0].xbnd[14] = -25.;
-  chn[0].xbnd[15] = 25.;
-  chn[0].xbnd[16] = -25.;
-  chn[0].xbnd[17] = 25.;
-  chn[0].xbnd[18] = -25.;
-  chn[0].xbnd[19] = 25.;
-  chn[0].xbnd[20] = -25.;
-  chn[0].xbnd[21] = 25.;
-  chn[0].xbnd[22] = -25.;
-  chn[0].xbnd[23] = 25.;
-  chn[0].xbnd[24] = 0.0;
-  chn[0].xbnd[25] = 2.0;
 
-  //}
+  chn[0].x0[6] = 0.2;
+  chn[0].xbnd[12] = 0.;
+  chn[0].xbnd[13] = 25.;
 
   initializeChain ( cdp, chn, mdl, spc );
 
