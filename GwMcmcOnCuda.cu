@@ -34,20 +34,19 @@ int main ( int argc, char *argv[] ) {
 
   Chain chn[1];
   const char *spcFl1 = argv[2];
-  //const char *spcFl2 = argv[3];
-<<<<<<< HEAD
-  //const char *spcFl3 = argv[4];
-  const char *spcLst[NSPCTR] = { spcFl1 }; //, spcFl2 };
-=======
-  const char *spcLst[NSPCTR] = { spcFl1 };
->>>>>>> e21463ee90a28f85d240dd90b7580119be62082a
+  const char *spcFl2 = argv[3];
+  const char *spcFl3 = argv[4];
+  const char *spcFl4 = argv[5];
+  const char *spcFl5 = argv[6];
+  const char *spcFl6 = argv[7];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6 };
 
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
   chn[0].nst = atoi ( argv[NSPCTR+4] );
   chn[0].indx = atoi ( argv[NSPCTR+5] );
   chn[0].dim = NPRS;
-  chn[0].dlt = 1.E-6;
+  chn[0].dlt = 1.E-4;
 
   Model mdl[1];
   Spectrum spc[NSPCTR];
@@ -121,16 +120,11 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[0] = 5.5;
   chn[0].xbnd[1] = 6.5;
 
-<<<<<<< HEAD
-  chn[0].x0[1] = -3.;
-=======
   chn[0].x0[1] = 0.0;
->>>>>>> e21463ee90a28f85d240dd90b7580119be62082a
-  chn[0].xbnd[2] = -25.;
-  chn[0].xbnd[3] = 25;
+  chn[0].xbnd[2] = -5.;
+  chn[0].xbnd[3] = 5;
 
   chn[0].x0[2] = 1.5;
-<<<<<<< HEAD
   chn[0].xbnd[4] = 0.;
   chn[0].xbnd[5] = 25.;
 
@@ -138,35 +132,17 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[6] = -25.;
   chn[0].xbnd[7] = 25.;
 
-  chn[0].x0[4] = 0.2;
+  chn[0].x0[4] = 1.5;
   chn[0].xbnd[8] = 0.;
-=======
-  chn[0].xbnd[4] = -25.;
-  chn[0].xbnd[5] = 25.;
-
-  chn[0].x0[3] = -5.5;
-  chn[0].xbnd[6] = -25.;
-  chn[0].xbnd[7] = 25.;
-  /*
-  chn[0].x0[4] = -5.;
-  chn[0].xbnd[8] = -25.;
->>>>>>> e21463ee90a28f85d240dd90b7580119be62082a
   chn[0].xbnd[9] = 25.;
 
-  chn[0].x0[5] = 1.5;
+  chn[0].x0[5] = -5.;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
-<<<<<<< HEAD
 
-  chn[0].x0[6] = -4.75;
-  chn[0].xbnd[12] = -25.;
+  chn[0].x0[6] = 0.2;
+  chn[0].xbnd[12] = 0.;
   chn[0].xbnd[13] = 25.;
-=======
-  */
-  chn[0].x0[4] = 0.2;
-  chn[0].xbnd[8] = 0.;
-  chn[0].xbnd[9] = 25.;
->>>>>>> e21463ee90a28f85d240dd90b7580119be62082a
 
   initializeChain ( cdp, chn, mdl, spc );
 

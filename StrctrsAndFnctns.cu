@@ -1500,27 +1500,21 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
   float f = 0, Norm, intNsaFlx;
   float scl = backscal_src / backscal_bkg;
   if ( e < nmbrOfEnrgChnnls && w < nwl ) {
-    if ( spIndx == 0 ) {
+    if ( spIndx < 3 ) {
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2. * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //- 2 * didi[w]
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
       f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-<<<<<<< HEAD
-      f = f * absrptn[t];
+      f *= absrptn[t];
       //f += scl * PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f = f * arf[e];
+      f *= arf[e];
       flx[t] = f;
-    } /*else if ( spIndx == 1 ) {
+    } else {
       f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f = f * arf[e];
-      flx[t] = f;
-    }*/
-=======
       f *= absrptn[t];
       f *= arf[e];
-      flx[t] = f * arf[e];
+      flx[t] = f;
     }
->>>>>>> e21463ee90a28f85d240dd90b7580119be62082a
   }
 }
 
@@ -1530,8 +1524,8 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   constantArray <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].nwl/2, 0., chn[0].stt1 );
   for ( int i = 0; i < NSPCTR; i++ ) {
     AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx1, spc[i].absrptnFctrs );
-    //BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx1, spc[i].nsa1Flxs );
-    BilinearInterpolation <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[i].enrgChnnls, chn[0].xx1, spc[i].nsa1Flxs );
+    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx1, spc[i].nsa1Flxs );
+    //BilinearInterpolation <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[i].enrgChnnls, chn[0].xx1, spc[i].nsa1Flxs );
     ReverseLinearInterpolationNoErrors <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>>  ( chn[0].nwl/2, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx1, chn[0].didi11 );
     ReverseLinearInterpolationNoErrors <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>>  ( chn[0].nwl/2, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist2, mdl[0].EBV2, chn[0].xx1, chn[0].didi12 );
     ReverseLinearInterpolationNoErrors <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>>  ( chn[0].nwl/2, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist3, mdl[0].EBV3, chn[0].xx1, chn[0].didi13 );
@@ -1557,8 +1551,8 @@ __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   float alpha = ALPHA, beta = BETA, beta1 = 1.;
   for ( int i = 0; i < NSPCTR; i++ ) {
     AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx, spc[i].absrptnFctrs );
-    //BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
-    BilinearInterpolation <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
+    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
+    //BilinearInterpolation <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
     ReverseLinearInterpolationNoErrors <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>>  ( chn[0].nwl, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx, chn[0].didi01 );
     ReverseLinearInterpolationNoErrors <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>>  ( chn[0].nwl, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist2, mdl[0].EBV2, chn[0].xx, chn[0].didi02 );
     ReverseLinearInterpolationNoErrors <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>>  ( chn[0].nwl, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist3, mdl[0].EBV3, chn[0].xx, chn[0].didi03 );
@@ -1714,8 +1708,13 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
 }
 
 __host__ __device__ float chisquared ( const float d, const float m, const float b, const float scale ) {
+  return powf ( d - scale * b - m, 2. ) / d;
+}
+
+__host__ __device__ float chi2 ( const float d, const float m ) {
   return powf ( d - m, 2. ) / d;
 }
+
 
 __global__ void AssembleArrayOfChannelStatistics ( const int nwl, const int nch, const float t_s, const float t_b, const float scal_s, const float scal_b, const float *src, const float *bkg, const float *flx, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -1723,8 +1722,9 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nwl, const int nch,
   int t = i + j * nch;
   if ( i < nch && j < nwl ) {
     //stt[t] = PoissonWithBackground ( src[i], bkg[i], flx[t], t_s, t_b, scal_s, scal_b );
-    stt[t] = Poisson ( src[i], flx[t], t_s );
-    //stt[t] = chisquared ( src[i], flx[t]*t_s, bkg[i], scal_s/scal_b );
+    //stt[t] = Poisson ( src[i], flx[t], t_s );
+    stt[t] = chisquared ( src[i], flx[t]*t_s, bkg[i], scal_s/scal_b );
+    //stt[t] = chi2 ( src[i], flx[t]*t_s );
   }
 }
 
