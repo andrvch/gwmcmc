@@ -12,12 +12,12 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 3 // Number of parameters
+#define NPRS 5 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 2
+#define NSPCTR 1
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
@@ -82,6 +82,7 @@ struct Spectrum {
   float *nsa1Flxs, *nsa2Flxs;
   int nmbrOfgrpIgnVls;
   int hghrBn, lwrBn;
+  float *bkgGrp;
 };
 
 struct Model {

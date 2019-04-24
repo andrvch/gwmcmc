@@ -34,8 +34,8 @@ int main ( int argc, char *argv[] ) {
 
   Chain chn[1];
   const char *spcFl1 = argv[2];
-  const char *spcFl2 = argv[3];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2 };
+  //const char *spcFl2 = argv[3];
+  const char *spcLst[NSPCTR] = { spcFl1 };
 
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );
@@ -117,30 +117,28 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[1] = 6.5;
 
   chn[0].x0[1] = 0.0;
-  chn[0].xbnd[2] = -10.;
-  chn[0].xbnd[3] = 10;
+  chn[0].xbnd[2] = -25.;
+  chn[0].xbnd[3] = 25;
 
-  chn[0].x0[2] = 0.2;
-  chn[0].xbnd[4] = 0.;
+  chn[0].x0[2] = 1.5;
+  chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
 
-  /*
   chn[0].x0[3] = -5.5;
   chn[0].xbnd[6] = -25.;
   chn[0].xbnd[7] = 25.;
-
-  chn[0].x0[4] = 1.9;
+  /*
+  chn[0].x0[4] = -5.;
   chn[0].xbnd[8] = -25.;
   chn[0].xbnd[9] = 25.;
 
   chn[0].x0[5] = -4.75;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
-
-  chn[0].x0[6] = 0.2;
-  chn[0].xbnd[12] = 0.;
-  chn[0].xbnd[13] = 25.;
   */
+  chn[0].x0[4] = 0.2;
+  chn[0].xbnd[8] = 0.;
+  chn[0].xbnd[9] = 25.;
 
   initializeChain ( cdp, chn, mdl, spc );
 

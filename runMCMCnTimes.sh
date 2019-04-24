@@ -1,8 +1,8 @@
 #!/bin/bash
 CUDAID=1
-SPECFILE1="pn-thin-5-ao17_0.fak"
-SPECFILE2="pn-thin-5-ao17_1.fak"
-#SPECFILE1="PN_J0633_15asec_grp15_0.fak"
+#SPECFILE1="pn-thin-5-ao17_0.fak"
+#SPECFILE2="pn-thin-5-ao17_1.fak"
+SPECFILE1="PN_J0633_15asec_grp1_0.fak"
 #SPECFILE2="PN_J0633_15asec_grp15_1.fak"
 #SPECFILE1="PN_J0633_15asec_grp15.pi"
 #SPECFILE2="PN_J0633_15asec_bkg.pi"
@@ -23,13 +23,13 @@ LSTEP=512
 i=$3
 NCHAINS=$4
 emin=0.3
-emax=1.0
+emax=7.0
 let NCHAINS=NCHAINS+i
 printf "DeviceID=$CUDAID"
 printf "\n"
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
-  ./runSFH $CUDAID $SPECFILE1 $SPECFILE2 $CHAINFILE $NWALK $LSTEP $i $emin $emax > $LOGFILE
+  ./runSFH $CUDAID $SPECFILE1 $CHAINFILE $NWALK $LSTEP $i $emin $emax > $LOGFILE
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"
