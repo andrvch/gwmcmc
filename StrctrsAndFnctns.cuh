@@ -70,15 +70,17 @@ struct Spectrum {
   char *spcLst[NSPCTR];
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   float lwrNtcdEnrg, hghrNtcdEnrg;
-  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns;
+  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns, nmbrOfNtcdBns, nmbrOfiVls, nmbrOfUsdBns;
   float srcExptm, bckgrndExptm;
   float backscal_src, backscal_bkg;
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
-  float *grpVls;
-  int *grpIndx, *grpPntr;
+  float *grpVls, *ntcVls, *bnsbns, *grpng, *grpIgnVls, *iVls, *srcGrp;
+  int *grpIndx, *grpPntr, *grpIgnIndx, *grpIgnPntr, *iPntr, *iIndx;
+  int *ntcIndx, *ntcPntr;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
+  int nmbrOfgrpIgnVls;
 };
 
 struct Model {
@@ -186,7 +188,7 @@ __host__ int SpecData ( Cupar*, const int, Model*, Spectrum* );
 __host__ int SpecInfo ( const char *spcLst[NSPCTR], const int, Spectrum* );
 __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, int*, float*, float*, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] );
-__host__ int ReadFitsData ( const int, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float*, const int, float*, int*, int* );
+__host__ int ReadFitsData ( const int, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float*, const int, float*, int*, int*, float* );
 __host__ void FreeModel ( const Model* );
 
 __global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const float*, float* );
@@ -204,6 +206,7 @@ __host__ __device__ float BlackBody ( const float, const float, const float, con
 __host__ __device__ float Poisson ( const float, const float, const float );
 __host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
+__host__ __device__ float chisquared ( const float, const float );
 
 __global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const float*, float* );
 __global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float* );

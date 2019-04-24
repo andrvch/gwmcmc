@@ -1015,7 +1015,7 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
       printf ( " RMF table        -- %s\n", spc[i].rmfTbl );
       printf ( " Background table -- %s\n", spc[i].bckgrndTbl );
     }
-    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls, spc[i].nmbrOfBns, spc[i].grpVls, spc[i].grpIndx, spc[i].grpPntr );
+    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls, spc[i].nmbrOfBns, spc[i].grpVls, spc[i].grpIndx, spc[i].grpPntr, spc[i].grpng );
     cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     AssembleArrayOfNoticedChannels <<< grid1D ( spc[i].nmbrOfChnnls ), THRDS >>> ( spc[i].nmbrOfChnnls, spc[i].lwrNtcdEnrg, spc[i].hghrNtcdEnrg, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].gdQltChnnls, spc[i].ntcdChnnls );
     cublasSdot ( cdp[0].cublasHandle, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, spc[i].ntcdChnnls, INCYY, &spc[i].smOfNtcdChnnls );
@@ -1075,8 +1075,39 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
     cudaMallocManaged ( ( void ** ) &spc[i].grpPntr, ( spc[i].nmbrOfBns + 1 ) * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spc[i].grpIndx, spc[i].nmbrOfChnnls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spc[i].grpVls, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpng, spc[i].nmbrOfChnnls * sizeof ( float ) );
   }
   return 0;
+}
+
+__host__ void FreeSpec ( const Spectrum *spc ) {
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    cudaFree ( spc[i].rmfVlsInCsc );
+    cudaFree ( spc[i].rmfIndxInCsc );
+    cudaFree ( spc[i].rmfPntrInCsc );
+    cudaFree ( spc[i].rmfVls );
+    cudaFree ( spc[i].rmfIndx );
+    cudaFree ( spc[i].rmfPntr );
+    cudaFree ( spc[i].enrgChnnls );
+    cudaFree ( spc[i].arfFctrs );
+    cudaFree ( spc[i].srcCnts );
+    cudaFree ( spc[i].bckgrndCnts );
+    cudaFree ( spc[i].gdQltChnnls );
+    cudaFree ( spc[i].lwrChnnlBndrs );
+    cudaFree ( spc[i].hghrChnnlBndrs );
+    cudaFree ( spc[i].crssctns );
+    cudaFree ( spc[i].absrptnFctrs );
+    cudaFree ( spc[i].mdlFlxs );
+    cudaFree ( spc[i].nsa1Flxs );
+    cudaFree ( spc[i].nsa2Flxs );
+    cudaFree ( spc[i].flddMdlFlxs );
+    cudaFree ( spc[i].chnnlSttstcs );
+    cudaFree ( spc[i].ntcdChnnls );
+    cudaFree ( spc[i].grpVls );
+    cudaFree ( spc[i].grpIndx );
+    cudaFree ( spc[i].grpPntr );
+    cudaFree ( spc[i].grpng );
+  }
 }
 
 __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, int *nmbrOfBins, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] ) {
@@ -1139,7 +1170,7 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   return 0;
 }
 
-__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls, const int nmbrOfBns, float *grpVls, int *grpIndx, int *grpPntr ) {
+__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls, const int nmbrOfBns, float *grpVls, int *grpIndx, int *grpPntr, float *grpng ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
@@ -1153,24 +1184,8 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   fits_read_key ( ftsPntr, TSTRING, "TELESCOP", Telescop, NULL, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, srcCnts, &anynull, &status );
-  int *grp;
-  grp = ( int * ) malloc ( nmbrOfChnnls * sizeof ( int ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colGrp, &colnum, &status );
-  fits_read_col_int ( ftsPntr, colnum, 1, 1, nmbrOfChnnls, intnull, grp, &anynull, &status );
-  int k = 0;
-  for ( int i = 0; i < nmbrOfChnnls; i++ ) {
-    grpVls[i] = 1.;
-    if ( grp[i] == 1 ) {
-      grpPntr[k] = i;
-      k += 1;
-    }
-  }
-  grpPntr[nmbrOfBns+1] = nmbrOfChnnls;
-  for ( int i = 0; i < nmbrOfBns; i++ ) {
-    for ( int j = grpPntr[i]; j < grpPntr[i+1]; j++ ) {
-      grpIndx[i+j] = j;
-    }
-  }
+  fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, grpng, &anynull, &status );
   /* Read ARF FILE: */
   fits_open_file ( &ftsPntr, arfTbl, READONLY, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colSpecResp, &colnum, &status );
@@ -1281,7 +1296,6 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   free ( n_chan );
   free ( f_chan );
   free ( n_grp );
-  free ( grp );
   return 0;
 }
 
@@ -1754,35 +1768,6 @@ __host__ int InitializeModel ( Model *mdl ) {
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
   return 0;
-}
-
-__host__ void FreeSpec ( const Spectrum *spc ) {
-  for ( int i = 0; i < NSPCTR; i++ ) {
-    cudaFree ( spc[i].rmfVlsInCsc );
-    cudaFree ( spc[i].rmfIndxInCsc );
-    cudaFree ( spc[i].rmfPntrInCsc );
-    cudaFree ( spc[i].rmfVls );
-    cudaFree ( spc[i].rmfIndx );
-    cudaFree ( spc[i].rmfPntr );
-    cudaFree ( spc[i].enrgChnnls );
-    cudaFree ( spc[i].arfFctrs );
-    cudaFree ( spc[i].srcCnts );
-    cudaFree ( spc[i].bckgrndCnts );
-    cudaFree ( spc[i].gdQltChnnls );
-    cudaFree ( spc[i].lwrChnnlBndrs );
-    cudaFree ( spc[i].hghrChnnlBndrs );
-    cudaFree ( spc[i].crssctns );
-    cudaFree ( spc[i].absrptnFctrs );
-    cudaFree ( spc[i].mdlFlxs );
-    cudaFree ( spc[i].nsa1Flxs );
-    cudaFree ( spc[i].nsa2Flxs );
-    cudaFree ( spc[i].flddMdlFlxs );
-    cudaFree ( spc[i].chnnlSttstcs );
-    cudaFree ( spc[i].ntcdChnnls );
-    cudaFree ( spc[i].grpVls );
-    cudaFree ( spc[i].grpIndx );
-    cudaFree ( spc[i].grpPntr );
-  }
 }
 
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *bn, const float *xx, float *cc ) {
