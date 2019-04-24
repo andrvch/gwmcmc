@@ -1,9 +1,11 @@
 #!/bin/bash
 CUDAID=1
-#SPECFILE1="pn-thin-5-ao17_0.fak"
-#SPECFILE2="pn-thin-5-ao17_1.fak"
-SPECFILE1="PN_J0633_15asec_grp15.pi"
-SPECFILE2="PN_J0633_15asec_bkg.pi"
+SPECFILE1="pn-thin-5-ao17_0.fak"
+SPECFILE2="pn-thin-5-ao17_1.fak"
+#SPECFILE1="PN_J0633_15asec_grp15_0.fak"
+#SPECFILE2="PN_J0633_15asec_grp15_1.fak"
+#SPECFILE1="PN_J0633_15asec_grp15.pi"
+#SPECFILE2="PN_J0633_15asec_bkg.pi"
 #SPECFILE3="M1_J0633_15asec_grp15.pi"
 #SPECFILE4="M1_J0633_bkg.pi"
 #SPECFILE5="M2_J0633_15asec_grp15.pi"
@@ -16,12 +18,12 @@ SPECFILE2="PN_J0633_15asec_bkg.pi"
 #SPECFILE12="M2_pwn_ex_bkg.pi"
 CHAINFILE=$1
 LOGFILE=$2
-NWALK=64
-LSTEP=128
+NWALK=128
+LSTEP=512
 i=$3
 NCHAINS=$4
 emin=0.3
-emax=7.0
+emax=1.0
 let NCHAINS=NCHAINS+i
 printf "DeviceID=$CUDAID"
 printf "\n"

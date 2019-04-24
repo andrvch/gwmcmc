@@ -16,7 +16,7 @@
 #include "StrctrsAndFnctns.cuh"
 
 int main ( int argc, char *argv[] ) {
-  const int vrb = 0;
+  const int vrb = 1;
 
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
@@ -61,6 +61,7 @@ int main ( int argc, char *argv[] ) {
   SpecAlloc ( chn, spc );
   SpecData ( cdp, vrb, mdl, spc );
 
+  /*
   printf ( " Grouping Information -- \n " );
   int count = 0;
   for ( int i = 0; i < spc[0].nmbrOfBns; i++ ) {
@@ -107,7 +108,7 @@ int main ( int argc, char *argv[] ) {
   for ( int i = 0; i < spc[0].nmbrOfUsdBns; i++ ) {
     printf ( " %2.0f ", spc[0].srcGrp[i] );
   }
-  printf ( " \n " );
+  printf ( " \n " );*/
 
   allocateChain ( chn );
 
@@ -119,10 +120,11 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[2] = -10.;
   chn[0].xbnd[3] = 10;
 
-  chn[0].x0[2] = 1.5;
-  chn[0].xbnd[4] = -25.;
+  chn[0].x0[2] = 0.2;
+  chn[0].xbnd[4] = 0.;
   chn[0].xbnd[5] = 25.;
 
+  /*
   chn[0].x0[3] = -5.5;
   chn[0].xbnd[6] = -25.;
   chn[0].xbnd[7] = 25.;
@@ -138,6 +140,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[6] = 0.2;
   chn[0].xbnd[12] = 0.;
   chn[0].xbnd[13] = 25.;
+  */
 
   initializeChain ( cdp, chn, mdl, spc );
 
@@ -149,34 +152,14 @@ int main ( int argc, char *argv[] ) {
   cudaEventRecord ( cdp[0].start, 0 );
 
   initializeRandomForStreach ( cdp, chn );
-  //initializeRandomForWalk ( cdp, chn );
-  //initializeRandomForMetropolis ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
-    /*metropolisMove ( cdp, chn );
-    statisticMetropolis ( cdp, chn );
-    metropolisUpdate ( cdp, chn );*/
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
-      //walkMove ( cdp, chn );
       streachMove ( cdp, chn );
-      //metropolisMove ( cdp, chn );
-      //cudaDeviceSynchronize ();
-      //printMetropolisMove ( chn );
-      //statistic ( cdp, chn );
       modelStatistic1 ( cdp, mdl, chn, spc );
-      //statisticMetropolis ( cdp, chn );
-      //cudaDeviceSynchronize ();
-      //printMetropolisMove ( chn );
-      //printMove ( chn );
-      //printSpec ( spc );
-      //walkUpdate ( cdp, chn );
       streachUpdate ( cdp, chn, mdl );
-      //metropolisUpdate ( cdp, chn );
-      //cudaDeviceSynchronize ();
-      //printMetropolisUpdate ( chn );
-      //printUpdate ( chn );
       chn[0].isb += 1;
     }
     saveCurrent ( chn );

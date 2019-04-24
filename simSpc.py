@@ -10,12 +10,12 @@ Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 
-name = sys.argv[1]
-time = float(sys.argv[2])
-num = int(sys.argv[3])
+name = "PN_J0633_15asec_grp15"
+time = float(sys.argv[1])
+num = int(sys.argv[2])
 AllData(name+".pi")
-AllModels += "(bbodyrad+powerlaw)*phabs"
-pars = (0.12, 10**(-2.0*2)*10**8, 1.5, 10**-5., 0.15)
+AllModels += "nsa*phabs"
+pars = (6.0, 1.4, 13., 1.E12, 1.E-4, 0.15)
 AllModels(1).setPars(pars)
 for i in range(num):
     if time == 0:
