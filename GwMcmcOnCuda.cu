@@ -92,6 +92,12 @@ int main ( int argc, char *argv[] ) {
   for ( int i = 0; i < spc[0].nmbrOfChnnls; i++ ) {
     printf ( " %2.0f ", spc[0].grpVls[i] );
   }
+  printf ( "\n" );
+
+  printf ( " %i\n", spc[0].nmbrOfNtcdBns );
+  printf ( " %i\n", spc[0].nmbrOfUsdBns );
+  printf ( " %i\n", spc[0].lwrBn );
+  printf ( " %i\n", spc[0].hghrBn );
 
   allocateChain ( chn );
 

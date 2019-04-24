@@ -81,6 +81,7 @@ struct Spectrum {
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
   int nmbrOfgrpIgnVls;
+  int hghrBn, lwrBn;
 };
 
 struct Model {
