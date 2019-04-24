@@ -39,7 +39,13 @@ int main ( int argc, char *argv[] ) {
   const char *spcFl4 = argv[5];
   const char *spcFl5 = argv[6];
   const char *spcFl6 = argv[7];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6 };
+  const char *spcFl7 = argv[8];
+  const char *spcFl8 = argv[9];
+  const char *spcFl9 = argv[10];
+  const char *spcFl10 = argv[11];
+  const char *spcFl11 = argv[12];
+  const char *spcFl12 = argv[13];
+  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
 
   chn[0].name = argv[NSPCTR+2];
   chn[0].nwl = atoi ( argv[NSPCTR+3] );

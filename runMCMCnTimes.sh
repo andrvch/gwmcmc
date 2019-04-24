@@ -25,8 +25,8 @@ NWALK=128
 LSTEP=512
 i=$3
 NCHAINS=$4
-emin=0.4
-emax=7.0
+emin=0.3
+emax=8.0
 let NCHAINS=NCHAINS+i
 printf "DeviceID=$CUDAID"
 printf "\n"

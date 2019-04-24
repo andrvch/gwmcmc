@@ -64,6 +64,7 @@ struct Chain {
   float *didi, *didi0, *dist, *didi1;
   float *didi01, *didi02, *didi03, *didi11, *didi12, *didi13;
   int *kex;
+  float *chi, *chi1, *chi0;
 };
 
 struct Spectrum {
