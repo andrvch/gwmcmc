@@ -61,7 +61,7 @@ int main ( int argc, char *argv[] ) {
   SpecAlloc ( chn, spc );
   SpecData ( cdp, vrb, mdl, spc );
 
-  printf ( " Grouping Information --  " );
+  printf ( " Grouping Information -- \n " );
   int count = 0;
   for ( int i = 0; i < spc[0].nmbrOfBns; i++ ) {
     count += spc[0].grpPntr[i+1] - spc[0].grpPntr[i];
@@ -87,6 +87,27 @@ int main ( int argc, char *argv[] ) {
   printf ( " %i\n", spc[0].nmbrOfUsdBns );
   printf ( " %i\n", spc[0].lwrBn );
   printf ( " %i\n", spc[0].hghrBn );
+  printf ( " %i\n", spc[0].nmbrOfgrpIgnVls );
+
+  for ( int i = 0; i < spc[0].nmbrOfgrpIgnVls; i++ ) {
+    printf ( " %2.0f ", spc[0].grpIgnVls[i] );
+  }
+  printf ( " \n " );
+
+  for ( int i = 0; i < spc[0].nmbrOfgrpIgnVls; i++ ) {
+    printf ( " %i ", spc[0].grpIgnIndx[i] );
+  }
+  printf ( " \n " );
+
+  for ( int i = 0; i < spc[0].nmbrOfNtcdBns+1; i++ ) {
+    printf ( " %i ", spc[0].grpIgnPntr[i] );
+  }
+  printf ( " \n " );
+
+  for ( int i = 0; i < spc[0].nmbrOfUsdBns; i++ ) {
+    printf ( " %2.0f ", spc[0].srcGrp[i] );
+  }
+  printf ( " \n " );
 
   allocateChain ( chn );
 
