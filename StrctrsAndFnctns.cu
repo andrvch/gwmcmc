@@ -110,28 +110,35 @@ __global__ void setWalkersAtLast ( const int dim, const int nwl, const float *ls
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int t = i + j * dim;
   if ( i < dim && j < nwl ) {
-    xx[t] = lst[i+j*(dim+1+1+1)];
+    xx[t] = lst[i+j*(dim+1+1+1+1)];
   }
 }
 
 __global__ void setStatisticAtLast ( const int dim, const int nwl, const float *lst, float *stt ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    stt[i] = lst[dim+1+i*(dim+1+1+1)];
+    stt[i] = lst[dim+1+i*(dim+1+1+1+1)];
+  }
+}
+
+__global__ void setChiAtLast ( const int dim, const int nwl, const float *lst, float *stt ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nwl ) {
+    stt[i] = lst[dim+2+i*(dim+1+1+1+1)];
   }
 }
 
 __global__ void setDistanceAtLast ( const int dim, const int nwl, const float *lst, float *didi ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    didi[i] = lst[dim+i*(dim+1+1+1)];
+    didi[i] = lst[dim+i*(dim+1+1+1+1)];
   }
 }
 
 __global__ void setPriorAtLast ( const int dim, const int nwl, const float *lst, float *prr ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    prr[i] = lst[dim+2+i*(dim+1+1+1)];
+    prr[i] = lst[dim+3+i*(dim+1+1+1+1)];
   }
 }
 
@@ -428,6 +435,7 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn, Model *mdl, Spectrum *spc
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
     constantArray <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, 0., chn[0].stt );
+    constantArray <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, 0., chn[0].chi );
     curandGenerateUniform ( cdp[0].curandGnrtr, chn[0].uni, chn[0].nwl );
     mapKex <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].uni, chn[0].kex );
     //statistic0 ( cdp, chn );
@@ -436,6 +444,7 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn, Model *mdl, Spectrum *spc
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
     setStatisticAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].stt );
+    setChiAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].chi );
     setPriorAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].prr );
     setDistanceAtLast <<< grid1D ( chn[0].nwl ), THRDS  >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].didi );
   }
@@ -578,6 +587,7 @@ __host__ int streachUpdate ( const Cupar *cdp, Chain *chn, Model *mdl ) {
   updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].didi1, chn[0].q, chn[0].ru, chn[0].didi0 );
   insertArray <<< grid1D ( nxx ), THRDSPERBLCK >>> ( nxx, indxX0, chn[0].xx0, chn[0].xx );
   insertArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].stt0, chn[0].stt );
+  insertArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].chi0, chn[0].chi );
   insertArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].prr0, chn[0].prr );
   insertArray <<< grid1D ( nss ), THRDSPERBLCK >>> ( nss, indxS0, chn[0].didi0, chn[0].didi );
   return 0;
@@ -633,8 +643,8 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   i = 0;
   int j;
   while ( fscanf ( fptr, "%e", &value ) == 1 ) {
-    if ( i >= n - ( dim + 1 + 1 + 1 ) * nwl ) {
-      j = i - ( n - ( dim + 1 + 1 + 1  ) * nwl );
+    if ( i >= n - ( dim + 1 + 1 + 1 + 1 ) * nwl ) {
+      j = i - ( n - ( dim + 1 + 1 + 1 + 1  ) * nwl );
       lst[j] = value;
     }
     i += 1;
@@ -642,7 +652,7 @@ __host__ void readLastFromFile ( const char *name, const int indx, const int dim
   fclose ( fptr );
 }
 
-__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const float *smpls, const float *stat, const float *priors, const float *dist ) {
+__host__ void writeChainToFile ( const char *name, const int indx, const int dim, const int nwl, const int nst, const float *smpls, const float *stat, const float *priors, const float *dist, const float *chi ) {
   FILE *flPntr;
   char flNm[FLEN_CARD];
   int ttlChnIndx, stpIndx, wlkrIndx, prmtrIndx;
@@ -661,6 +671,8 @@ __host__ void writeChainToFile ( const char *name, const int indx, const int dim
       fprintf ( flPntr, " %.8E ", dist[wlkrIndx+stpIndx*nwl] );
       prmtrIndx += 1;
       fprintf ( flPntr, " %.8E ", stat[wlkrIndx+stpIndx*nwl] );
+      prmtrIndx += 1;
+      fprintf ( flPntr, " %.8E ", chi[wlkrIndx+stpIndx*nwl] );
       prmtrIndx += 1;
       fprintf ( flPntr, " %.8E\n", priors[wlkrIndx+stpIndx*nwl] );
       wlkrIndx += 1;
@@ -1731,7 +1743,13 @@ __host__ __device__ float chisquared ( const float d, const float m, const float
 }
 
 __host__ __device__ float chi2 ( const float d, const float m ) {
-  return powf ( d - m, 2. ) / m;
+  float s = 0;
+  if ( d != 0 ) {
+    s = powf ( d - m, 2. ) / d;
+  } else if ( d == 0 && m !=0 ) {
+    s = powf ( d - m, 2. ) / m;
+  }
+  return s;
 }
 
 __global__ void AssembleArrayOfChannelStatistics ( const int nwl, const int nch, const float t_s, const float t_b, const float scal_s, const float scal_b, const float *src, const float *bkg, const float *flx, float *stt ) {
@@ -1748,10 +1766,10 @@ __global__ void AssembleArrayOfChannelStatistics ( const int nwl, const int nch,
 
 __host__ __device__ float cstat ( const float d, const float m ) {
   float s = 0;
-  if ( d != 0 && m >= TLR ) {
+  if ( d > TLR && m > TLR ) {
     s = m - d * logf ( m ) - d * ( 1 - logf ( d ) );
-  } else if ( d != 0 && m < TLR ) {
-    s = TLR - d * logf ( TLR ) - d * ( 1 - logf ( d ) );
+  } else if ( d > TLR && m <= TLR ) {
+    s = - d * ( 1 - logf ( d ) );
   } else {
     s = m;
   }

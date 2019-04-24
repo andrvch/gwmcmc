@@ -168,7 +168,7 @@ __host__ int walkUpdate ( const Cupar*, Chain* );
 __host__ int streachUpdate ( const Cupar*, Chain*, Model* );
 __host__ int saveCurrent ( Chain* );
 __host__ void readLastFromFile ( const char*, const int, const int, const int, float* );
-__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float*, const float*, const float* );
+__host__ void writeChainToFile ( const char*, const int, const int, const int, const int, const float*, const float*, const float*, const float*, const float* );
 __host__ int destroyCuda ( const Cupar* );
 __host__ void freeChain ( const Chain* );
 __host__ void simpleReadDataFloat ( const char*, float* );
@@ -246,5 +246,7 @@ __global__ void arrayOfCStat ( const int nwl, const int nch, const float t, cons
 __global__ void arrayOfChiSquareds ( const int nwl, const int nch, const float t, const float *c, const float *f, float *s );
 
 __host__ __device__ float chi2 ( const float, const float );
+
+__global__ void setChiAtLast ( const int dim, const int nwl, const float *lst, float *stt );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
