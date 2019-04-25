@@ -70,10 +70,12 @@ struct Spectrum {
   char *spcLst[NSPCTR];
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   float lwrNtcdEnrg, hghrNtcdEnrg;
-  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls;
+  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns;
   float srcExptm, bckgrndExptm;
   float backscal_src, backscal_bkg;
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
+  float *grpVls;
+  int *grpIndx, *grpPntr;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
@@ -103,10 +105,10 @@ struct Model {
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
-  const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
   int numNsmaxgE = 117;
   int numNsmaxgT = 14;
@@ -180,50 +182,57 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn );
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
+__host__ int SpecData ( Cupar*, const int, Model*, Spectrum* );
+__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int, Spectrum* );
+__host__ int SpecAlloc ( Chain*, Spectrum* );
+__host__ int ReadFitsInfo ( const char*, int*, int*, int*, int*, float*, float*, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] );
+__host__ int ReadFitsData ( const int, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float*, const int, float*, int*, int* );
+__host__ void FreeModel ( const Model* );
 
-__host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc );
-__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc );
-__host__ int SpecAlloc ( Chain *chn, Spectrum *spc );
-__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] );
-__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls );
+__global__ void BilinearInterpolation ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const float*, float* );
+__global__ void BilinearInterpolationNsmax ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const float*, float* );
+__global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const float*, float*, float* );
+__global__ void LinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const float*, float*, float* );
+__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const float*, const float*, float*, const float* );
 
-__host__ void FreeModel ( const Model *mdl );
-__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs );
-__global__ void BilinearInterpolationNsmax ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs );
-__global__ void LinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *errEBV, const float *wlkrs, float *mNh, float *sNh );
-__global__ void LinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *mNh, float *sNh );
-__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float* );
-__host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc );
-__host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc );
-__host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr );
-__host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 );
-__host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, const float en1, const float en2 );
-__host__ __device__ float BlackBody ( const float kT, const float logRtD, const float enrgLwr, const float enrgHghr );
-__host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts );
-__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg );
-__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x );
-__global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, const float *crssctns, const float *abndncs, const int *atmcNmbrs, const float *wlkrs, float *absrptnFctrs );
-__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs );
-__host__ void AssembleArrayOfPhotoelectricCrossections ( const int nmbrOfEnrgChnnls, const int nmbrOfElmnts, int sgFlag, float *enrgChnnls, int *atmcNmbrs, float *crssctns );
-__global__ void AssembleArrayOfNoticedChannels ( const int nmbrOfChnnls, const float lwrNtcdEnrg, const float hghrNtcdEnrg, const float *lwrChnnlBndrs, const float *hghrChnnlBndrs, const float *gdQltChnnls, float *ntcdChnnls );
-__host__ int InitializeModel ( Model *mdl );
-__host__ void FreeSpec ( const Spectrum *spc );
+__host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum* );
+__host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum* );
+__host__ __device__ float PowerLaw ( const float, const float, const float, const float );
+__host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
+__host__ __device__ float IntegrateNsmax ( const float, const float, const float, const float );
+__host__ __device__ float BlackBody ( const float, const float, const float, const float );
+__host__ __device__ float Poisson ( const float, const float, const float );
+__host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
+__host__ __device__ int FindElementIndex ( const float*, const int, const float );
+
+__global__ void AssembleArrayOfAbsorptionFactors ( const int, const int, const int, const float*, const float*, const int*, const float*, float* );
+__global__ void AssembleArrayOfChannelStatistics ( const int, const int, const float, const float, const float, const float, const float*, const float*, const float*, float* );
+
+__host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, int, float*, int*, float* );
+
+__global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
+
+__host__ int InitializeModel ( Model* );
+__host__ void FreeSpec ( const Spectrum* );
+
 extern "C" float photo_ ( float*, float*, int*, int*, int* );
 extern "C" float gphoto_ ( float*, float*, int*, int* );
 
-__global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *bn, const float *xx, float *cc );
-__global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, const float *xx, float *pr );
-__host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes );
-__host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes );
-__host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV, float *errDist, float *errEBV );
-__host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int numDist, float *data, float *Dist, float *EBV );
-__host__ int printSpec ( const Spectrum *spc );
-__global__ void returnQ1 ( const int dim, const int n, const float *p1, const float *p0, const float *s1, const float *s0, const float *zr, float *q );
-__global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, const float *nhMd, const float *nhSg, const float *xx, float *pr );
-__global__ void setPriorAtLast ( const int dim, const int nwl, const float *lst, float *prr );
-__global__ void ReverseLinearInterpolationNoErrors ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int dIndx, const float *Dist, const float *EBV, const float *wlkrs, float *dist );
-__global__ void setDistanceAtLast ( const int dim, const int nwl, const float *lst, float *didi );
+__global__ void arrayOf2DConditions ( const int, const int, const float*, const float*, float* );
+__global__ void arrayOfPriors ( const int, const int, const float*, const float*, float* );
+
+__host__ void SimpleReadNsaTable ( const char*, const int, const int, float*, float*, float*, float* );
+__host__ void SimpleReadNsmaxgTable ( const char*, const int, const int, float*, float*, float*, float* );
+__host__ void SimpleReadReddenningData ( const char*, const int, float*, float*, float*, float*, float* );
+__host__ void SimpleReadReddenningDataNoErrors ( const char*, const int, float*, float*, float* );
+__host__ int printSpec ( const Spectrum* );
+
+__global__ void returnQ1 ( const int, const int, const float*, const float*, const float*, const float*, const float*, float* );
+__global__ void arrayOfPriors1 ( const int, const int, const float*, const float*, const float*, const float*, float* );
+__global__ void setPriorAtLast ( const int, const int, const float*, float* );
+__global__ void ReverseLinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const float*, float* );
+__global__ void setDistanceAtLast ( const int, const int nwl, const float *lst, float *didi );
 __global__ void chooseLaw ( const int, const int*, const float*, const float*, const float*, float* );
-__global__ void mapKex ( const int nwl, const float *r, int *kex );
+__global__ void mapKex ( const int, const float*, int* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

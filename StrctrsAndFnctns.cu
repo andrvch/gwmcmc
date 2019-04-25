@@ -853,7 +853,6 @@ __host__ int printMetropolisUpdate ( const Chain *chn ) {
   return 0;
 }
 
-
 __host__ int printMove ( const Chain *chn ) {
   printf ( "=========================================\n" );
   printf ( " step - %i ", chn[0].ist );
@@ -1016,7 +1015,7 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
       printf ( " RMF table        -- %s\n", spc[i].rmfTbl );
       printf ( " Background table -- %s\n", spc[i].bckgrndTbl );
     }
-    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls );
+    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls, spc[i].nmbrOfBns, spc[i].grpVls, spc[i].grpIndx, spc[i].grpPntr );
     cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
     AssembleArrayOfNoticedChannels <<< grid1D ( spc[i].nmbrOfChnnls ), THRDS >>> ( spc[i].nmbrOfChnnls, spc[i].lwrNtcdEnrg, spc[i].hghrNtcdEnrg, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].gdQltChnnls, spc[i].ntcdChnnls );
     cublasSdot ( cdp[0].cublasHandle, spc[i].nmbrOfChnnls, spc[i].ntcdChnnls, INCXX, spc[i].ntcdChnnls, INCYY, &spc[i].smOfNtcdChnnls );
@@ -1024,27 +1023,28 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
     smOfNtcdChnnls = smOfNtcdChnnls + spc[i].smOfNtcdChnnls;
     AssembleArrayOfPhotoelectricCrossections ( spc[i].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[i].enrgChnnls, mdl[0].atmcNmbrs, spc[i].crssctns );
     if ( verbose == 1 ) {
-      printf ( " Number of energy channels                = %i\n", spc[i].nmbrOfEnrgChnnls );
-      printf ( " Number of instrument channels            = %i\n", spc[i].nmbrOfChnnls );
-      printf ( " Number of nonzero elements of RMF matrix = %i\n", spc[i].nmbrOfRmfVls );
-      printf ( " Exposure time                            = %.8E\n", spc[i].srcExptm );
-      printf ( " Exposure time (background)               = %.8E\n", spc[i].bckgrndExptm );
-      printf ( " Number of used instrument channels -- %4.0f\n", spc[i].smOfNtcdChnnls );
-      printf ( " Backscale src -- %4.0f\n", spc[i].backscal_src );
-      printf ( " Backscale bkg -- %4.0f\n", spc[i].backscal_bkg );
+      printf ( " Number of energy channels                -- %i\n", spc[i].nmbrOfEnrgChnnls );
+      printf ( " Number of instrument channels            -- %i\n", spc[i].nmbrOfChnnls );
+      printf ( " Number of nonzero elements of RMF matrix -- %i\n", spc[i].nmbrOfRmfVls );
+      printf ( " Number of spectral bins                  -- %i\n", spc[i].nmbrOfBns );
+      printf ( " Exposure time                            -- %.8E\n", spc[i].srcExptm );
+      printf ( " Exposure time (background)               -- %.8E\n", spc[i].bckgrndExptm );
+      printf ( " Number of used instrument channels       -- %4.0f\n", spc[i].smOfNtcdChnnls );
+      printf ( " Backscale src                            -- %4.0f\n", spc[i].backscal_src );
+      printf ( " Backscale bkg                            -- %4.0f\n", spc[i].backscal_bkg );
     }
   }
   if ( verbose == 1 ) {
     printf ( ".................................................................\n" );
-    printf ( " Total number of used instrument channels -- %4.0f\n", smOfNtcdChnnls );
-    printf ( " Number of degrees of freedom -- %4.0f\n", smOfNtcdChnnls - NPRS );
+    printf ( " Total number of used data channels         -- %4.0f\n", smOfNtcdChnnls );
+    printf ( " Number of degrees of freedom               -- %4.0f\n", smOfNtcdChnnls - NPRS );
   }
   return 0;
 }
 
 __host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc ) {
   for ( int i = 0; i < NSPCTR; i++ ) {
-    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
+    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].nmbrOfBns, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
   }
   return 0;
 }
@@ -1072,15 +1072,17 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
     cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpPntr, ( spc[i].nmbrOfBns + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpIndx, spc[i].nmbrOfChnnls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpVls, spc[i].nmbrOfChnnls * sizeof ( float ) );
   }
   return 0;
 }
 
-__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] )
-{
+__host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrOfChnnls, int *nmbrOfRmfVls, int *nmbrOfBins, float *srcExptm, float *bckgrndExptm, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, intnull = 0, anynull = 0, colnum;
-  char card[FLEN_CARD], colNgr[] = "N_GRP", colNch[] = "N_CHAN";
+  char card[FLEN_CARD], colNgr[] = "N_GRP", colGrp[] = "GROUPING", colNch[] = "N_CHAN";
   float floatnull;
   /* Open Spectrum  */
   snprintf ( srcTbl, sizeof ( card ), "%s%s", spcFl, "[SPECTRUM]" );
@@ -1095,13 +1097,19 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   /* Open Background file */
   fits_read_key ( ftsPntr, TSTRING, "BACKFILE", card, NULL, &status );
   snprintf ( bckgrndTbl, sizeof ( card ), "%s%s", card, "[SPECTRUM]" );
-  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  if ( status == 0 && BACKIN == 1 )
-  {
-    fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+  int *grp;
+  grp = ( int * ) malloc ( *nmbrOfChnnls * sizeof ( int ) );
+  fits_get_colnum ( ftsPntr, CASEINSEN, colGrp, &colnum, &status );
+  fits_read_col_int ( ftsPntr, colnum, 1, 1, *nmbrOfChnnls, intnull, grp, &anynull, &status );
+  int sum = 0;
+  for ( int i = 0; i < *nmbrOfChnnls; i++ ) {
+    sum += ( grp[i] > 0 );
   }
-  else
-  {
+  *nmbrOfBins = sum;
+  fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
+  if ( status == 0 && BACKIN == 1 ) {
+    fits_read_key ( ftsPntr, TFLOAT, "EXPOSURE", bckgrndExptm, NULL, &status );
+  } else {
     *bckgrndExptm = 0.0;
     status = 0;
   }
@@ -1116,28 +1124,26 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
   fits_read_col_int ( ftsPntr, colnum, 1, 1, *nmbrOfEnrgChnnls, intnull, n_grp, &anynull, &status );
   int *n_chan_vec;
   n_chan_vec = ( int * ) malloc ( *nmbrOfChnnls * sizeof ( int ) );
-  int sum = 0;
-  for ( int i = 0; i < *nmbrOfEnrgChnnls; i++ )
-  {
+  sum = 0;
+  for ( int i = 0; i < *nmbrOfEnrgChnnls; i++ ) {
     fits_get_colnum ( ftsPntr, CASEINSEN, colNch, &colnum, &status );
     fits_read_col ( ftsPntr, TINT, colnum, i+1, 1, n_grp[i], &floatnull, n_chan_vec, &anynull, &status );
-    for ( int j = 0; j < n_grp[i]; j++ )
-    {
+    for ( int j = 0; j < n_grp[i]; j++ ) {
       sum = sum + n_chan_vec[j];
     }
   }
   *nmbrOfRmfVls = sum;
   free ( n_chan_vec );
   free ( n_grp );
+  free ( grp );
   return 0;
 }
 
-__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls )
-{
+__host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls, const int nmbrOfBns, float *grpVls, int *grpIndx, int *grpPntr ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
   int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
-  char colNgr[]="N_GRP", colNch[]="N_CHAN",  colFch[]="F_CHAN", colCounts[]="COUNTS", colSpecResp[]="SPECRESP", colEnLo[]="ENERG_LO", colEnHi[]="ENERG_HI", colMat[]="MATRIX", colEmin[]="E_MIN", colEmax[]="E_MAX";
+  char colNgr[]="N_GRP", colNch[]="N_CHAN",  colFch[]="F_CHAN", colCounts[]="COUNTS", colSpecResp[]="SPECRESP", colEnLo[]="ENERG_LO", colEnHi[]="ENERG_HI", colMat[]="MATRIX", colEmin[]="E_MIN", colEmax[]="E_MAX", colGrp[] = "GROUPING";
   float floatnull;
   /* Read Spectrum: */
   fits_open_file ( &ftsPntr, srcTbl, READONLY, &status );
@@ -1147,26 +1153,39 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   fits_read_key ( ftsPntr, TSTRING, "TELESCOP", Telescop, NULL, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, srcCnts, &anynull, &status );
+  int *grp;
+  grp = ( int * ) malloc ( nmbrOfChnnls * sizeof ( int ) );
+  fits_get_colnum ( ftsPntr, CASEINSEN, colGrp, &colnum, &status );
+  fits_read_col_int ( ftsPntr, colnum, 1, 1, nmbrOfChnnls, intnull, grp, &anynull, &status );
+  int k = 0;
+  for ( int i = 0; i < nmbrOfChnnls; i++ ) {
+    grpVls[i] = 1.;
+    if ( grp[i] == 1 ) {
+      grpPntr[k] = i;
+      k += 1;
+    }
+  }
+  grpPntr[nmbrOfBns+1] = nmbrOfChnnls;
+  for ( int i = 0; i < nmbrOfBns; i++ ) {
+    for ( int j = grpPntr[i]; j < grpPntr[i+1]; j++ ) {
+      grpIndx[i+j] = j;
+    }
+  }
   /* Read ARF FILE: */
   fits_open_file ( &ftsPntr, arfTbl, READONLY, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colSpecResp, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, arfFctrs, &anynull, &status );
   /* Read Background: */
   fits_open_file ( &ftsPntr, bckgrndTbl, READONLY, &status );
-  if ( status == 0 && BACKIN == 1 )
-  {
+  if ( status == 0 && BACKIN == 1 ) {
     fits_read_key ( ftsPntr, TFLOAT, "BACKSCAL", backscal_bkg, NULL, &status );
     fits_get_colnum ( ftsPntr, CASEINSEN, colCounts, &colnum, &status );
     fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfChnnls, &floatnull, bckgrndCnts, &anynull, &status );
-  }
-  else
-  {
-    if ( verbose == 1)
-    {
+  } else {
+    if ( verbose == 1) {
       printf ( " Warning: Background table is not used, background exposure and background are set to 0.\n " );
     }
-    for ( int i = 0; i < nmbrOfChnnls; i++ )
-    {
+    for ( int i = 0; i < nmbrOfChnnls; i++ ) {
       bckgrndCnts[i] = 0;
     }
     status = 0;
@@ -1180,8 +1199,7 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, enelo_vec, &anynull, &status );
   fits_get_colnum ( ftsPntr, CASEINSEN, colEnHi, &colnum, &status );
   fits_read_col ( ftsPntr, TFLOAT, colnum, 1, 1, nmbrOfEnrgChnnls, &floatnull, enehi_vec, &anynull, &status );
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     enrgChnnls[i] = enelo_vec[i];
   }
   enrgChnnls[nmbrOfEnrgChnnls] = enehi_vec[nmbrOfEnrgChnnls-1];
@@ -1195,57 +1213,42 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   n_grp = ( int * ) malloc ( nmbrOfEnrgChnnls * sizeof ( int ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colNgr, &colnum, &status );
   fits_read_col_int ( ftsPntr, colnum, 1, 1, nmbrOfEnrgChnnls, intnull, n_grp, &anynull, &status );
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     fits_get_colnum ( ftsPntr, CASEINSEN, colNch, &colnum, &status );
     fits_read_col_int ( ftsPntr, colnum, i+1, 1, n_grp[i], intnull, n_chan_vec, &anynull, &status );
-    for ( int j = 0; j < rep_chan; j++ )
-    {
+    for ( int j = 0; j < rep_chan; j++ ) {
       n_chan[i*rep_chan+j] = n_chan_vec[j];
     }
   }
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     fits_get_colnum ( ftsPntr, CASEINSEN, colFch, &colnum, &status );
     fits_read_col ( ftsPntr, TINT, colnum, i+1, 1, n_grp[i], &floatnull, f_chan_vec, &anynull, &status );
-    for ( int j = 0; j < rep_chan; j++ )
-    {
+    for ( int j = 0; j < rep_chan; j++ ) {
       f_chan[i*rep_chan+j] = f_chan_vec[j];
     }
   }
   int sum = 0;
   rmfPntrInCsc[0] = 0;
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
-    for ( int j = 0; j < n_grp[i]; j++ )
-    {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+    for ( int j = 0; j < n_grp[i]; j++ ) {
       sum = sum + n_chan[rep_chan*i+j];
     }
     rmfPntrInCsc[i+1] = sum;
   }
   int m = 0;
-  if ( nmbrOfChnnls != 1024 )
-  {
-    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-    {
-      for ( int j = 0; j < n_grp[i]; j++ )
-      {
-        for ( int k = f_chan[rep_chan*i+j] ; k < f_chan[rep_chan*i+j] + n_chan[rep_chan*i+j]; k++ )
-        {
+  if ( nmbrOfChnnls != 1024 ) {
+    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+      for ( int j = 0; j < n_grp[i]; j++ ) {
+        for ( int k = f_chan[rep_chan*i+j] ; k < f_chan[rep_chan*i+j] + n_chan[rep_chan*i+j]; k++ ) {
           rmfIndxInCsc[m] = k;
           m = m + 1;
         }
       }
     }
-  }
-  else if ( nmbrOfChnnls == 1024 )
-  {
-    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-    {
-      for ( int j = 0; j < n_grp[i]; j++ )
-      {
-        for ( int k = f_chan[rep_chan*i+j] - 1; k < f_chan[rep_chan*i+j] - 1 + n_chan[rep_chan*i+j]; k++ )
-        {
+  } else if ( nmbrOfChnnls == 1024 ) {
+    for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
+      for ( int j = 0; j < n_grp[i]; j++ ) {
+        for ( int k = f_chan[rep_chan*i+j] - 1; k < f_chan[rep_chan*i+j] - 1 + n_chan[rep_chan*i+j]; k++ ) {
           rmfIndxInCsc[m] = k;
           m = m + 1;
         }
@@ -1256,12 +1259,10 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   rmf_vec = ( float * ) malloc ( nmbrOfChnnls * sizeof ( float ) );
   fits_get_colnum ( ftsPntr, CASEINSEN, colMat, &colnum, &status );
   m = 0;
-  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ )
-  {
+  for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
     sum = rmfPntrInCsc[i+1] - rmfPntrInCsc[i];
     fits_read_col ( ftsPntr, TFLOAT, colnum, i+1, 1, sum, &floatnull, rmf_vec, &anynull, &status );
-    for ( int k = 0; k < sum; k++ )
-    {
+    for ( int k = 0; k < sum; k++ ) {
       rmfVlsInCsc[m] = rmf_vec[k];
       m = m + 1;
     }
@@ -1280,6 +1281,7 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   free ( n_chan );
   free ( f_chan );
   free ( n_grp );
+  free ( grp );
   return 0;
 }
 
@@ -1558,37 +1560,30 @@ __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   return 0;
 }
 
-__host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr )
-{
+__host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr ) {
   float flx;
-  if ( fabsf ( 1 - phtnIndx ) > TLR )
-  {
+  if ( fabsf ( 1 - phtnIndx ) > TLR ) {
     flx = powf ( 10, nrmlztn ) * ( powf ( enrgHghr, 1 - phtnIndx ) - powf ( enrgLwr, 1 - phtnIndx ) ) / ( 1 - phtnIndx );
-  }
-  else
-  {
+  } else {
     flx = powf ( 10, nrmlztn ) * ( logf ( enrgHghr ) - logf ( enrgLwr ) );
   }
   return flx;
 }
 
-__host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 )
-{
+__host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 ) {
   float flx;
   flx = 0.5 * ( flx1 + flx2 ) * ( en2 - en1 );
   return flx;
 }
 
-__host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, const float en1, const float en2 )
-{
+__host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, const float en1, const float en2 ) {
   float flx;
   float gr = sqrtf ( 1. - 2.952 * MNS / RNS );
   flx = gr * 0.5 * ( flx1 * ( en2/en1 - 1 ) + flx2 * ( 1 - en1/en2 ) );
   return flx;
 }
 
-__host__ __device__ float BlackBody ( const float kT, const float logRtD, const float enrgLwr, const float enrgHghr )
-{
+__host__ __device__ float BlackBody ( const float kT, const float logRtD, const float enrgLwr, const float enrgHghr ) {
   float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
   t = kT;
   tinv = 1. / t;
@@ -1596,95 +1591,68 @@ __host__ __device__ float BlackBody ( const float kT, const float logRtD, const 
   anormh = 0.5 * anorm;
   elow = enrgLwr;
   x = elow * tinv;
-  if ( x <= 1.0e-4f )
-  {
+  if ( x <= 1.0e-4f ) {
     alow = elow * t;
   }
-  else if ( x > 60.0 )
-  {
+  else if ( x > 60.0 ) {
     flx = 0;
     return flx;
-  }
-  else
-  {
+  } else {
     alow = elow * elow / ( expf ( x ) - 1.0e0f );
   }
   ehi = enrgHghr;
   x = ehi * tinv;
-  if ( x <= 1.0e-4f )
-  {
+  if ( x <= 1.0e-4f ) {
     ahi = ehi * t;
-  }
-  else if ( x > 60.0 )
-  {
+  } else if ( x > 60.0 ) {
     flx = 0;
     return flx;
-  }
-  else
-  {
+  } else {
     ahi = ehi * ehi / ( expf ( x ) - 1.0e0f );
   }
   flx = anormh * ( alow + ahi ) * ( ehi - elow );
   return flx;
 }
 
-__host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts )
-{
+__host__ __device__ float Poisson ( const float scnts, const float mdl, const float ts ) {
   float sttstc = 0;
-  if ( scnts != 0 && ts * mdl >= TLR )
-  {
+  if ( scnts != 0 && ts * mdl >= TLR ) {
     sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
-  }
-  else if ( scnts != 0 && ts * mdl < TLR )
-  {
+  } else if ( scnts != 0 && ts * mdl < TLR ) {
     sttstc = TLR - scnts * logf ( TLR ) - scnts * ( 1 - logf ( scnts ) );
-  }
-  else
-  {
+  } else {
     sttstc = ts * mdl;
   }
   sttstc = 2 * sttstc;
   return sttstc;
 }
 
-__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg )
-{
+__host__ __device__ float PoissonWithBackground ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg ) {
   float sttstc = 0, d, f;
   float scls = 1;
   float sclb = backscal_bkg / backscal_src;
   d = sqrtf ( powf ( ( ts * scls + tb * sclb ) * mdl - scnts - bcnts, 2. ) + 4 * ( ts * scls + tb * sclb ) * bcnts * mdl );
   f = ( scnts + bcnts - ( ts * scls + tb * sclb ) * mdl + d ) / 2 / ( ts * scls + tb * sclb );
-  if ( scnts != 0 && bcnts != 0 )
-  {
+  if ( scnts != 0 && bcnts != 0 ) {
     sttstc = ts * mdl + ts * scls * f  + tb * sclb * f - scnts * logf ( ts * mdl + ts * scls * f ) - bcnts * logf ( tb * sclb * f ) - scnts * ( 1 - logf ( scnts ) ) - bcnts * ( 1 - logf ( bcnts ) );
-  }
-  else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts * scls + tb * sclb ) )
-  {
+  } else if ( scnts != 0 && bcnts == 0 && mdl >= scnts / ( ts * scls + tb * sclb ) ) {
     sttstc = ts * mdl - scnts * logf ( ts * mdl ) - scnts * ( 1 - logf ( scnts ) );
-  }
-  else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts * scls + tb * sclb ) )
-  {
+  } else if ( scnts != 0 && bcnts == 0 && mdl < scnts / ( ts * scls + tb * sclb ) ) {
     sttstc = ts * ( 1 - scls ) * mdl - tb * sclb * mdl - scnts * logf ( ts * ( 1 - scls ) * mdl + ts * scls * scnts / ( ts * scls + tb * sclb ) ) + scnts * logf ( scnts );
-  }
-  else if ( scnts == 0 && bcnts != 0 )
-  {
+  } else if ( scnts == 0 && bcnts != 0 ) {
     sttstc = ts * mdl - bcnts * logf ( tb * sclb / ( ts * scls + tb * sclb ) );
-  }
-  else if ( scnts == 0 && bcnts == 0 )
-  {
+  } else if ( scnts == 0 && bcnts == 0 ) {
     sttstc = ts * mdl;
   }
   sttstc = 2 * sttstc;
   return sttstc;
 }
 
-__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x )
-{
+__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x ) {
   int ju, jm, jl, jres;
   jl = 0;
   ju = n;
-  while ( ju - jl > 1 )
-  {
+  while ( ju - jl > 1 ) {
     jm = floorf ( 0.5 * ( ju + jl ) );
     if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
   }
@@ -1700,10 +1668,8 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
   int ttIndx = enIndx + wlIndx * nmbrOfEnrgChnnls;
   int elIndx, effElIndx, crIndx, prIndx;
   float xsctn, clmn, nh;
-  if ( ( enIndx < nmbrOfEnrgChnnls ) && ( wlIndx < nmbrOfWlkrs ) )
-  {
-    if ( NHINDX == NPRS-1 )
-    {
+  if ( enIndx < nmbrOfEnrgChnnls && wlIndx < nmbrOfWlkrs ) {
+    if ( NHINDX == NPRS-1 ) {
       elIndx = 0;
       prIndx = elIndx + NHINDX;
       crIndx = elIndx + enIndx * nmbrOfElmnts;
@@ -1712,8 +1678,7 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
       clmn = abndncs[effElIndx];
       xsctn = clmn * crssctns[crIndx];
       elIndx = 1;
-      while ( elIndx < nmbrOfElmnts )
-      {
+      while ( elIndx < nmbrOfElmnts ) {
         prIndx = elIndx + NHINDX;
         crIndx = elIndx + enIndx * nmbrOfElmnts;
         effElIndx = atmcNmbrs[elIndx] - 1;
@@ -1722,21 +1687,17 @@ __global__ void AssembleArrayOfAbsorptionFactors ( const int nmbrOfWlkrs, const 
         elIndx += 1;
       }
       absrptnFctrs[ttIndx] = expf ( - nh * xsctn );
-    }
-    else if ( NHINDX == NPRS )
-    {
+    } else if ( NHINDX == NPRS ) {
       absrptnFctrs[ttIndx] = 1;
     }
   }
 }
 
-__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs )
-{
+__global__ void AssembleArrayOfChannelStatistics ( const int nmbrOfWlkrs, const int nmbrOfChnnls, const float srcExptm, const float bckgrndExptm, const float backscal_src, const float backscal_bkg, const float *srcCnts, const float *bckgrndCnts, const float *flddMdlFlxs, float *chnnlSttstcs ) {
   int c = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
   int t = c + w * nmbrOfChnnls;
-  if ( ( c < nmbrOfChnnls ) && ( w < nmbrOfWlkrs ) )
-  {
+  if ( c < nmbrOfChnnls && w < nmbrOfWlkrs ) {
     //chnnlSttstcs[t] = PoissonWithBackground ( srcCnts[c], bckgrndCnts[c], flddMdlFlxs[t], srcExptm, bckgrndExptm, backscal_src, backscal_bkg );
     chnnlSttstcs[t] = Poisson ( srcCnts[c], flddMdlFlxs[t], srcExptm );
   }
@@ -1818,6 +1779,9 @@ __host__ void FreeSpec ( const Spectrum *spc ) {
     cudaFree ( spc[i].flddMdlFlxs );
     cudaFree ( spc[i].chnnlSttstcs );
     cudaFree ( spc[i].ntcdChnnls );
+    cudaFree ( spc[i].grpVls );
+    cudaFree ( spc[i].grpIndx );
+    cudaFree ( spc[i].grpPntr );
   }
 }
 
@@ -1845,7 +1809,7 @@ __global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, 
     //theta = powf ( nhSg[i], 2 ) / nhMd[i];
     //kk = nhMd[i] / theta;
     //sum = ( kk - 1 ) * logf ( xx[NHINDX+i*nwl] ) - xx[NHINDX+i*nwl] / theta;
-    sum = 0;//powf ( ( xx[NHINDX+i*nwl] - nhMd[i] ) / nhSg[i], 2 );
+    sum = 0; //powf ( ( xx[NHINDX+i*nwl] - nhMd[i] ) / nhSg[i], 2 );
     pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
   }
 }
@@ -1855,23 +1819,18 @@ __host__ void SimpleReadNsaTable ( const char *flNm, const int numEn, const int 
   float value;
   int i = 0;
   flPntr = fopen ( flNm, "r" );
-  while ( fscanf ( flPntr, "%e", &value ) == 1 )
-  {
+  while ( fscanf ( flPntr, "%e", &value ) == 1 ) {
     data[i] = value;
     i += 1;
   }
-  for (int j = 0; j < numEn; j++)
-  {
+  for (int j = 0; j < numEn; j++) {
     En[j] = log10f ( data[(j+1)*(numTe+1)] );
   }
-  for (int j = 0; j < numTe; j++)
-  {
+  for (int j = 0; j < numTe; j++) {
     Te[j] = data[j+1];
   }
-  for (int j = 0; j < numEn; j++)
-  {
-    for (int i = 0; i < numTe; i++)
-    {
+  for (int j = 0; j < numEn; j++) {
+    for (int i = 0; i < numTe; i++) {
       fluxes[j+i*numEn] = log10f ( data[(i+1)+(j+1)*(numTe+1)] );
     }
   }
@@ -1883,25 +1842,20 @@ __host__ void SimpleReadNsmaxgTable ( const char *flNm, const int numEn, const i
   float value;
   int i = 0;
   flPntr = fopen ( flNm, "r" );
-  while ( fscanf ( flPntr, "%e", &value ) == 1 )
-  {
+  while ( fscanf ( flPntr, "%e", &value ) == 1 ) {
     data[i] = value;
     i += 1;
   }
   //numTe = (int*)data[0];
-  for (int j = 0; j < numTe; j++)
-  {
+  for (int j = 0; j < numTe; j++) {
     Te[j] = data[1+j];
   }
   //numEn = (int*)data[17];
-  for (int j = 0; j < numEn; j++)
-  {
+  for (int j = 0; j < numEn; j++) {
     En[j] = log10f ( data[18+j] );
   }
-  for (int i = 0; i < numTe; i++)
-  {
-    for (int j = 0; j < numEn; j++)
-    {
+  for (int i = 0; i < numTe; i++) {
+    for (int j = 0; j < numEn; j++) {
       fluxes[j+i*numEn] = log10f ( data[(18+numEn)+j+i*numEn] );
     }
   }
@@ -1913,13 +1867,11 @@ __host__ void SimpleReadReddenningData ( const char *flNm, const int numDist, fl
   float value;
   int i = 0;
   flPntr = fopen ( flNm, "r" );
-  while ( fscanf (flPntr, "%e", &value ) == 1 )
-  {
+  while ( fscanf (flPntr, "%e", &value ) == 1 ) {
     data[i] = value;
     i += 1;
   }
-  for ( int j = 0; j < numDist; j++ )
-  {
+  for ( int j = 0; j < numDist; j++ ) {
     Dist[j] = log10f ( data[5*j] * 1.E3 );
     EBV[j] = data[5*j+1];
     errDist[j] = log10f ( data[5*j+2] );
@@ -1933,19 +1885,16 @@ __host__ void SimpleReadReddenningDataNoErrors ( const char *flNm, const int num
   float value;
   int i = 0;
   flPntr = fopen ( flNm, "r" );
-  while ( fscanf (flPntr, "%e", &value ) == 1 )
-  {
+  while ( fscanf (flPntr, "%e", &value ) == 1 ) {
     data[i] = value;
     i += 1;
   }
-  for ( int j = 0; j < numDist; j++ )
-  {
+  for ( int j = 0; j < numDist; j++ ) {
     Dist[j] = log10f ( data[2*j] * 1000. );
     EBV[j] = data[2*j+1];
   }
   fclose ( flPntr );
 }
-
 
 __host__ int printSpec ( const Spectrum *spc ) {
   printf ( " spectra -- "  );
