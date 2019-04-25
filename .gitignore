@@ -14,7 +14,7 @@ save-commands.json
 *.arf
 *.chain
 *.orig
-Log*
+Log
 GwMcmcStructuresFunctionsAndKernels.cu
 *.old
 *.ps
@@ -22,4 +22,11 @@ GwMcmcStructuresFunctionsAndKernels.cu
 *.pdf
 ._Log
 .Log*
+*.jpg
 runSFH
+LogSFH
+physA*
+*.crdbl
+*.log
+*.jpeg
+test.all
