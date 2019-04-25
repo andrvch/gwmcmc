@@ -12,7 +12,7 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 19 // Number of parameters
+#define NPRS 21 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
@@ -113,8 +113,8 @@ struct Model {
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
-  //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";

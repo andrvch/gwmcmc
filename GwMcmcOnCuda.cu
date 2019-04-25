@@ -132,13 +132,13 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[2] = -5.;
   chn[0].xbnd[3] = 5;
 
-  chn[0].x0[2] = 1.5;
-  chn[0].xbnd[4] = -25.;
-  chn[0].xbnd[5] = 25.;
+  chn[0].x0[2] = 0.0;
+  chn[0].xbnd[4] = -5.;
+  chn[0].xbnd[5] = 5.;
 
-  chn[0].x0[3] = -5.;
-  chn[0].xbnd[6] = -25.;
-  chn[0].xbnd[7] = 25.;
+  chn[0].x0[3] = 0.0;
+  chn[0].xbnd[6] = -5.;
+  chn[0].xbnd[7] = 5.;
 
   chn[0].x0[4] = 1.5;
   chn[0].xbnd[8] = -25.;
@@ -196,9 +196,17 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[34] = -25.;
   chn[0].xbnd[35] = 25.;
 
-  chn[0].x0[18] = 0.2;
-  chn[0].xbnd[36] = 0.;
+  chn[0].x0[18] = 1.5;
+  chn[0].xbnd[36] = -25.;
   chn[0].xbnd[37] = 25.;
+
+  chn[0].x0[19] = -5.;
+  chn[0].xbnd[38] = -25.;
+  chn[0].xbnd[39] = 25.;
+
+  chn[0].x0[20] = 0.2;
+  chn[0].xbnd[40] = 0.;
+  chn[0].xbnd[41] = 25.;
 
   initializeChain ( cdp, chn, mdl, spc );
 

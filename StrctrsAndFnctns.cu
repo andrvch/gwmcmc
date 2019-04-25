@@ -1535,69 +1535,69 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
       Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f += scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 1 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
-      f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f += scl * PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 2 ) {
+    } else if ( spIndx == 1 ) {
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[2+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f += scl * PowerLaw ( wlk[10+w*NPRS], wlk[11+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 3 ) {
+    } else if ( spIndx == 2 ) {
+      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
+      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[3+w*NPRS] + 2 * KMCMPCCM ); //
+      f += Norm * intNsaFlx;
       f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f += scl * PowerLaw ( wlk[12+w*NPRS], wlk[13+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 4 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+    } else if ( spIndx == 3 ) {
+      f += PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f += scl * PowerLaw ( wlk[14+w*NPRS], wlk[15+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 5 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
+    } else if ( spIndx == 4 ) {
+      f += PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f += scl * PowerLaw ( wlk[16+w*NPRS], wlk[17+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 6 ) {
+    } else if ( spIndx == 5 ) {
       f += PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
+      f *= absrptn[t];
+      f += scl * PowerLaw ( wlk[18+w*NPRS], wlk[19+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 7 ) {
+    } else if ( spIndx == 6 ) {
       f += PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 8 ) {
+    } else if ( spIndx == 7 ) {
       f += PowerLaw ( wlk[10+w*NPRS], wlk[11+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 9 ) {
+    } else if ( spIndx == 8 ) {
       f += PowerLaw ( wlk[12+w*NPRS], wlk[13+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 10 ) {
+    } else if ( spIndx == 9 ) {
       f += PowerLaw ( wlk[14+w*NPRS], wlk[15+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
-    } else if ( spIndx == 11 ) {
+    } else if ( spIndx == 10 ) {
       f += PowerLaw ( wlk[16+w*NPRS], wlk[17+w*NPRS], en[e], en[e+1] );
+      f *= arf[e];
+      flx[t] = f;
+    } else if ( spIndx == 11 ) {
+      f += PowerLaw ( wlk[18+w*NPRS], wlk[19+w*NPRS], en[e], en[e+1] );
       f *= arf[e];
       flx[t] = f;
     }
