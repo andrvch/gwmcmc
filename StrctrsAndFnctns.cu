@@ -1533,8 +1533,8 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
   if ( e < nmbrOfEnrgChnnls && w < nwl ) {
     if ( spIndx == 0 ) {
       //intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      intNsaFlx = BlackBody ( wlk[0+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
+      intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
+      Norm = 1.; //powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
       f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
@@ -1543,8 +1543,8 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
       flx[t] = f;
     } else if ( spIndx == 1 ) {
       //intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      intNsaFlx = BlackBody ( wlk[0+w*NPRS], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[2+w*NPRS] + 2 * KMCMPCCM ); //
+      intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[2+w*NPRS], en[e], en[e+1] );
+      Norm = 1.; //powf ( 10., - 2 * didi[w] + 2 * wlk[2+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
       f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
@@ -1553,8 +1553,8 @@ __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, co
       flx[t] = f;
     } else if ( spIndx == 2 ) {
       //intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      intNsaFlx = BlackBody ( wlk[0+w*NPRS], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[3+w*NPRS] + 2 * KMCMPCCM ); //
+      intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      Norm = 1.; // powf ( 10., - 2 * didi[w] + 2 * wlk[3+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
       f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
@@ -1732,13 +1732,13 @@ __host__ __device__ float IntegrateNsmax ( const float flx1, const float flx2, c
   return flx;
 }
 
-__host__ __device__ float BlackBody ( const float Teff, const float enrgLwr, const float enrgHghr ) {
+__host__ __device__ float BlackBody ( const float Teff, const float logRtD, const float enrgLwr, const float enrgHghr ) {
   float t, anorm, elow, x, tinv, anormh, alow, ehi, ahi, flx;
-  float kb = 1.38E-16;
-  float gr = sqrtf ( 1. - 2.952 * MNS / RNS );
-  t = Teff; //powf ( 10., Teff ) * kb / 1.6022E-9 * gr;
+  //float kb = 1.38E-16;
+  //float gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+  t = powf ( 10., Teff ); //powf ( 10., Teff ) * kb / 1.6022E-9 * gr;
   tinv = 1. / t;
-  anorm = 1.0344e-3f * powf ( RNS, 2. ) * 1.e8f; //  * powf ( 10, logRtD ) ;//* 1e8f
+  anorm = 1.0344e-3f * powf ( 10, logRtD ) * 1.e8f;
   anormh = 0.5 * anorm;
   elow = enrgLwr;
   x = elow * tinv;
