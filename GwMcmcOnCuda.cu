@@ -124,21 +124,21 @@ int main ( int argc, char *argv[] ) {
 
   allocateChain ( chn );
 
-  chn[0].x0[0] = 5.9;
-  chn[0].xbnd[0] = 5.5;
-  chn[0].xbnd[1] = 6.5;
+  chn[0].x0[0] = 0.120;
+  chn[0].xbnd[0] = 0.;
+  chn[0].xbnd[1] = 1.;
 
-  chn[0].x0[1] = 0.0;
-  chn[0].xbnd[2] = -5.;
-  chn[0].xbnd[3] = 5;
+  chn[0].x0[1] = -1.;
+  chn[0].xbnd[2] = -25.;
+  chn[0].xbnd[3] = 25.;
 
-  chn[0].x0[2] = 0.0;
-  chn[0].xbnd[4] = -5.;
-  chn[0].xbnd[5] = 5.;
+  chn[0].x0[2] = -1.;
+  chn[0].xbnd[4] = -25.;
+  chn[0].xbnd[5] = 25.;
 
-  chn[0].x0[3] = 0.0;
-  chn[0].xbnd[6] = -5.;
-  chn[0].xbnd[7] = 5.;
+  chn[0].x0[3] = -1.;
+  chn[0].xbnd[6] = -25.;
+  chn[0].xbnd[7] = 25.;
 
   chn[0].x0[4] = 1.5;
   chn[0].xbnd[8] = -25.;

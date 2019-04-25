@@ -208,7 +208,7 @@ __host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum* );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsmax ( const float, const float, const float, const float );
-__host__ __device__ float BlackBody ( const float, const float, const float, const float );
+__host__ __device__ float BlackBody ( const float, const float, const float );
 __host__ __device__ float Poisson ( const float, const float, const float );
 __host__ __device__ float PoissonWithBackground ( const float, const float, const float, const float, const float, const float, const float );
 __host__ __device__ int FindElementIndex ( const float*, const int, const float );
