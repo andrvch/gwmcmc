@@ -45,20 +45,20 @@ int main ( int argc, char *argv[] ) {
   const char *spcFl10 = argv[11];
   const char *spcFl11 = argv[12];
   const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
+  const char *spcLst[NSPCTR11] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
 
-  chn[0].name = argv[NSPCTR+2];
-  chn[0].nwl = atoi ( argv[NSPCTR+3] );
-  chn[0].nst = atoi ( argv[NSPCTR+4] );
-  chn[0].indx = atoi ( argv[NSPCTR+5] );
+  chn[0].name = argv[NSPCTR11+2];
+  chn[0].nwl = atoi ( argv[NSPCTR11+3] );
+  chn[0].nst = atoi ( argv[NSPCTR11+4] );
+  chn[0].indx = atoi ( argv[NSPCTR11+5] );
   chn[0].dim = NPRS;
   chn[0].dlt = 1.E-4;
 
   Model mdl[1];
   Spectrum spc[NSPCTR];
 
-  const float lwrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR+6] );
-  const float hghrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR+7] );
+  const float lwrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+6] );
+  const float hghrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+7] );
 
   for ( int i = 0; i < NSPCTR; i++ ) {
     spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
@@ -115,10 +115,12 @@ int main ( int argc, char *argv[] ) {
   }
   printf ( " \n " );
 
-  for ( int i = 0; i < spc[0].nmbrOfUsdBns; i++ ) {
-    printf ( " %2.0f ", spc[0].srcGrp[i] );
-  }
-  printf ( " \n " );*/
+  for ( int j = 0; j < NSPCTR; j++ ) {
+    for ( int i = 0; i < spc[j].nmbrOfUsdBns; i++ ) {
+      printf ( " %2.0f ", spc[j].srcGrp[i] );
+    }
+    printf ( " \n " );
+  }*/
 
   allocateChain ( chn );
 
@@ -131,7 +133,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[3] = 5;
 
   chn[0].x0[2] = 1.5;
-  chn[0].xbnd[4] = 0.;
+  chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
 
   chn[0].x0[3] = -5.;
@@ -139,7 +141,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[7] = 25.;
 
   chn[0].x0[4] = 1.5;
-  chn[0].xbnd[8] = 0.;
+  chn[0].xbnd[8] = -25.;
   chn[0].xbnd[9] = 25.;
 
   chn[0].x0[5] = -5.;
@@ -147,16 +149,56 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[11] = 25.;
 
   chn[0].x0[6] = 1.5;
-  chn[0].xbnd[12] = 0.;
+  chn[0].xbnd[12] = -25.;
   chn[0].xbnd[13] = 25.;
 
   chn[0].x0[7] = -5.;
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
 
-  chn[0].x0[8] = 0.2;
-  chn[0].xbnd[16] = 0.;
+  chn[0].x0[8] = 1.5;
+  chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
+
+  chn[0].x0[9] = -5.;
+  chn[0].xbnd[18] = -25.;
+  chn[0].xbnd[19] = 25.;
+
+  chn[0].x0[10] = 1.5;
+  chn[0].xbnd[20] = -25.;
+  chn[0].xbnd[21] = 25.;
+
+  chn[0].x0[11] = -5.;
+  chn[0].xbnd[22] = -25.;
+  chn[0].xbnd[23] = 25.;
+
+  chn[0].x0[12] = 1.5;
+  chn[0].xbnd[24] = -25.;
+  chn[0].xbnd[25] = 25.;
+
+  chn[0].x0[13] = -5.;
+  chn[0].xbnd[26] = -25.;
+  chn[0].xbnd[27] = 25.;
+
+  chn[0].x0[14] = 1.5;
+  chn[0].xbnd[28] = -25.;
+  chn[0].xbnd[29] = 25.;
+
+  chn[0].x0[15] = -5.;
+  chn[0].xbnd[30] = -25.;
+  chn[0].xbnd[31] = 25.;
+
+  chn[0].x0[16] = 1.5;
+  chn[0].xbnd[32] = -25.;
+  chn[0].xbnd[33] = 25.;
+
+  chn[0].x0[17] = -5.;
+  chn[0].xbnd[34] = -25.;
+  chn[0].xbnd[35] = 25.;
+
+  chn[0].x0[18] = 0.2;
+  chn[0].xbnd[36] = 0.;
+  chn[0].xbnd[37] = 25.;
 
   initializeChain ( cdp, chn, mdl, spc );
 
@@ -217,7 +259,7 @@ int main ( int argc, char *argv[] ) {
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors, chn[0].dist, chn[0].chi );
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors, chn[0].dist, chn[0].chiTwo );
 
   destroyCuda ( cdp );
   freeChain ( chn );

@@ -12,12 +12,13 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 9 // Number of parameters
+#define NPRS 19 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
 #define NSPCTR 12
+#define NSPCTR11 12
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
@@ -65,6 +66,7 @@ struct Chain {
   float *didi01, *didi02, *didi03, *didi11, *didi12, *didi13;
   int *kex;
   float *chi, *chi1, *chi0;
+  float *chiTwo;
 };
 
 struct Spectrum {
@@ -79,7 +81,7 @@ struct Spectrum {
   int *grpIndx, *grpPntr, *grpIgnIndx, *grpIgnPntr, *iPntr, *iIndx;
   int *ntcIndx, *ntcPntr;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
-  float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, smOfNtcdChnnls;
+  float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, *chiSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
   int nmbrOfgrpIgnVls;
   int hghrBn, lwrBn;
@@ -248,5 +250,7 @@ __global__ void arrayOfChiSquareds ( const int nwl, const int nch, const float t
 __host__ __device__ float chi2 ( const float, const float );
 
 __global__ void setChiAtLast ( const int dim, const int nwl, const float *lst, float *stt );
+
+__global__ void arrayOfChiSquaredsWithBackground ( const int nwl, const int nch, const float t, const float *c, const float *b, const float scale, const float *f, float *s );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
