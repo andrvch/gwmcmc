@@ -16,7 +16,7 @@ gr = math.sqrt(1 - 2.952 * Mns / Rns)
 
 nbins = 100
 
-qqlevel = 90  # percent
+qqlevel = 99.999  # percent
 quont = [0.99,0.90,0.68,0.40]
 halfqq = (100 - qqlevel)*0.5
 qqq = 0.01*qqlevel
@@ -26,7 +26,7 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 #samples = read_data_nsmpl(sys.argv[2],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[np.r_[0:samples.shape[0]-1],:]
+samples = samples[np.r_[0:6,18:samples.shape[0]-1],:]
 #print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 print samples.shape
