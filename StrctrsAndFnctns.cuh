@@ -19,6 +19,7 @@
 #define BACKIN 1
 #define NSPCTR 12
 #define NSPCTR11 12
+#define NSPCTRCHI NSPCTR/2
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
