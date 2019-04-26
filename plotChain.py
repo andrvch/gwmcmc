@@ -5,7 +5,7 @@ import os, sys
 import math
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import *
 from cudakde import *
@@ -33,5 +33,5 @@ for i in range(nprmtrs):
     for j in range(nwlkrs):
         ax[i].errorbar(stps,wlkrs[i,j,:])
 
-#plt.show()
-plt.savefig(sys.argv[1]+".jpg")
+plt.show()
+#plt.savefig(sys.argv[1]+".jpg")

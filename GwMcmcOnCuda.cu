@@ -124,19 +124,19 @@ int main ( int argc, char *argv[] ) {
 
   allocateChain ( chn );
 
-  chn[0].x0[0] = -1.;
-  chn[0].xbnd[0] = -25.;
-  chn[0].xbnd[1] = 25.;
+  chn[0].x0[0] = 5.9;
+  chn[0].xbnd[0] = 5.5;
+  chn[0].xbnd[1] = 6.5;
 
-  chn[0].x0[1] = -1.;
+  chn[0].x0[1] = 0.0;
   chn[0].xbnd[2] = -25.;
   chn[0].xbnd[3] = 25.;
 
-  chn[0].x0[2] = -1.;
+  chn[0].x0[2] = 0.0;
   chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
 
-  chn[0].x0[3] = -1.;
+  chn[0].x0[3] = 0.0;
   chn[0].xbnd[6] = -25.;
   chn[0].xbnd[7] = 25.;
 
@@ -172,41 +172,9 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[22] = -25.;
   chn[0].xbnd[23] = 25.;
 
-  chn[0].x0[12] = 1.5;
-  chn[0].xbnd[24] = -25.;
+  chn[0].x0[12] = 0.2;
+  chn[0].xbnd[24] = 0.;
   chn[0].xbnd[25] = 25.;
-
-  chn[0].x0[13] = -5.;
-  chn[0].xbnd[26] = -25.;
-  chn[0].xbnd[27] = 25.;
-
-  chn[0].x0[14] = 1.5;
-  chn[0].xbnd[28] = -25.;
-  chn[0].xbnd[29] = 25.;
-
-  chn[0].x0[15] = -5.;
-  chn[0].xbnd[30] = -25.;
-  chn[0].xbnd[31] = 25.;
-
-  chn[0].x0[16] = 1.5;
-  chn[0].xbnd[32] = -25.;
-  chn[0].xbnd[33] = 25.;
-
-  chn[0].x0[17] = -5.;
-  chn[0].xbnd[34] = -25.;
-  chn[0].xbnd[35] = 25.;
-
-  chn[0].x0[18] = 1.5;
-  chn[0].xbnd[36] = -25.;
-  chn[0].xbnd[37] = 25.;
-
-  chn[0].x0[19] = -5.;
-  chn[0].xbnd[38] = -25.;
-  chn[0].xbnd[39] = 25.;
-
-  chn[0].x0[20] = 0.2;
-  chn[0].xbnd[40] = 0.;
-  chn[0].xbnd[41] = 25.;
 
   initializeChain ( cdp, chn, mdl, spc );
 
