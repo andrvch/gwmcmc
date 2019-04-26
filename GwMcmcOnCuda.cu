@@ -71,57 +71,6 @@ int main ( int argc, char *argv[] ) {
   SpecAlloc ( chn, spc );
   SpecData ( cdp, vrb, mdl, spc );
 
-  /*
-  printf ( " Grouping Information -- \n " );
-  int count = 0;
-  for ( int i = 0; i < spc[0].nmbrOfBns; i++ ) {
-    count += spc[0].grpPntr[i+1] - spc[0].grpPntr[i];
-    printf ( " %i ", i );
-    printf ( " %i ", spc[0].grpPntr[i+1] - spc[0].grpPntr[i] );
-    for ( int j = spc[0].grpPntr[i]; j < spc[0].grpPntr[i+1]; j++ ) {
-      printf ( " %2.0f ", spc[0].grpng[j] );
-    }
-    printf ( "\n" );
-  }
-  printf ( " Number of grouping bins -- %i\n ", count );
-  printf ( " final bin -- %i\n", spc[0].grpPntr[spc[0].nmbrOfBns] - spc[0].grpPntr[spc[0].nmbrOfBns-1] );
-  for ( int i = 0; i < spc[0].nmbrOfChnnls; i++ ) {
-    printf ( " %i ", spc[0].grpIndx[i] );
-  }
-  printf ( "\n" );
-  for ( int i = 0; i < spc[0].nmbrOfChnnls; i++ ) {
-    printf ( " %2.0f ", spc[0].grpVls[i] );
-  }
-  printf ( "\n" );
-
-  printf ( " %i\n", spc[0].nmbrOfNtcdBns );
-  printf ( " %i\n", spc[0].nmbrOfUsdBns );
-  printf ( " %i\n", spc[0].lwrBn );
-  printf ( " %i\n", spc[0].hghrBn );
-  printf ( " %i\n", spc[0].nmbrOfgrpIgnVls );
-
-  for ( int i = 0; i < spc[0].nmbrOfgrpIgnVls; i++ ) {
-    printf ( " %2.0f ", spc[0].grpIgnVls[i] );
-  }
-  printf ( " \n " );
-
-  for ( int i = 0; i < spc[0].nmbrOfgrpIgnVls; i++ ) {
-    printf ( " %i ", spc[0].grpIgnIndx[i] );
-  }
-  printf ( " \n " );
-
-  for ( int i = 0; i < spc[0].nmbrOfNtcdBns+1; i++ ) {
-    printf ( " %i ", spc[0].grpIgnPntr[i] );
-  }
-  printf ( " \n " );
-
-  for ( int j = 0; j < NSPCTR; j++ ) {
-    for ( int i = 0; i < spc[j].nmbrOfUsdBns; i++ ) {
-      printf ( " %2.0f ", spc[j].srcGrp[i] );
-    }
-    printf ( " \n " );
-  }*/
-
   allocateChain ( chn );
 
   chn[0].x0[0] = 5.9;
