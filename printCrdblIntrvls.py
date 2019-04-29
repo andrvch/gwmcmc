@@ -16,7 +16,7 @@ gr = math.sqrt(1 - 2.952 * Mns / Rns)
 
 nbins = 100
 
-qqlevel = 99.9999  # percent
+qqlevel = 90  # percent
 quont = [0.99,0.90,0.68,0.40]
 halfqq = (100 - qqlevel)*0.5
 qqq = 0.01*qqlevel
