@@ -12,14 +12,14 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 9 // Number of parameters
+#define NPRS 15 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 6
-#define NSPCTR11 12
-#define NSPCTRCHI NSPCTR
+#define NSPCTR 16
+#define NSPCTR11 16
+#define NSPCTRCHI NSPCTR/2
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f

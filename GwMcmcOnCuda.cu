@@ -45,7 +45,11 @@ int main ( int argc, char *argv[] ) {
   const char *spcFl10 = argv[11];
   const char *spcFl11 = argv[12];
   const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR11] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
+  const char *spcFl13 = argv[14];
+  const char *spcFl14 = argv[15];
+  const char *spcFl15 = argv[16];
+  const char *spcFl16 = argv[17];
+  const char *spcLst[NSPCTR11] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12, spcFl13, spcFl14, spcFl15, spcFl16 };
 
   chn[0].name = argv[NSPCTR11+2];
   chn[0].nwl = atoi ( argv[NSPCTR11+3] );
@@ -70,6 +74,9 @@ int main ( int argc, char *argv[] ) {
   SpecInfo ( spcLst, vrb, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, vrb, mdl, spc );
+
+  spc[7].backscal_src = 1;
+  spc[8].backscal_bkg = 1;
 
   allocateChain ( chn );
 
@@ -105,10 +112,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
 
-  chn[0].x0[8] = 0.1;
-  chn[0].xbnd[16] = 0.;
+  chn[0].x0[8] = 1.5;
+  chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
-/*
+
   chn[0].x0[9] = -5.;
   chn[0].xbnd[18] = -25.;
   chn[0].xbnd[19] = 25.;
@@ -121,9 +128,17 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[22] = -25.;
   chn[0].xbnd[23] = 25.;
 
-  chn[0].x0[12] = 0.2;
-  chn[0].xbnd[24] = 0.;
-  chn[0].xbnd[25] = 25.;*/
+  chn[0].x0[12] = 1.5;
+  chn[0].xbnd[24] = -25.;
+  chn[0].xbnd[25] = 25.;
+
+  chn[0].x0[13] = -5.;
+  chn[0].xbnd[26] = -25.;
+  chn[0].xbnd[27] = 25.;
+
+  chn[0].x0[14] = 0.2;
+  chn[0].xbnd[28] = 0.;
+  chn[0].xbnd[29] = 25.;
 
   initializeChain ( cdp, chn, mdl, spc );
 
