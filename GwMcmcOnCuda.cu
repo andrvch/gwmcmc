@@ -105,11 +105,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
 
-  chn[0].x0[8] = 0.1;
-  chn[0].xbnd[16] = 0.;
+  chn[0].x0[8] = 1.5;
+  chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
 
-  /*
   chn[0].x0[9] = -5.;
   chn[0].xbnd[18] = -25.;
   chn[0].xbnd[19] = 25.;
@@ -124,9 +123,24 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].x0[12] = 0.2;
   chn[0].xbnd[24] = 0.;
-  chn[0].xbnd[25] = 25.;*/
+  chn[0].xbnd[25] = 25.;
 
   initializeChain ( cdp, chn, mdl, spc );
+
+  /*
+  cudaDeviceSynchronize ();
+
+  for ( int i = 0; i < spc[0].nmbrOfNtcdChnnls; i++ ) {
+    printf ( " %2.2f ", spc[0].flddMdlFlxs[i]  );
+    printf ( " %2.2f ", spc[0].chnnlSttstcs[i]  );
+  }
+  printf ( "\n" );
+
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %2.2f ", chn[0].stt[i]  );
+  }
+  printf ( "\n" );
+  */
 
   if ( vrb ) {
     printf ( ".................................................................\n" );

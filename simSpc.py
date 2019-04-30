@@ -10,9 +10,9 @@ Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 
-name = "PN_J0633_15asec_grp1"
-time = float(sys.argv[1])
-num = int(sys.argv[2])
+name = sys.argv[1]
+time = float(sys.argv[2])
+num = int(sys.argv[3])
 AllData(name+".pi")
 AllModels += "(nsa+powerlaw)*phabs"
 pars = (6.0, 1.4, 13., 1.E12, 1.E-6, 1.5, 4.E-5, 0.15)

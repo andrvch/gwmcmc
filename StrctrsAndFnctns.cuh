@@ -12,14 +12,14 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 9 // Number of parameters
+#define NPRS 13 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 6
+#define NSPCTR 12
 #define NSPCTR11 12
-#define NSPCTRCHI NSPCTR
+#define NSPCTRCHI NSPCTR/2
 #define ATNMR 18
 #define NELMS 30
 #define MNS 1.4e0f
@@ -74,19 +74,19 @@ struct Spectrum {
   char *spcLst[NSPCTR];
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   float lwrNtcdEnrg, hghrNtcdEnrg;
-  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns, nmbrOfNtcdBns, nmbrOfiVls, nmbrOfUsdBns;
+  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns, nmbrOfNtcdBns, nmbrOfiVls, nmbrOfUsdBns, nmbrOfNtcdChnnls;
   float srcExptm, bckgrndExptm;
   float backscal_src, backscal_bkg;
   int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
-  float *grpVls, *ntcVls, *bnsbns, *grpng, *grpIgnVls, *iVls, *srcGrp;
-  int *grpIndx, *grpPntr, *grpIgnIndx, *grpIgnPntr, *iPntr, *iIndx;
-  int *ntcIndx, *ntcPntr;
+  float *grpVls, *ntcVls, *bnsbns, *grpng, *grpIgnVls, *iVls, *srcGrp, *ignRmfVls, *ignVls, *srcIgn;
+  int *grpIndx, *grpPntr, *grpIgnIndx, *grpIgnPntr, *iPntr, *iIndx, *ignRmfIndx, *ignRmfPntr;
+  int *ntcIndx, *ntcPntr, *ignPntr, *ignIndx;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
   float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, *chiSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
-  int nmbrOfgrpIgnVls;
-  int hghrBn, lwrBn;
-  float *bkgGrp;
+  int nmbrOfgrpIgnVls, nmbrOfignRmfVls;
+  int hghrBn, lwrBn, hghrCh, lwrCh;
+  float *bkgGrp, *bkgIgn;
 };
 
 struct Model {
@@ -253,5 +253,10 @@ __host__ __device__ float chi2 ( const float, const float );
 __global__ void setChiAtLast ( const int dim, const int nwl, const float *lst, float *stt );
 
 __global__ void arrayOfChiSquaredsWithBackground ( const int nwl, const int nch, const float t, const float *c, const float *b, const float scale, const float *f, float *s );
+__global__ void arrayOfWStat ( const int nwl, const int nch, const float ts, const float tb, const float backscal_src, const float backscal_bkg, const float *d, const float *b, const float *f, float *s );
+
+__host__ __device__ float wstat ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg );
+
+__global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
