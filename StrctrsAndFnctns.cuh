@@ -12,13 +12,13 @@
 #define INCYY 1
 #define THRDSPERBLCK 32
 #define RANK 1
-#define NPRS 13 // Number of parameters
+#define NPRS 7 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
-#define NSPCTR 12
-#define NSPCTR11 12
+#define NSPCTR 2
+#define NSPCTR11 2
 #define NSPCTRCHI NSPCTR/2
 #define ATNMR 18
 #define NELMS 30
@@ -108,8 +108,8 @@ struct Model {
   float *RedData2, *Dist2, *EBV2;
   const char *rddnngFl3 = "Drimmel03.dat";
   float *RedData3, *Dist3, *EBV3;
-  //const char *nsaFl = "nsa_spec_B_1e12G.dat";
-  const char *nsaFl = "nsa_spec_B_1e13G.dat";
+  const char *nsaFl = "nsa_spec_B_1e12G.dat";
+  //const char *nsaFl = "nsa_spec_B_1e13G.dat";
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
