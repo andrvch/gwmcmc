@@ -19,25 +19,26 @@ Rns = 13.
 kb = 1.38E-16
 kev = 1.6022E-9
 gr = math.sqrt(1 - 2.952 * Mns / Rns)
+redshift = 1. / gr
 
 nbins1D = 100
 nbins2D = 200
 
-#nsm = 500000
-#samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
 samples = samples[:samples.shape[0]-1,:]
 print samples.shape
-#samples = samples[:,np.where(samples[-1,:]<14000)[0]]
-#print samples.shape
-#samples[1] = samples[-2] - samples[1]
+
+samples[0] = 10**samples[0]*kb/1.6022E-12/redshift
+samples[1] = 10**samples[1]*Rns
+samples[3] = 10**samples[3]/1.E-5
+samples[5] = 10**samples[5]/1.E-5
+samples[6] = samples[6]*10.
+samples[7] = 10**samples[7]/1.E3
 
 npars = len(samples)
 
-qlevel = 95 # percent
-#quont = [0.999,0.99,0.95,0.90]
-#quont = [0.99,0.95,0.90,0.68,0.40]
+qlevel = 90 # percent
 quont = [0.999,0.99,0.90,0.68,0.40]
 eqh_inter = np.empty([npars,3])
 

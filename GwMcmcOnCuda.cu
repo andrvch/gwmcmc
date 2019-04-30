@@ -97,10 +97,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
 
-  chn[0].x0[6] = 1.5;
-  chn[0].xbnd[12] = -25.;
+  chn[0].x0[6] = 0.1;
+  chn[0].xbnd[12] = 0.;
   chn[0].xbnd[13] = 25.;
-
+/*
   chn[0].x0[7] = -5.;
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
@@ -116,7 +116,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[10] = 0.1;
   chn[0].xbnd[20] = 0.;
   chn[0].xbnd[21] = 25.;
-/*
+
   chn[0].x0[11] = -5.;
   chn[0].xbnd[22] = -25.;
   chn[0].xbnd[23] = 25.;
