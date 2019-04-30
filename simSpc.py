@@ -20,6 +20,7 @@ AllModels(1).setPars(pars)
 for i in range(num):
     if time == 0:
         fs1 = FakeitSettings(fileName=name+"_"+"%i"%(i)+".fak")
+        fs1.background = "PN_J0633_15asec_bkg.pi"
     else:
         fs1 = FakeitSettings(fileName=name+"_"+"%i"%(i)+".fak",exposure=time,backExposure=time)
     AllData.fakeit(1, fs1)
