@@ -81,11 +81,11 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[2] = -25.;
   chn[0].xbnd[3] = 25.;
 
-  chn[0].x0[2] = 0.0;
+  chn[0].x0[2] = 1.5;
   chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
 
-  chn[0].x0[3] = 0.0;
+  chn[0].x0[3] = -5.;
   chn[0].xbnd[6] = -25.;
   chn[0].xbnd[7] = 25.;
 
@@ -105,18 +105,18 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
 
-  chn[0].x0[8] = 0.1;
-  chn[0].xbnd[16] = 0.;
+  chn[0].x0[8] = 1.5;
+  chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
-/*
+
   chn[0].x0[9] = -5.;
   chn[0].xbnd[18] = -25.;
   chn[0].xbnd[19] = 25.;
 
-  chn[0].x0[10] = 1.5;
-  chn[0].xbnd[20] = -25.;
+  chn[0].x0[10] = 0.1;
+  chn[0].xbnd[20] = 0.;
   chn[0].xbnd[21] = 25.;
-
+/*
   chn[0].x0[11] = -5.;
   chn[0].xbnd[22] = -25.;
   chn[0].xbnd[23] = 25.;
