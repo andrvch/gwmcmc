@@ -1116,6 +1116,12 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
     cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, spc[i].bckgrndCnts, &beta, spc[i].bkgIgn );
     AssembleArrayOfPhotoelectricCrossections ( spc[i].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[i].enrgChnnls, mdl[0].atmcNmbrs, spc[i].crssctns );
     cudaDeviceSynchronize ( );
+    if ( spc[i].backscal_src == 0 ) {
+      spc[i].backscal_src = 1;
+    }
+    if ( spc[i].backscal_bkg == 0 ) {
+      spc[i].backscal_bkg = 1;
+    }
     sumOfAllBins += spc[i].nmbrOfNtcdBns;
     if ( i < NSPCTRCHI ) {
       sumOfSourceBins += spc[i].nmbrOfNtcdBns;
@@ -1295,7 +1301,12 @@ __host__ int ReadFitsInfo ( const char *spcFl, int *nmbrOfEnrgChnnls, int *nmbrO
 
 __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int nmbrOfEnrgChnnls, const int nmbrOfChnnls, const int nmbrOfRmfVls, float *backscal_src, float *backscal_bkg, float *srcCnts, float *bckgrndCnts, float *arfFctrs, float *rmfVlsInCsc, int *rmfIndxInCsc, int *rmfPntrInCsc, float *gdQltChnnls, float *lwrChnnlBndrs, float *hghrChnnlBndrs, float *enrgChnnls, const int nmbrOfBns, float *grpVls, int *grpIndx, int *grpPntr, float *grpng ) {
   fitsfile *ftsPntr;       /* pointer to the FITS file; defined in fitsio.h */
-  int status = 0, anynull, colnum, intnull = 0, rep_chan = 100;
+  int status = 0, anynull, colnum, intnull = 0, rep_chan;
+  if ( nmbrOfChnnls == 1024 ) {
+    rep_chan = 6;
+  } else {
+    rep_chan = 100;
+  }
   char card[FLEN_CARD], EboundsTable[FLEN_CARD], Telescop[FLEN_CARD];
   char colNgr[]="N_GRP", colNch[]="N_CHAN",  colFch[]="F_CHAN", colCounts[]="COUNTS", colSpecResp[]="SPECRESP", colEnLo[]="ENERG_LO", colEnHi[]="ENERG_HI", colMat[]="MATRIX", colEmin[]="E_MIN", colEmax[]="E_MAX", colGrp[] = "GROUPING";
   float floatnull;
@@ -1398,7 +1409,7 @@ __host__ int ReadFitsData ( const int verbose, const char srcTbl[FLEN_CARD], con
   } else if ( nmbrOfChnnls == 1024 ) {
     for ( int i = 0; i < nmbrOfEnrgChnnls; i++ ) {
       for ( int j = 0; j < n_grp[i]; j++ ) {
-        for ( int k = f_chan[rep_chan*i+j] - 1; k < f_chan[rep_chan*i+j] - 1 + n_chan[rep_chan*i+j]; k++ ) {
+        for ( int k = f_chan[rep_chan*i+j]; k < f_chan[rep_chan*i+j] + n_chan[rep_chan*i+j]; k++ ) {
           rmfIndxInCsc[m] = k;
           m = m + 1;
         }
