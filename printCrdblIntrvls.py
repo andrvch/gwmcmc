@@ -13,6 +13,7 @@ Rns = 13.
 kb = 1.38E-16
 kev = 1.6022E-9
 gr = math.sqrt(1 - 2.952 * Mns / Rns)
+redshift = 1. / gr
 
 nbins = 100
 
@@ -22,19 +23,20 @@ halfqq = (100 - qqlevel)*0.5
 qqq = 0.01*qqlevel
 quantiles = [halfqq,50,qqlevel+halfqq]
 
-#nsm = 500000
-#samples = read_data_nsmpl(sys.argv[2],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
 #samples = samples[np.r_[0:8,14:samples.shape[0]-1],:]
 samples = samples[np.r_[0:samples.shape[0]-1],:]
-#print samples.shape
-#samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 print samples.shape
 
 npars = len(samples)
 
-#samples[1] = samples[1] + samples[2]\
+samples[0] = 10**samples[0]*kb/1.6022E-12/redshift
+samples[1] = 10**samples[1]*Rns
+samples[3] = 10**samples[3]/1.E-5
+samples[5] = 10**samples[5]/1.E-5
+samples[6] = samples[6]*10.
+samples[7] = 10**samples[7]/1.E3
 
 eqh_inter = np.empty([npars,len(quantiles)])
 
@@ -45,7 +47,7 @@ for i in range(npars):
     zin,eqh_inter[i,:] = prc(xi,zi,qqq)
     print eqh_inter[i,:]
 
-f = open(sys.argv[1]+"."+"%2.0f"%(qqlevel)+"."+"crdbl", "w")
+f = open(sys.argv[1]+"."+"%2.2f"%(qqlevel)+"."+"crdbl", "w")
 for i in range(npars):
     for j in range(3):
         f.write(" %.15E "%(eqh_inter[i,j]))

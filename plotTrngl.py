@@ -29,12 +29,14 @@ print samples.shape
 samples = samples[:samples.shape[0]-1,:]
 print samples.shape
 
-samples[0] = 10**samples[0]*kb/1.6022E-12/redshift
-samples[1] = 10**samples[1]*Rns
-samples[3] = 10**samples[3]/1.E-5
-samples[5] = 10**samples[5]/1.E-5
-samples[6] = samples[6]*10.
-samples[7] = 10**samples[7]/1.E3
+##
+#samples[0] = 10**samples[0]*kb/1.6022E-12/redshift
+#samples[1] = 10**samples[1]*Rns
+#samples[3] = 10**samples[3]/1.E-5
+#samples[5] = 10**samples[5]/1.E-5
+#samples[6] = samples[6]*10.
+#samples[7] = 10**samples[7]/1.E3
+#
 
 npars = len(samples)
 
