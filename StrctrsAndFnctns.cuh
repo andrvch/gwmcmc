@@ -116,8 +116,8 @@ struct Model {
   //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
-  //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
-  const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
+  const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
   int numNsmaxgE = 117;
   int numNsmaxgT = 14;
   float *nsmaxgDt, *nsmaxgE, *nsmaxgT, *nsmaxgFlxs;
