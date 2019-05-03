@@ -10,7 +10,6 @@
 #define BETA  0e0f
 #define INCXX 1
 #define INCYY 1
-#define THRDSPERBLCK 32
 #define RANK 1
 #define NPRS 7 // Number of parameters
 #define THRDS 32
@@ -68,6 +67,7 @@ struct Chain {
   int *kex;
   float *chi, *chi1, *chi0;
   float *chiTwo;
+  float *msmp, *vsmp, *hsmp, *stdsmp, *csmp, *sqcsmp;
 };
 
 struct Spectrum {
@@ -114,9 +114,9 @@ struct Model {
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
   //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
-  //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
-  const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
   int numNsmaxgE = 117;
   int numNsmaxgT = 14;
@@ -258,5 +258,10 @@ __global__ void arrayOfWStat ( const int nwl, const int nch, const float ts, con
 __host__ __device__ float wstat ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg );
 
 __global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi );
+
+__global__ void gaussKde1D ( const int nd, const int nb, const float h, const float *a, const float *b, float *pdf );
+__host__ int chainMoments ( Cupar *cdp, Chain *chn );
+__global__ void powWalkers ( const int n, const float c, const float *a, float *d );
+__global__ void scaleWalkers ( const int n, const float c, const float *a, float *d );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

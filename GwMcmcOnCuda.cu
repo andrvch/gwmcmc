@@ -73,11 +73,11 @@ int main ( int argc, char *argv[] ) {
 
   allocateChain ( chn );
 
-  chn[0].x0[0] = -1.;
-  chn[0].xbnd[0] = -25.;
-  chn[0].xbnd[1] = 0.0;
+  chn[0].x0[0] = 5.9;
+  chn[0].xbnd[0] = 5.5;
+  chn[0].xbnd[1] = 6.5;
 
-  chn[0].x0[1] = -6.;
+  chn[0].x0[1] = 0.0;
   chn[0].xbnd[2] = -25.;
   chn[0].xbnd[3] = 25.;
 
@@ -164,6 +164,8 @@ int main ( int argc, char *argv[] ) {
     chn[0].ist += 1;
   }
 
+  chainMoments ( cdp, chn );
+
   if ( vrb ) {
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
   }
@@ -174,6 +176,10 @@ int main ( int argc, char *argv[] ) {
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
+    for ( int i = 0; i < chn[0].dim; i++ ) {
+      printf ( " Med, Std -- %2.2f, ", chn[0].msmp[i] );
+      printf ( " %2.2f\n", chn[0].stdsmp[i] );
+    }
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
   }
