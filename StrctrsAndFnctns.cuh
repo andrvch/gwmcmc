@@ -77,6 +77,8 @@ struct Chain {
   int Indx;
   float *param, *sortIndx;
   int *sm;
+  float *sp, *ssp, *smVls;
+  int *smPntr, *smIndx;
 };
 
 struct Spectrum {
@@ -285,7 +287,7 @@ __host__ int sortChain ( Cupar *cdp, Chain *chn );
 __host__ int cmp ( const void *a, const void *b );
 __host__ int sortQ ( Chain *chn );
 
-__global__ void sortIndex ( const int dim, const int nd, const float *a, int *sm );
+__global__ void sortIndex ( const int dim, const int nd, const float *a, int *sm, float *sp );
 __host__ int sillySort ( Cupar *cdp, Chain *chn );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

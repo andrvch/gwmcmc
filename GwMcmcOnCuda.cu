@@ -181,9 +181,11 @@ int main ( int argc, char *argv[] ) {
     }
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
-    for ( int i = 0; i < 10; i++ ) {
-      printf ( " %i ", chn[0].sm[i*chn[0].dim] );
-      printf ( " %2.2f\n", chn[0].smpls[i*chn[0].dim] );
+    for ( int i = 0; i < chn[0].nst*chn[0].nwl; i++ ) {
+      for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].ssp[i+j*chn[0].nst*chn[0].nwl] );
+      }
+      printf ( "\n" );
     }
   }
 
@@ -205,7 +207,7 @@ int main ( int argc, char *argv[] ) {
     printf ( "\n" );
   }
 
-  sortQ ( chn );
+  //sortQ ( chn );
 
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );

@@ -451,6 +451,11 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].param, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sm, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sortIndx, chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sp, chn[0].dim * chn[0].nst * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ssp, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smVls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smIndx, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smPntr, ( chn[0].dim * chn[0].nwl * chn[0].nst + 1 ) * sizeof ( int ) );
   return 0;
 }
 
@@ -786,6 +791,11 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].param );
   cudaFree ( chn[0].sm );
   cudaFree ( chn[0].sortIndx );
+  cudaFree ( chn[0].sp );
+  cudaFree ( chn[0].ssp );
+  cudaFree ( chn[0].smVls );
+  cudaFree ( chn[0].smIndx );
+  cudaFree ( chn[0].smPntr );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
@@ -2311,18 +2321,19 @@ __global__ void sortMatrix ( const int nd, const float *a, float *sm ) {
   }
 }
 
-__global__ void sortIndex ( const int dim, const int nd, const float *a, int *sm ) {
+__global__ void sortIndex ( const int dim, const int nd, const float *a, int *sm, float *sp ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int sum, il;
   int ij = i + j * dim;
+  int ji = j + i * nd;
   if ( i < dim && j < nd ) {
-    sum = 0;
-    for ( int l = 0; l < nd; l++ ) {
+    for ( int l = j+1; l < nd; l++ ) {
       il = i + l * dim;
-      sum += ( a[ij] > a[il] );
+      sum = ( a[il] > a[ij] ) * l + ( a[il] <= a[ij] ) * j;
     }
-    sm[ij] = sum;
+    sm[ji] = sum;
+    sp[ji] = a[ij];
   }
 }
 
@@ -2330,7 +2341,17 @@ __host__ int sillySort ( Cupar *cdp, Chain *chn ) {
   int nd = chn[0].nwl * chn[0].nst;
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
-  sortIndex <<< grid2D ( chn[0].dim, nd ), block2D () >>> ( chn[0].dim, nd, chn[0].smpls, chn[0].sm );
+  sortIndex <<< grid2D ( chn[0].dim, nd ), block2D () >>> ( chn[0].dim, nd, chn[0].smpls, chn[0].sm, chn[0].sp );
+  cudaDeviceSynchronize ();
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    for ( int j = 0; j < nd; j++ ) {
+      chn[0].smPntr[j+i*nd] = j+i*nd;
+      chn[0].smIndx[j+i*nd] = chn[0].sm[j+i*nd] + i*nd;
+      chn[0].smVls[j+i*nd] = 1.;
+    }
+  }
+  chn[0].smPntr[chn[0].dim*nd] = chn[0].dim * nd;
+  cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, chn[0].dim*nd, chn[0].dim*nd, chn[0].dim*nd, &alpha, cdp[0].MatDescr, chn[0].smVls, chn[0].smPntr, chn[0].smIndx, chn[0].sp, &beta, chn[0].ssp );
   return 0;
 }
 
