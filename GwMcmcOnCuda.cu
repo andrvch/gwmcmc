@@ -166,6 +166,8 @@ int main ( int argc, char *argv[] ) {
 
   chainMoments ( cdp, chn );
 
+  sortChain ( cdp, chn );
+
   if ( vrb ) {
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
   }

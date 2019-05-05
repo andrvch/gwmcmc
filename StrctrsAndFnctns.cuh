@@ -35,6 +35,11 @@
 
 typedef float2 Complex;
 
+struct arrIndx {
+    float value;
+    int index;
+};
+
 struct Cupar {
   int dev;
   cudaError_t err = cudaSuccess;
@@ -53,7 +58,7 @@ struct Cupar {
 
 struct Chain {
   char *name;
-  int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
+  int indx, dim, nwl, nst, nsm, ist, isb, *kr, *kuni;
   float dlt, time;
   float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt, *priors, *nhMd, *nhSg;
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
@@ -68,6 +73,9 @@ struct Chain {
   float *chi, *chi1, *chi0;
   float *chiTwo;
   float *msmp, *vsmp, *hsmp, *stdsmp, *csmp, *sqcsmp;
+  arrIndx *obj;
+  int Indx;
+  float *param, *sm, *sortIndx;
 };
 
 struct Spectrum {
@@ -263,5 +271,14 @@ __global__ void gaussKde1D ( const int nd, const int nb, const float h, const fl
 __host__ int chainMoments ( Cupar *cdp, Chain *chn );
 __global__ void powWalkers ( const int n, const float c, const float *a, float *d );
 __global__ void scaleWalkers ( const int n, const float c, const float *a, float *d );
+
+/*
+__host__ int cmp ( const void *a, const void *b );
+__host__ int sortChain ( Chain *chn );
+*/
+
+__global__ void sortMatrix ( const int nd, const float *a, float *sm );
+__global__ void extractParam ( const int dim, const int nd, const int Indx, const float *s, float *a );
+__host__ int sortChain ( Cupar *cdp, Chain *chn );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

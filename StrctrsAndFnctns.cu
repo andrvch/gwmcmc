@@ -447,6 +447,10 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].vsmp, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stdsmp, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].hsmp, chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].obj, chn[0].nwl * chn[0].nst * sizeof ( arrIndx ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].param, chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sm, chn[0].nwl * chn[0].nst * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sortIndx, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   return 0;
 }
 
@@ -778,6 +782,10 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].vsmp );
   cudaFree ( chn[0].hsmp );
   cudaFree ( chn[0].stdsmp );
+  cudaFree ( chn[0].obj );
+  cudaFree ( chn[0].param );
+  cudaFree ( chn[0].sm );
+  cudaFree ( chn[0].sortIndx );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
@@ -2265,6 +2273,55 @@ __host__ int chainMoments ( Cupar *cdp, Chain *chn ) {
   powWalkers <<< grid1D ( chn[0].dim ), THRDS >>> ( chn[0].dim, 0.5, chn[0].vsmp, chn[0].stdsmp );
   float scale = 1.06 / powf ( nd, 1. / 5. );
   scaleWalkers <<< grid1D ( chn[0].dim ), THRDS >>> ( chn[0].dim, scale, chn[0].stdsmp, chn[0].hsmp );
+  return 0;
+}
+
+/*
+__host__ int cmp ( const void *a, const void *b ) {
+    struct str * a1 = ( struct str * ) a;
+    struct str * a2 = ( struct str * ) b;
+    if ( (*a1).value > (*a2).value )
+        return -1;
+    else if ( (*a1).value < (*a2).value )
+        return 1;
+    else
+        return 0;
+}*/
+
+__global__ void sortMatrix ( const int nd, const float *a, float *sm ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int ij = i + j * nd;
+  if ( i < nd && j < nd ) {
+    sm[ij] = ( a[i] > a[j] );
+  }
+}
+
+__global__ void extractParam ( const int dim, const int nd, const int Indx, const float *s, float *a ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nd ) {
+    a[i] = s[Indx+i*dim];
+  }
+}
+
+__host__ int sortChain ( Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  int nd = chn[0].nwl * chn[0].nst;
+  chn[0].Indx = 0;
+  extractParam <<< grid1D ( nd ), THRDS >>> ( chn[0].dim, nd, chn[0].Indx, chn[0].smpls, chn[0].param );
+  sortMatrix <<< grid2D ( nd, nd ), block2D () >>> ( nd, chn[0].param, chn[0].sm );
+  constantArray <<< grid1D ( nd ), THRDS >>> ( nd, alpha, chn[0].stps );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, nd, nd, &alpha, chn[0].sm, nd, chn[0].stps, incxx, &beta, chn[0].sortIndx, incyy );
+  cudaDeviceSynchronize ();
+  for ( int i = 0; i < 11; i++ ) {
+    printf ( " %i ", int(chn[0].sortIndx[i]) );
+    printf ( " %2.2f ", chn[0].param[int(chn[0].sortIndx[i])] );
+    for ( int j = 0; j < 11; j++ ) {
+      printf ( " %2.2f ", chn[0].sm[i+j*nd] );
+    }
+    printf ( "\n" );
+  }
   return 0;
 }
 
