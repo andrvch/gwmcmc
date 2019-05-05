@@ -2328,7 +2328,7 @@ __global__ void sortIndex ( const int dim, const int nd, const float *a, int *sm
   int ij = i + j * dim;
   int ji = j + i * nd;
   if ( i < dim && j < nd ) {
-    for ( int l = j+1; l < nd; l++ ) {
+    for ( int l = 0; l < nd; l++ ) {
       il = i + l * dim;
       sum = ( a[il] > a[ij] ) * l + ( a[il] <= a[ij] ) * j;
     }
