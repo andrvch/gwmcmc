@@ -449,7 +449,7 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].hsmp, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].obj, chn[0].nwl * chn[0].nst * sizeof ( arrIndx ) );
   cudaMallocManaged ( ( void ** ) &chn[0].param, chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sm, chn[0].nwl * chn[0].nst * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sm, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sortIndx, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   return 0;
 }
@@ -2276,17 +2276,31 @@ __host__ int chainMoments ( Cupar *cdp, Chain *chn ) {
   return 0;
 }
 
-/*
 __host__ int cmp ( const void *a, const void *b ) {
-    struct str * a1 = ( struct str * ) a;
-    struct str * a2 = ( struct str * ) b;
-    if ( (*a1).value > (*a2).value )
-        return -1;
-    else if ( (*a1).value < (*a2).value )
-        return 1;
-    else
-        return 0;
-}*/
+  struct arrIndx * a1 = ( struct arrIndx * ) a;
+  struct arrIndx * a2 = ( struct arrIndx * ) b;
+  if ( (*a1).value > (*a2).value ) {
+    return 1;
+  } else if ( (*a1).value < (*a2).value ) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
+__host__ int sortQ ( Chain *chn ) {
+  int nd =  chn[0].nwl * chn[0].nst;
+  for ( int i = 0; i < nd; i++ ) {
+    chn[0].obj[i].value = chn[0].smpls[i*chn[0].dim];
+    chn[0].obj[i].index = i;
+  }
+  qsort ( chn[0].obj, nd, sizeof ( arrIndx ), cmp );
+  for ( int i = 0; i < nd; i++ ) {
+    printf ( " %i ", chn[0].obj[i].index );
+    printf ( " %2.2f\n", chn[0].obj[i].value );
+  }
+  return 0;
+}
 
 __global__ void sortMatrix ( const int nd, const float *a, float *sm ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -2297,13 +2311,36 @@ __global__ void sortMatrix ( const int nd, const float *a, float *sm ) {
   }
 }
 
+__global__ void sortIndex ( const int dim, const int nd, const float *a, int *sm ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int sum, il;
+  int ij = i + j * dim;
+  if ( i < dim && j < nd ) {
+    sum = 0;
+    for ( int l = 0; l < nd; l++ ) {
+      il = i + l * dim;
+      sum += ( a[ij] > a[il] );
+    }
+    sm[ij] = sum;
+  }
+}
+
+__host__ int sillySort ( Cupar *cdp, Chain *chn ) {
+  int nd = chn[0].nwl * chn[0].nst;
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  sortIndex <<< grid2D ( chn[0].dim, nd ), block2D () >>> ( chn[0].dim, nd, chn[0].smpls, chn[0].sm );
+  return 0;
+}
+
 __global__ void extractParam ( const int dim, const int nd, const int Indx, const float *s, float *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nd ) {
     a[i] = s[Indx+i*dim];
   }
 }
-
+/*
 __host__ int sortChain ( Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
@@ -2323,6 +2360,6 @@ __host__ int sortChain ( Cupar *cdp, Chain *chn ) {
     printf ( "\n" );
   }
   return 0;
-}
+}*/
 
 #endif // _STRCTRSANDFNCTNS_CU_

@@ -150,7 +150,6 @@ int main ( int argc, char *argv[] ) {
   cudaEventRecord ( cdp[0].start, 0 );
 
   initializeRandomForStreach ( cdp, chn );
-
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
     chn[0].isb = 0;
@@ -163,10 +162,8 @@ int main ( int argc, char *argv[] ) {
     saveCurrent ( chn );
     chn[0].ist += 1;
   }
-
   chainMoments ( cdp, chn );
-
-  sortChain ( cdp, chn );
+  sillySort ( cdp, chn );
 
   if ( vrb ) {
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
@@ -184,6 +181,10 @@ int main ( int argc, char *argv[] ) {
     }
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
+    for ( int i = 0; i < 10; i++ ) {
+      printf ( " %i ", chn[0].sm[i*chn[0].dim] );
+      printf ( " %2.2f\n", chn[0].smpls[i*chn[0].dim] );
+    }
   }
 
   cudaEventRecord ( cdp[0].start, 0 );
@@ -203,6 +204,8 @@ int main ( int argc, char *argv[] ) {
     printf ( " Time to compute acor time: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
   }
+
+  sortQ ( chn );
 
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
