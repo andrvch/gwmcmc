@@ -53,6 +53,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[NSPCTR11+5] );
   chn[0].dim = NPRS;
   chn[0].dlt = 1.E-4;
+  chn[0].nkb = 100;
 
   Model mdl[1];
   Spectrum spc[NSPCTR];
@@ -164,6 +165,7 @@ int main ( int argc, char *argv[] ) {
   }
   chainMoments ( cdp, chn );
   sillySort ( cdp, chn );
+  chainKde ( cdp, chn );
 
   if ( vrb ) {
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
@@ -181,12 +183,41 @@ int main ( int argc, char *argv[] ) {
     }
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
-    for ( int i = 0; i < chn[0].nst*chn[0].nwl; i++ ) {
+    for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].sp[j+0*chn[0].dim] );
+    }
+    printf ( "\n" );
+    for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].sp[j+(chn[0].nst*chn[0].nwl-1)*chn[0].dim] );
+    }
+    printf ( "\n" );
+    for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].lkde[j] );
+    }
+    printf ( "\n" );
+    for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].hkde[j] );
+    }
+    printf ( "\n" );
+    for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].kbin[j+0*chn[0].dim] );
+    }
+    printf ( "\n" );
+    for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].kbin[j+(chn[0].nkb-1)*chn[0].dim] );
+    }
+    printf ( "\n" );
+    /*for ( int i = 0; i < chn[0].nkb; i++ ) {
       for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].ssp[i+j*chn[0].nst*chn[0].nwl] );
+        printf ( " %2.2f ", chn[0].skdePdf[j+i*chn[0].dim] );
       }
       printf ( "\n" );
-    }
+      for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].skbin[j+i*chn[0].dim] );
+      }
+      printf ( "\n" );
+    }*/
+    printf ( "\n" );
   }
 
   cudaEventRecord ( cdp[0].start, 0 );

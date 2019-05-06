@@ -456,6 +456,18 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].smVls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].smIndx, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].smPntr, ( chn[0].dim * chn[0].nwl * chn[0].nst + 1 ) * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].pdf, chn[0].nkb * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ppdf, chn[0].nkb * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].maxPdf, chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kbin, chn[0].dim * chn[0].nkb * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].skpdf, chn[0].nkb * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kdeVls, chn[0].nkb * chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kdePdf, chn[0].nkb * chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].lkde, chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].hkde, chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].skdePdf, chn[0].nkb * chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].skbin, chn[0].nkb * chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].objkde, chn[0].nkb * sizeof ( arrKde ) );
   return 0;
 }
 
@@ -796,6 +808,19 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].smVls );
   cudaFree ( chn[0].smIndx );
   cudaFree ( chn[0].smPntr );
+  cudaFree ( chn[0].pdf );
+  cudaFree ( chn[0].ppdf );
+  cudaFree ( chn[0].maxPdf );
+  cudaFree ( chn[0].kpar );
+  cudaFree ( chn[0].kbin );
+  cudaFree ( chn[0].skpdf );
+  cudaFree ( chn[0].kdeVls );
+  cudaFree ( chn[0].kdePdf );
+  cudaFree ( chn[0].lkde );
+  cudaFree ( chn[0].hkde );
+  cudaFree ( chn[0].skbin );
+  cudaFree ( chn[0].skdePdf );
+  cudaFree ( chn[0].objkde );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
@@ -2262,15 +2287,6 @@ __host__ int printSpec ( const Spectrum *spc ) {
   return 0;
 }
 
-__global__ void gaussKde1D ( const int nd, const int nb, const float h, const float *a, const float *b, float *pdf ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int ij = i + j * nd;
-  if ( i < nd && j < nb ) {
-    pdf[ij] = expf ( - powf ( a[i] - b[j], 2. ) / 2. / powf ( h, 2 ) ) / h / nd / powf ( 2 * PI, 0.5 );
-  }
-}
-
 __host__ int chainMoments ( Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
@@ -2283,7 +2299,17 @@ __host__ int chainMoments ( Cupar *cdp, Chain *chn ) {
   powWalkers <<< grid1D ( chn[0].dim ), THRDS >>> ( chn[0].dim, 0.5, chn[0].vsmp, chn[0].stdsmp );
   float scale = 1.06 / powf ( nd, 1. / 5. );
   scaleWalkers <<< grid1D ( chn[0].dim ), THRDS >>> ( chn[0].dim, scale, chn[0].stdsmp, chn[0].hsmp );
+  lhkde <<< grid1D ( chn[0].dim ), THRDS >>> ( chn[0].dim, chn[0].msmp, chn[0].stdsmp, chn[0].lkde, chn[0].hkde );
+  lineSpace <<< grid2D ( chn[0].dim, chn[0].nkb ), block2D () >>> ( chn[0].dim, chn[0].nkb, chn[0].lkde, chn[0].hkde, chn[0].kbin );
   return 0;
+}
+
+__global__ void lhkde ( const int n, const float *a, const float *b, float *l, float *h  ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    l[i] = a[i] - 3 * b[i];
+    h[i] = a[i] + 3 * b[i];
+  }
 }
 
 __host__ int cmp ( const void *a, const void *b ) {
@@ -2296,6 +2322,36 @@ __host__ int cmp ( const void *a, const void *b ) {
   } else {
     return 0;
   }
+}
+
+__host__ int cmpKde ( const void *a, const void *b ) {
+  struct arrKde * a1 = ( struct arrKde * ) a;
+  struct arrKde * a2 = ( struct arrKde * ) b;
+  if ( (*a1).value < (*a2).value ) {
+    return 1;
+  } else if ( (*a1).value > (*a2).value ) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
+__host__ int sortQKde ( Chain *chn ) {
+  int n = chn[0].nkb;
+  for ( int i = 0; i < n; i++ ) {
+    chn[0].objkde[i].value = chn[0].pdf[i];
+    chn[0].objkde[i].bin = chn[0].kbin[chn[0].Indx+i*chn[0].dim];
+    chn[0].objkde[i].index = i;
+    /*
+    printf ( " %2.2f ", chn[0].objkde[i].bin );
+    printf ( " %2.2f\n", chn[0].objkde[i].value );*/
+  }
+  qsort ( chn[0].objkde, n, sizeof ( arrKde ), cmpKde );
+  //for ( int i = 0; i < n; i++ ) {
+  printf ( " %2.2f ", chn[0].objkde[0].bin );
+  printf ( " %2.2f\n", chn[0].objkde[0].value );
+  //}
+  return 0;
 }
 
 __host__ int sortQ ( Chain *chn ) {
@@ -2321,45 +2377,125 @@ __global__ void sortMatrix ( const int nd, const float *a, float *sm ) {
   }
 }
 
-__global__ void sortIndex ( const int dim, const int nd, const float *a, int *sm, float *sp ) {
+__global__ void sortIndex ( const int d, const int n, const float *a, int *si, float *sa ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int sum, il;
-  int ij = i + j * dim;
-  int ji = j + i * nd;
-  if ( i < dim && j < nd ) {
-    for ( int l = 0; l < nd; l++ ) {
-      il = i + l * dim;
-      sum = ( a[il] > a[ij] ) * l + ( a[il] <= a[ij] ) * j;
+  int ij = i + j * d;
+  int mewj, il;
+  float mewa;
+  if ( i < d && j < n ) {
+    mewj = j;
+    mewa = a[ij];
+    for ( int l = 0; l < n; l++ ) {
+      il = i + l * d;
+      if ( l > j ) {
+        mewj += ( a[il] < mewa ) * ( l - mewj );
+        mewa += ( a[il] < mewa ) * ( a[il] - mewa );
+      } else if ( l < j ) {
+        mewj += ( a[il] > mewa ) * ( l - mewj );
+        mewa += ( a[il] > mewa ) * ( a[il] - mewa );
+      }
     }
-    sm[ji] = sum;
-    sp[ji] = a[ij];
+    si[ij] = mewj;
+    sa[ij] = mewa;
   }
 }
 
 __host__ int sillySort ( Cupar *cdp, Chain *chn ) {
   int nd = chn[0].nwl * chn[0].nst;
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
   sortIndex <<< grid2D ( chn[0].dim, nd ), block2D () >>> ( chn[0].dim, nd, chn[0].smpls, chn[0].sm, chn[0].sp );
-  cudaDeviceSynchronize ();
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    for ( int j = 0; j < nd; j++ ) {
-      chn[0].smPntr[j+i*nd] = j+i*nd;
-      chn[0].smIndx[j+i*nd] = chn[0].sm[j+i*nd] + i*nd;
-      chn[0].smVls[j+i*nd] = 1.;
-    }
-  }
-  chn[0].smPntr[chn[0].dim*nd] = chn[0].dim * nd;
-  cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, chn[0].dim*nd, chn[0].dim*nd, chn[0].dim*nd, &alpha, cdp[0].MatDescr, chn[0].smVls, chn[0].smPntr, chn[0].smIndx, chn[0].sp, &beta, chn[0].ssp );
   return 0;
 }
 
-__global__ void extractParam ( const int dim, const int nd, const int Indx, const float *s, float *a ) {
+__global__ void extractParam ( const int d, const int n, const int Indx, const float *s, float *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < nd ) {
-    a[i] = s[Indx+i*dim];
+  if ( i < n ) {
+    a[i] = s[Indx+i*d];
   }
+}
+
+__global__ void lineSpace ( const int d, const int n, const float *l, const float *h, float *b ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float delta;
+  if ( i < d && j < n ) {
+    delta = ( h[i] - l[i] ) / ( n - 1 );
+    b[i+j*d] = l[i] + j * delta;
+  }
+}
+
+__global__ void gaussKde1D ( const int dim, const int nd, const int nb, const int Indx, const float *hh, const float *a, const float *b, float *pdf ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int ij = i + j * nb;
+  float h;
+  if ( i < nb && j < nd ) {
+    h = hh[Indx];
+    pdf[ij] = expf ( - powf ( a[Indx+j*dim] - b[Indx+i*dim], 2. ) / 2. / powf ( h, 2 ) ) / h / powf ( 2 * PI, 0.5 );
+  }
+}
+
+__global__ void sortIndexKde ( const int d, const int n, const float *a, const float *b, float *sa, float *sb ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int ij = i + j * d;
+  int mewj, il;
+  float mewa, mewb;
+  if ( i < d && j < n ) {
+    mewj = j;
+    mewa = a[ij];
+    mewb = b[ij];
+    for ( int l = 0; l < n; l++ ) {
+      il = i + l * d;
+      if ( l > j ) {
+        mewj += ( a[il] < mewa ) * ( l - mewj );
+        mewa += ( a[il] < mewa ) * ( a[il] - mewa );
+        mewb += ( a[il] < mewa ) * ( b[il] - mewb );
+      } else if ( l < j ) {
+        mewj += ( a[il] > mewa ) * ( l - mewj );
+        mewa += ( a[il] > mewa ) * ( a[il] - mewa );
+        mewb += ( a[il] > mewa ) * ( b[il] - mewb );
+      }
+    }
+    sa[ij] = mewa;
+    sb[ij] = mewb;
+  }
+}
+
+__global__ void saveKde ( const int d, const int n, const int Indx, const float *a, float *sa ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < n ) {
+    sa[Indx+i*d] = a[i];
+  }
+}
+
+__host__ int chainKde ( Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  int nd = chn[0].nwl * chn[0].nst;
+  chn[0].Indx = 0;
+  while ( chn[0].Indx < chn[0].dim ) {
+    gaussKde1D <<< grid2D ( chn[0].nkb, nd ), block2D () >>> ( chn[0].dim, nd, chn[0].nkb, chn[0].Indx, chn[0].hsmp, chn[0].smpls, chn[0].kbin, chn[0].ppdf );
+    /*cudaDeviceSynchronize ();
+    for ( int i = 0; i < nd; i++ ) {
+      for ( int j = 0; i < chn[0].nkb; )
+    }*/
+    constantArray <<< grid1D ( nd ), THRDS >>> ( nd, alpha / nd, chn[0].stps );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nkb, nd, &alpha, chn[0].ppdf, chn[0].nkb, chn[0].stps, incxx, &beta, chn[0].pdf, incyy );
+    /*cudaDeviceSynchronize ();
+    for ( int i = 0; i < chn[0].nkb; i++ ) {
+      printf ( " %2.2f ", chn[0].pdf[i] );
+    }
+    printf ( "\n" );*/
+    saveKde <<< grid1D ( chn[0].nkb ), THRDS >>> ( chn[0].dim, chn[0].nkb, chn[0].Indx, chn[0].pdf, chn[0].kdePdf );
+    cudaDeviceSynchronize ();
+    sortQKde ( chn );
+    chn[0].Indx += 1;
+  }
+  //sortQKde ( chn );
+  //sortIndexKde <<< grid2D ( chn[0].dim, chn[0].nkb ), block2D () >>> ( chn[0].dim, chn[0].nkb, chn[0].kdePdf, chn[0].kbin, chn[0].skdePdf, chn[0].skbin );
+  //sortIndexKde <<< grid1D ( chn[0].nkb ), THRDS >>> ( chn[0].nkb, chn[0].kbin, chn[0].pdf, chn[0].sm, chn[0].skbin, chn[0].skpdf );
+  return 0;
 }
 /*
 __host__ int sortChain ( Cupar *cdp, Chain *chn ) {
