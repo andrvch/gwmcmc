@@ -46,7 +46,6 @@ struct arrKde {
     int index;
 };
 
-
 struct Cupar {
   int dev;
   cudaError_t err = cudaSuccess;
@@ -93,6 +92,7 @@ struct Chain {
   float *hkde, *lkde;
   float *skdePdf;
   arrKde *objkde;
+  float *whales;
 };
 
 struct Spectrum {
@@ -171,8 +171,6 @@ __global__ void returnQ ( const int, const int, const float*, const float*, cons
 __global__ void returnQM ( const int, const int, const float*, const float*, float* );
 __global__ void updateWalkers ( const int, const int, const float*, const float*, const float*, float* );
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
-__global__ void saveWalkers ( const int, const int, const int, const float*, float* );
-__global__ void saveStatistic ( const int, const int, const float*, float* );
 __global__ void mapRandomNumbers ( const int, const int, const int, const float*, float*, int*, float*, int* );
 __global__ void permuteWalkers ( const int, const int, const int*, const float*, float* );
 __global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP );
@@ -314,4 +312,8 @@ __global__ void lhkde ( const int n, const float *a, const float *b, float *l, f
 __global__ void sortIndexKde ( const int d, const int n, const float *a, const float *b, float *sa, float *sb );
 __host__ int cmpKde ( const void *a, const void *b );
 __host__ int sortQKde ( Chain *chn );
+
+__global__ void saveTheWhalesXX ( const int, const int, const int, float*, const int, const int, const float* );
+__global__ void saveTheWhalesX ( const int, const int, const int, const int, float*, const int, const float* );
+
 #endif // _STRCTRSANDFNCTNS_CUH_

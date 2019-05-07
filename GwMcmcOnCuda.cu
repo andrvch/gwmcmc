@@ -175,6 +175,8 @@ int main ( int argc, char *argv[] ) {
   cudaEventSynchronize ( cdp[0].stop );
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
+  sortQKde ( chn );
+
   if ( vrb ) {
     printf ( ".................................................................\n" );
     for ( int i = 0; i < chn[0].dim; i++ ) {
@@ -184,22 +186,6 @@ int main ( int argc, char *argv[] ) {
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
     for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].sp[j+0*chn[0].dim] );
-    }
-    printf ( "\n" );
-    for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].sp[j+(chn[0].nst*chn[0].nwl-1)*chn[0].dim] );
-    }
-    printf ( "\n" );
-    for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].lkde[j] );
-    }
-    printf ( "\n" );
-    for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].hkde[j] );
-    }
-    printf ( "\n" );
-    for ( int j = 0; j < chn[0].dim; j++ ) {
         printf ( " %2.2f ", chn[0].kbin[j+0*chn[0].dim] );
     }
     printf ( "\n" );
@@ -207,16 +193,9 @@ int main ( int argc, char *argv[] ) {
         printf ( " %2.2f ", chn[0].kbin[j+(chn[0].nkb-1)*chn[0].dim] );
     }
     printf ( "\n" );
-    /*for ( int i = 0; i < chn[0].nkb; i++ ) {
-      for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].skdePdf[j+i*chn[0].dim] );
-      }
-      printf ( "\n" );
-      for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].skbin[j+i*chn[0].dim] );
-      }
-      printf ( "\n" );
-    }*/
+    for ( int j = 0; j < chn[0].dim; j++ ) {
+        printf ( " %2.2f ", chn[0].skbin[j+0*chn[0].dim] );
+    }
     printf ( "\n" );
   }
 

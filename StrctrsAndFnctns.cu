@@ -264,12 +264,26 @@ __global__ void updateStatistic ( const int nwl, const float *stt1, const float 
   }
 }
 
-__global__ void saveWalkers ( const int dim, const int nwl, const int ist, const float *xx, float *smpls ) {
+__global__ void saveWalkers ( const int d, const int n, const int is, const float *xx, float *xxx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i + j * dim;
-  if ( i < dim && j < nwl ) {
-    smpls[t+ist*dim*nwl] = xx[t];
+  if ( i < d && j < n ) {
+    xxx[i+j*d+is*d*n] = xx[i+j*d];
+  }
+}
+
+__global__ void saveTheWhalesXX ( const int d0, const int d1, const int i2, float *xxx, const int d3, const int d4, const float *xx ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  if ( i < d3 && j < d4 ) {
+    xxx[i+j*d0+i2*d0*d1] = xx[i+j*d3];
+  }
+}
+
+__global__ void saveTheWhalesX ( const int d0, const int d1, const int i0, const int i2, float *xxx, const int d3, const float *x ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < d3 ) {
+    xxx[i0+i*d0+i2*d0*d1] = x[i];
   }
 }
 
@@ -468,6 +482,7 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].skdePdf, chn[0].nkb * chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].skbin, chn[0].nkb * chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].objkde, chn[0].nkb * sizeof ( arrKde ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].whales, ( chn[0].dim + 2 ) * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   return 0;
 }
 
@@ -637,11 +652,17 @@ __host__ int streachUpdate ( const Cupar *cdp, Chain *chn, Model *mdl ) {
 }
 
 __host__ int saveCurrent ( Chain *chn ) {
-  saveWalkers <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].ist, chn[0].xx, chn[0].smpls );
-  saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].stt, chn[0].stat );
-  saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].chi, chn[0].chiTwo );
+  saveTheWhalesXX <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].ist, chn[0].smpls, chn[0].dim, chn[0].nwl, chn[0].xx );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( 1, chn[0].nwl, 0, chn[0].ist, chn[0].stat, chn[0].nwl, chn[0].stt );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( 1, chn[0].nwl, 0, chn[0].ist, chn[0].chiTwo, chn[0].nwl, chn[0].chi );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( 1, chn[0].nwl, 0, chn[0].ist, chn[0].priors, chn[0].nwl, chn[0].prr );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( 1, chn[0].nwl, 0, chn[0].ist, chn[0].dist, chn[0].nwl, chn[0].didi );
+  /*saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].chi, chn[0].chiTwo );
   saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].prr, chn[0].priors );
-  saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].didi, chn[0].dist );
+  saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].didi, chn[0].dist );*/
+  saveTheWhalesXX <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>>  ( chn[0].dim+2, chn[0].nwl, chn[0].ist, chn[0].whales, chn[0].dim, chn[0].nwl, chn[0].xx );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim+2, chn[0].nwl, chn[0].dim, chn[0].ist, chn[0].whales, chn[0].nwl, chn[0].didi );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim+2, chn[0].nwl, chn[0].dim+1, chn[0].ist, chn[0].whales, chn[0].nwl, chn[0].chiTwo );
   return 0;
 }
 
@@ -821,6 +842,7 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].skbin );
   cudaFree ( chn[0].skdePdf );
   cudaFree ( chn[0].objkde );
+  cudaFree ( chn[0].whales );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
@@ -2336,24 +2358,6 @@ __host__ int cmpKde ( const void *a, const void *b ) {
   }
 }
 
-__host__ int sortQKde ( Chain *chn ) {
-  int n = chn[0].nkb;
-  for ( int i = 0; i < n; i++ ) {
-    chn[0].objkde[i].value = chn[0].pdf[i];
-    chn[0].objkde[i].bin = chn[0].kbin[chn[0].Indx+i*chn[0].dim];
-    chn[0].objkde[i].index = i;
-    /*
-    printf ( " %2.2f ", chn[0].objkde[i].bin );
-    printf ( " %2.2f\n", chn[0].objkde[i].value );*/
-  }
-  qsort ( chn[0].objkde, n, sizeof ( arrKde ), cmpKde );
-  //for ( int i = 0; i < n; i++ ) {
-  printf ( " %2.2f ", chn[0].objkde[0].bin );
-  printf ( " %2.2f\n", chn[0].objkde[0].value );
-  //}
-  return 0;
-}
-
 __host__ int sortQ ( Chain *chn ) {
   int nd =  chn[0].nwl * chn[0].nst;
   for ( int i = 0; i < nd; i++ ) {
@@ -2448,13 +2452,13 @@ __global__ void sortIndexKde ( const int d, const int n, const float *a, const f
     for ( int l = 0; l < n; l++ ) {
       il = i + l * d;
       if ( l > j ) {
-        mewj += ( a[il] < mewa ) * ( l - mewj );
-        mewa += ( a[il] < mewa ) * ( a[il] - mewa );
-        mewb += ( a[il] < mewa ) * ( b[il] - mewb );
-      } else if ( l < j ) {
         mewj += ( a[il] > mewa ) * ( l - mewj );
         mewa += ( a[il] > mewa ) * ( a[il] - mewa );
         mewb += ( a[il] > mewa ) * ( b[il] - mewb );
+      } else if ( l < j ) {
+        mewj += ( a[il] < mewa ) * ( l - mewj );
+        mewa += ( a[il] < mewa ) * ( a[il] - mewa );
+        mewb += ( a[il] < mewa ) * ( b[il] - mewb );
       }
     }
     sa[ij] = mewa;
@@ -2467,6 +2471,29 @@ __global__ void saveKde ( const int d, const int n, const int Indx, const float 
   if ( i < n ) {
     sa[Indx+i*d] = a[i];
   }
+}
+
+__host__ int sortQKde ( Chain *chn ) {
+  int n = chn[0].nkb;
+  chn[0].Indx = 0;
+  while ( chn[0].Indx < chn[0].dim ) {
+    for ( int i = 0; i < n; i++ ) {
+      chn[0].objkde[i].value = chn[0].kdePdf[chn[0].Indx+i*chn[0].dim];
+      chn[0].objkde[i].bin = chn[0].kbin[chn[0].Indx+i*chn[0].dim];
+      chn[0].objkde[i].index = i;
+    }
+    qsort ( chn[0].objkde, n, sizeof ( arrKde ), cmpKde );
+    for ( int i = 0; i < n; i++ ) {
+      printf ( " %2.2f ", chn[0].objkde[i].value );
+      printf ( " %2.2f ", chn[0].objkde[i].bin );
+      chn[0].skdePdf[chn[0].Indx+i*chn[0].dim] = chn[0].objkde[i].value;
+      chn[0].skbin[chn[0].Indx+i*chn[0].dim] = chn[0].objkde[i].bin;
+      printf ( " %2.2f ", chn[0].skdePdf[chn[0].Indx+i*chn[0].dim] );
+      printf ( " %2.2f\n", chn[0].skbin[chn[0].Indx+i*chn[0].dim] );
+    }
+    chn[0].Indx += 1;
+  }
+  return 0;
 }
 
 __host__ int chainKde ( Cupar *cdp, Chain *chn ) {
@@ -2488,12 +2515,12 @@ __host__ int chainKde ( Cupar *cdp, Chain *chn ) {
     }
     printf ( "\n" );*/
     saveKde <<< grid1D ( chn[0].nkb ), THRDS >>> ( chn[0].dim, chn[0].nkb, chn[0].Indx, chn[0].pdf, chn[0].kdePdf );
-    cudaDeviceSynchronize ();
-    sortQKde ( chn );
+    //cudaDeviceSynchronize ();
+    //sortQKde ( chn );
     chn[0].Indx += 1;
   }
   //sortQKde ( chn );
-  //sortIndexKde <<< grid2D ( chn[0].dim, chn[0].nkb ), block2D () >>> ( chn[0].dim, chn[0].nkb, chn[0].kdePdf, chn[0].kbin, chn[0].skdePdf, chn[0].skbin );
+  sortIndexKde <<< grid2D ( chn[0].dim, chn[0].nkb ), block2D () >>> ( chn[0].dim, chn[0].nkb, chn[0].kdePdf, chn[0].kbin, chn[0].skdePdf, chn[0].skbin );
   //sortIndexKde <<< grid1D ( chn[0].nkb ), THRDS >>> ( chn[0].nkb, chn[0].kbin, chn[0].pdf, chn[0].sm, chn[0].skbin, chn[0].skpdf );
   return 0;
 }
