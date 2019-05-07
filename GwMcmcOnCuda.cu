@@ -52,6 +52,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nst = atoi ( argv[NSPCTR11+4] );
   chn[0].indx = atoi ( argv[NSPCTR11+5] );
   chn[0].dim = NPRS;
+  chn[0].dim1 = chn[0].dim + 3;
   chn[0].dlt = 1.E-4;
   chn[0].nkb = 100;
 
@@ -163,40 +164,20 @@ int main ( int argc, char *argv[] ) {
     saveCurrent ( chn );
     chn[0].ist += 1;
   }
-  chainMoments ( cdp, chn );
-  sillySort ( cdp, chn );
-  chainKde ( cdp, chn );
+
+  chainMomentsAndKde ( cdp, chn );
 
   if ( vrb ) {
-    printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
+    printf ( " Done!\n" );
   }
 
   cudaEventRecord ( cdp[0].stop, 0 );
   cudaEventSynchronize ( cdp[0].stop );
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
-  sortQKde ( chn );
-
   if ( vrb ) {
     printf ( ".................................................................\n" );
-    for ( int i = 0; i < chn[0].dim; i++ ) {
-      printf ( " Med, Std -- %2.2f, ", chn[0].msmp[i] );
-      printf ( " %2.2f\n", chn[0].stdsmp[i] );
-    }
-    printf ( " Time to generate: %3.1f ms\n", chn[0].time );
-    printf ( "\n" );
-    for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].kbin[j+0*chn[0].dim] );
-    }
-    printf ( "\n" );
-    for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].kbin[j+(chn[0].nkb-1)*chn[0].dim] );
-    }
-    printf ( "\n" );
-    for ( int j = 0; j < chn[0].dim; j++ ) {
-        printf ( " %2.2f ", chn[0].skbin[j+0*chn[0].dim] );
-    }
-    printf ( "\n" );
+    printf ( " Time to generate -- %3.1f ms\n", chn[0].time );
   }
 
   cudaEventRecord ( cdp[0].start, 0 );
@@ -209,19 +190,61 @@ int main ( int argc, char *argv[] ) {
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
-    printf ( " Autocorrelation time window -- %i\n", chn[0].mmm );
-    printf ( " Autocorrelation time -- %.8E\n", chn[0].atcTime );
-    printf ( " Autocorrelation time threshold -- %.8E\n", chn[0].nst / 5e1f );
+    printf ( " Autocorrelation time window             -- %i\n", chn[0].mmm );
+    printf ( " Autocorrelation time                    -- %.8E\n", chn[0].atcTime );
+    printf ( " Autocorrelation time threshold          -- %.8E\n", chn[0].nst / 5e1f );
     printf ( " Effective number of independent samples -- %.8E\n", chn[0].nwl * chn[0].nst / chn[0].atcTime );
-    printf ( " Time to compute acor time: %3.1f ms\n", chn[0].time );
+    printf ( " Time to compute acor time               -- %3.1f ms\n", chn[0].time );
+  }
+
+  sortQKde ( chn );
+
+  if ( vrb ) {
+    printf ( ".................................................................\n" );
+    printf ( " Medium                    -- " );
+    for ( int i = 0; i < chn[0].dim1; i++ ) {
+      printf ( " %2.2f ", chn[0].msmp[i] );
+    }
+    printf ( "\n" );
+    printf ( " Std. deviation            -- " );
+    for ( int i = 0; i < chn[0].dim1; i++ ) {
+      printf ( " %2.2f ", chn[0].stdsmp[i] );
+    }
+    printf ( "\n" );
+    printf ( " Max pdf (best-fit) values -- " );
+    for ( int j = 0; j < chn[0].dim1; j++ ) {
+        printf ( " %2.2f ", chn[0].skbin[j+0*chn[0].dim1] );
+    }
     printf ( "\n" );
   }
 
-  //sortQ ( chn );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    chn[0].xx[i] = chn[0].skbin[i];
+  }
+
+  chn[0].didi[0] = chn[0].skbin[chn[0].dim];
+
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA, beta1 = 1.;
+
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx, spc[i].absrptnFctrs );
+    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
+    AssembleArrayOfModelFluxes2 <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( i, 1, spc[i].nmbrOfEnrgChnnls, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].mdlFlxs, chn[0].didi );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, 1, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
+    arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, 1 ), block2D () >>> ( 1, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, 1, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta, spc[i].stat, INCYY );
+    arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, 1 ), block2D () >>> ( 1, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chiSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, 1, &alpha, spc[i].chiSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta, spc[i].chi, INCYY );
+  }
+
+  cudaDeviceSynchronize ();
 
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
+  writeSpectraToFile ( "Spectra.out", spc );
+  writeWhalesToFile ( chn[0].name, chn[0].indx, chn[0].dim1, chn[0].nwl*chn[0].nst, chn[0].whales );
   writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors, chn[0].dist, chn[0].chiTwo );
 
   destroyCuda ( cdp );

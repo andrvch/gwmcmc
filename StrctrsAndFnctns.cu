@@ -59,6 +59,21 @@ __host__ __device__ Complex conjugateComplex ( Complex a ) {
   return c;
 }
 
+__global__ void saveTheWhalesXX ( const int d0, const int d1, const int i2, float *xxx, const int d3, const int d4, const float *xx ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  if ( i < d3 && j < d4 ) {
+    xxx[i+j*d0+i2*d0*d1] = xx[i+j*d3];
+  }
+}
+
+__global__ void saveTheWhalesX ( const int d0, const int d1, const int i0, const int i2, float *xxx, const int d3, const float *x ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < d3 ) {
+    xxx[i0+i*d0+i2*d0*d1] = x[i];
+  }
+}
+
 __global__ void constantArray ( const int n, const float c, float *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < n ) {
@@ -264,36 +279,6 @@ __global__ void updateStatistic ( const int nwl, const float *stt1, const float 
   }
 }
 
-__global__ void saveWalkers ( const int d, const int n, const int is, const float *xx, float *xxx ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  if ( i < d && j < n ) {
-    xxx[i+j*d+is*d*n] = xx[i+j*d];
-  }
-}
-
-__global__ void saveTheWhalesXX ( const int d0, const int d1, const int i2, float *xxx, const int d3, const int d4, const float *xx ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  if ( i < d3 && j < d4 ) {
-    xxx[i+j*d0+i2*d0*d1] = xx[i+j*d3];
-  }
-}
-
-__global__ void saveTheWhalesX ( const int d0, const int d1, const int i0, const int i2, float *xxx, const int d3, const float *x ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < d3 ) {
-    xxx[i0+i*d0+i2*d0*d1] = x[i];
-  }
-}
-
-__global__ void saveStatistic ( const int nwl, const int ist, const float *stt, float *stat ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < nwl ) {
-    stat[i+ist*nwl] = stt[i];
-  }
-}
-
 __global__ void mapRandomNumbers ( const int nwl, const int ist, const int isb, const float *r, float *zr, int *kr, float *ru, int *kex ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int rr;
@@ -455,34 +440,34 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].chi, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chi0, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].chiTwo, chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].msmp, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].csmp, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sqcsmp, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].vsmp, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stdsmp, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].hsmp, chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].msmp, chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].csmp, chn[0].dim1 * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sqcsmp, chn[0].dim1 * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].vsmp, chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].stdsmp, chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].hsmp, chn[0].dim1 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].obj, chn[0].nwl * chn[0].nst * sizeof ( arrIndx ) );
   cudaMallocManaged ( ( void ** ) &chn[0].param, chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sm, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sm, chn[0].dim1 * chn[0].nwl * chn[0].nst * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].sortIndx, chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sp, chn[0].dim * chn[0].nst * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].ssp, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].smVls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].smIndx, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].smPntr, ( chn[0].dim * chn[0].nwl * chn[0].nst + 1 ) * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].sp, chn[0].dim1 * chn[0].nst * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ssp, chn[0].dim1 * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smVls, chn[0].dim1 * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smIndx, chn[0].dim1 * chn[0].nwl * chn[0].nst * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].smPntr, ( chn[0].dim1 * chn[0].nwl * chn[0].nst + 1 ) * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].pdf, chn[0].nkb * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ppdf, chn[0].nkb * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].maxPdf, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].kbin, chn[0].dim * chn[0].nkb * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].maxPdf, chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kbin, chn[0].dim1 * chn[0].nkb * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].skpdf, chn[0].nkb * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].kdeVls, chn[0].nkb * chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].kdePdf, chn[0].nkb * chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].lkde, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].hkde, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].skdePdf, chn[0].nkb * chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].skbin, chn[0].nkb * chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kdeVls, chn[0].nkb * chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].kdePdf, chn[0].nkb * chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].lkde, chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].hkde, chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].skdePdf, chn[0].nkb * chn[0].dim1 * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].skbin, chn[0].nkb * chn[0].dim1 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].objkde, chn[0].nkb * sizeof ( arrKde ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].whales, ( chn[0].dim + 2 ) * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].whales, chn[0].dim1 * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   return 0;
 }
 
@@ -660,9 +645,10 @@ __host__ int saveCurrent ( Chain *chn ) {
   /*saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].chi, chn[0].chiTwo );
   saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].prr, chn[0].priors );
   saveStatistic <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, chn[0].ist, chn[0].didi, chn[0].dist );*/
-  saveTheWhalesXX <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>>  ( chn[0].dim+2, chn[0].nwl, chn[0].ist, chn[0].whales, chn[0].dim, chn[0].nwl, chn[0].xx );
-  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim+2, chn[0].nwl, chn[0].dim, chn[0].ist, chn[0].whales, chn[0].nwl, chn[0].didi );
-  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim+2, chn[0].nwl, chn[0].dim+1, chn[0].ist, chn[0].whales, chn[0].nwl, chn[0].chiTwo );
+  saveTheWhalesXX <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>>  ( chn[0].dim1, chn[0].nwl, chn[0].ist, chn[0].whales, chn[0].dim, chn[0].nwl, chn[0].xx );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim1, chn[0].nwl, chn[0].dim, chn[0].ist, chn[0].whales, chn[0].nwl, chn[0].didi );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim1, chn[0].nwl, chn[0].dim+1, chn[0].ist, chn[0].whales, chn[0].nwl, chn[0].stt );
+  saveTheWhalesX <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim1, chn[0].nwl, chn[0].dim+2, chn[0].ist, chn[0].whales, chn[0].nwl, chn[0].chiTwo );
   return 0;
 }
 
@@ -1270,6 +1256,8 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
     cudaMallocManaged ( ( void ** ) &spc[i].grpIndx, spc[i].nmbrOfChnnls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spc[i].grpVls, spc[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].chiSttstcs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].chi, chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].stat, chn[0].nwl * sizeof ( float ) );
   }
   return 0;
 }
@@ -1321,6 +1309,8 @@ __host__ void FreeSpec ( const Spectrum *spc ) {
     cudaFree ( spc[i].ignRmfPntr );
     cudaFree ( spc[i].bkgIgn );
     cudaFree ( spc[i].srcIgn );
+    cudaFree ( spc[i].chi );
+    cudaFree ( spc[i].stat );
   }
 }
 
@@ -2466,84 +2456,90 @@ __global__ void sortIndexKde ( const int d, const int n, const float *a, const f
   }
 }
 
-__global__ void saveKde ( const int d, const int n, const int Indx, const float *a, float *sa ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  if ( i < n ) {
-    sa[Indx+i*d] = a[i];
+__host__ int chainMomentsAndKde ( Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  int nd = chn[0].nwl * chn[0].nst;
+  constantArray <<< grid1D ( nd ), THRDS >>> ( nd, alpha / nd, chn[0].stps );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].dim1, nd, &alpha, chn[0].whales, chn[0].dim1, chn[0].stps, incxx, &beta, chn[0].msmp, incyy );
+  shiftWalkers <<< grid2D ( chn[0].dim1, nd ), block2D () >>> ( chn[0].dim1, nd, chn[0].whales, chn[0].msmp, chn[0].csmp );
+  powWalkers <<< grid1D ( chn[0].dim1 * nd ), THRDS >>> ( chn[0].dim1*nd, 2., chn[0].csmp, chn[0].sqcsmp );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].dim1, nd, &alpha, chn[0].sqcsmp, chn[0].dim1, chn[0].stps, incxx, &beta, chn[0].vsmp, incyy );
+  powWalkers <<< grid1D ( chn[0].dim1 ), THRDS >>> ( chn[0].dim1, 0.5, chn[0].vsmp, chn[0].stdsmp );
+  float scale = 1.06 / powf ( nd, 1. / 5. );
+  scaleWalkers <<< grid1D ( chn[0].dim1 ), THRDS >>> ( chn[0].dim1, scale, chn[0].stdsmp, chn[0].hsmp );
+  lhkde <<< grid1D ( chn[0].dim1 ), THRDS >>> ( chn[0].dim1, chn[0].msmp, chn[0].stdsmp, chn[0].lkde, chn[0].hkde );
+  lineSpace <<< grid2D ( chn[0].dim1, chn[0].nkb ), block2D () >>> ( chn[0].dim1, chn[0].nkb, chn[0].lkde, chn[0].hkde, chn[0].kbin );
+  chn[0].Indx = 0;
+  while ( chn[0].Indx < chn[0].dim1 ) {
+    gaussKde1D <<< grid2D ( chn[0].nkb, nd ), block2D () >>> ( chn[0].dim1, nd, chn[0].nkb, chn[0].Indx, chn[0].hsmp, chn[0].whales, chn[0].kbin, chn[0].ppdf );
+    constantArray <<< grid1D ( nd ), THRDS >>> ( nd, alpha / nd, chn[0].stps );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nkb, nd, &alpha, chn[0].ppdf, chn[0].nkb, chn[0].stps, incxx, &beta, chn[0].pdf, incyy );
+    saveTheWhalesX <<< grid1D ( chn[0].nkb ), THRDS >>> ( chn[0].dim1, chn[0].nkb, chn[0].Indx, 0, chn[0].kdePdf, chn[0].nkb, chn[0].pdf );
+    chn[0].Indx += 1;
   }
+  return 0;
 }
 
 __host__ int sortQKde ( Chain *chn ) {
   int n = chn[0].nkb;
   chn[0].Indx = 0;
-  while ( chn[0].Indx < chn[0].dim ) {
+  while ( chn[0].Indx < chn[0].dim1 ) {
     for ( int i = 0; i < n; i++ ) {
-      chn[0].objkde[i].value = chn[0].kdePdf[chn[0].Indx+i*chn[0].dim];
-      chn[0].objkde[i].bin = chn[0].kbin[chn[0].Indx+i*chn[0].dim];
+      chn[0].objkde[i].value = chn[0].kdePdf[chn[0].Indx+i*chn[0].dim1];
+      chn[0].objkde[i].bin = chn[0].kbin[chn[0].Indx+i*chn[0].dim1];
       chn[0].objkde[i].index = i;
     }
     qsort ( chn[0].objkde, n, sizeof ( arrKde ), cmpKde );
     for ( int i = 0; i < n; i++ ) {
-      printf ( " %2.2f ", chn[0].objkde[i].value );
-      printf ( " %2.2f ", chn[0].objkde[i].bin );
-      chn[0].skdePdf[chn[0].Indx+i*chn[0].dim] = chn[0].objkde[i].value;
-      chn[0].skbin[chn[0].Indx+i*chn[0].dim] = chn[0].objkde[i].bin;
-      printf ( " %2.2f ", chn[0].skdePdf[chn[0].Indx+i*chn[0].dim] );
-      printf ( " %2.2f\n", chn[0].skbin[chn[0].Indx+i*chn[0].dim] );
+      chn[0].skdePdf[chn[0].Indx+i*chn[0].dim1] = chn[0].objkde[i].value;
+      chn[0].skbin[chn[0].Indx+i*chn[0].dim1] = chn[0].objkde[i].bin;
     }
     chn[0].Indx += 1;
   }
   return 0;
 }
 
-__host__ int chainKde ( Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  int nd = chn[0].nwl * chn[0].nst;
-  chn[0].Indx = 0;
-  while ( chn[0].Indx < chn[0].dim ) {
-    gaussKde1D <<< grid2D ( chn[0].nkb, nd ), block2D () >>> ( chn[0].dim, nd, chn[0].nkb, chn[0].Indx, chn[0].hsmp, chn[0].smpls, chn[0].kbin, chn[0].ppdf );
-    /*cudaDeviceSynchronize ();
-    for ( int i = 0; i < nd; i++ ) {
-      for ( int j = 0; i < chn[0].nkb; )
-    }*/
-    constantArray <<< grid1D ( nd ), THRDS >>> ( nd, alpha / nd, chn[0].stps );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nkb, nd, &alpha, chn[0].ppdf, chn[0].nkb, chn[0].stps, incxx, &beta, chn[0].pdf, incyy );
-    /*cudaDeviceSynchronize ();
-    for ( int i = 0; i < chn[0].nkb; i++ ) {
-      printf ( " %2.2f ", chn[0].pdf[i] );
+__host__ void writeWhalesToFile ( const char *chainname, const int chainindx, const int dim, const int n, const float *whales ) {
+  FILE *pntr;
+  char name[FLEN_CARD];
+  snprintf ( name, sizeof ( name ), "%s%i%s", chainname, chainindx, ".whales" );
+  pntr = fopen ( name, "w" );
+  for ( int i = 0; i < n; i++ ) {
+    for ( int j = 0; j < dim; j++ ) {
+      fprintf ( pntr, " %.8E ", whales[j+i*dim] );
     }
-    printf ( "\n" );*/
-    saveKde <<< grid1D ( chn[0].nkb ), THRDS >>> ( chn[0].dim, chn[0].nkb, chn[0].Indx, chn[0].pdf, chn[0].kdePdf );
-    //cudaDeviceSynchronize ();
-    //sortQKde ( chn );
-    chn[0].Indx += 1;
+    fprintf ( pntr, "\n" );
   }
-  //sortQKde ( chn );
-  sortIndexKde <<< grid2D ( chn[0].dim, chn[0].nkb ), block2D () >>> ( chn[0].dim, chn[0].nkb, chn[0].kdePdf, chn[0].kbin, chn[0].skdePdf, chn[0].skbin );
-  //sortIndexKde <<< grid1D ( chn[0].nkb ), THRDS >>> ( chn[0].nkb, chn[0].kbin, chn[0].pdf, chn[0].sm, chn[0].skbin, chn[0].skpdf );
-  return 0;
+  fclose ( pntr );
 }
-/*
-__host__ int sortChain ( Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  int nd = chn[0].nwl * chn[0].nst;
-  chn[0].Indx = 0;
-  extractParam <<< grid1D ( nd ), THRDS >>> ( chn[0].dim, nd, chn[0].Indx, chn[0].smpls, chn[0].param );
-  sortMatrix <<< grid2D ( nd, nd ), block2D () >>> ( nd, chn[0].param, chn[0].sm );
-  constantArray <<< grid1D ( nd ), THRDS >>> ( nd, alpha, chn[0].stps );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, nd, nd, &alpha, chn[0].sm, nd, chn[0].stps, incxx, &beta, chn[0].sortIndx, incyy );
-  cudaDeviceSynchronize ();
-  for ( int i = 0; i < 11; i++ ) {
-    printf ( " %i ", int(chn[0].sortIndx[i]) );
-    printf ( " %2.2f ", chn[0].param[int(chn[0].sortIndx[i])] );
-    for ( int j = 0; j < 11; j++ ) {
-      printf ( " %2.2f ", chn[0].sm[i+j*nd] );
+
+__host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
+  FILE *pntr;
+  pntr = fopen ( name, "w" );
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].srcGrp[j] );
     }
-    printf ( "\n" );
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].bkgGrp[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].flddMdlFlxs[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].chnnlSttstcs[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].chiSttstcs[j] );
+    }
+    fprintf ( pntr, "\n" );
   }
-  return 0;
-}*/
+  fclose ( pntr );
+}
 
 #endif // _STRCTRSANDFNCTNS_CU_

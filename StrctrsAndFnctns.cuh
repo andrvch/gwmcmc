@@ -93,6 +93,7 @@ struct Chain {
   float *skdePdf;
   arrKde *objkde;
   float *whales;
+  int dim1;
 };
 
 struct Spectrum {
@@ -112,6 +113,7 @@ struct Spectrum {
   int nmbrOfgrpIgnVls, nmbrOfignRmfVls;
   int hghrBn, lwrBn, hghrCh, lwrCh;
   float *bkgGrp, *bkgIgn;
+  float *chi, *stat;
 };
 
 struct Model {
@@ -155,6 +157,9 @@ __host__ __device__ Complex addComplex ( Complex, Complex );
 __host__ __device__ Complex scaleComplex ( Complex, float );
 __host__ __device__ Complex multiplyComplex ( Complex, Complex );
 __host__ __device__ Complex conjugateComplex ( Complex );
+
+__global__ void saveTheWhalesXX ( const int, const int, const int, float*, const int, const int, const float* );
+__global__ void saveTheWhalesX ( const int, const int, const int, const int, float*, const int, const float* );
 
 __global__ void scaleArray ( const int, const float, float* );
 __global__ void constantArray ( const int, const float, float* );
@@ -282,7 +287,6 @@ __host__ __device__ float wstat ( const float scnts, const float bcnts, const fl
 
 __global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi );
 
-__host__ int chainMoments ( Cupar *cdp, Chain *chn );
 __global__ void powWalkers ( const int n, const float c, const float *a, float *d );
 __global__ void scaleWalkers ( const int n, const float c, const float *a, float *d );
 
@@ -304,16 +308,15 @@ __host__ int sillySort ( Cupar *cdp, Chain *chn );
 __global__ void lineSpace ( const int, const int, const float *l, const float *h, float *b );
 __global__ void gaussKde1D ( const int, const int nd, const int nb, const int, const float *h, const float *a, const float *b, float *pdf );
 __global__ void sortIndexKde ( const int n, const float *b, const float *a, int *si, float *sb, float *sa );
-__host__ int chainKde ( Cupar *cdp, Chain *chn );
-
-__global__ void saveKde ( const int d, const int n, const int Indx, const float *a, float *sa );
 
 __global__ void lhkde ( const int n, const float *a, const float *b, float *l, float *h  );
 __global__ void sortIndexKde ( const int d, const int n, const float *a, const float *b, float *sa, float *sb );
 __host__ int cmpKde ( const void *a, const void *b );
 __host__ int sortQKde ( Chain *chn );
 
-__global__ void saveTheWhalesXX ( const int, const int, const int, float*, const int, const int, const float* );
-__global__ void saveTheWhalesX ( const int, const int, const int, const int, float*, const int, const float* );
+__host__ int chainMomentsAndKde ( Cupar *cdp, Chain *chn );
+
+__host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, const int dim, const int n, const float *whales );
+__host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
