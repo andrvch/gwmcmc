@@ -11,23 +11,7 @@ from pylab import *
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import LogFormatterSciNotation
 from matplotlib import ticker
-from xspec import *
 from cudakde import *
-
-def readspectra(FileName):
-    lines = []
-    with open(FileName) as fp:
-        for line in iter(fp.readline, ''):
-            lines.append(str(line))
-    nsmpl = len(lines)
-    spcs = []
-    for i in range(nsmpl):
-        nbins = len(lines[i].split())
-        pars = np.empty([nbins])
-        for j in range(nbins):
-            pars[j] = lines[i].split()[j]
-        spcs.append(pars)
-    return spcs
 
 nspec = 6
 spcs = readspectra(sys.argv[1])

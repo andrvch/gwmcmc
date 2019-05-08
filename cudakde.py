@@ -50,6 +50,21 @@ __global__ void gauss_kde ( float *a, float *b, float *c, float *pdf ) {
 }
 """
 
+def readspectra(FileName):
+    lines = []
+    with open(FileName) as fp:
+        for line in iter(fp.readline, ''):
+            lines.append(str(line))
+    nsmpl = len(lines)
+    spcs = []
+    for i in range(nsmpl):
+        nbins = len(lines[i].split())
+        pars = np.empty([nbins])
+        for j in range(nbins):
+            pars[j] = lines[i].split()[j]
+        spcs.append(pars)
+    return spcs
+
 def read_data(FileName):
     lines = []
     with open(FileName) as fp:
