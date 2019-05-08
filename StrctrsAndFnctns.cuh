@@ -320,4 +320,5 @@ __host__ int chainMomentsAndKde ( Cupar *cdp, Chain *chn );
 __host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, const int dim, const int n, const float *whales );
 __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
 
+__host__ __device__ float gabs ( const float p0, const float p1, const float p2, const float enrgLwr, const float enrgHghr ) ;
 #endif // _STRCTRSANDFNCTNS_CUH_

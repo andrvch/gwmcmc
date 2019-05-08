@@ -1883,6 +1883,17 @@ __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, 
   return flx;
 }
 
+__host__ __device__ float gabs ( const float p0, const float p1, const float p2, const float enrgLwr, const float enrgHghr ) {
+  float flx, lflx;
+  float en = enrgHghr - enrgLwr;
+  float pp0 = powf ( 10, p0 );
+  float pp1 = powf ( 10, p1 );
+  float pp2 = powf ( 10, p2 );
+  lflx = - pp2 / powf ( 2 * PI ) / pp1 * expf ( - 0.5 * powf ( ( en - pp0 ) / pp1 ) );
+  flx = expf ( lflx );
+  return flx;
+}
+
 __host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 ) {
   float flx;
   flx = 0.5 * ( flx1 + flx2 ) * ( en2 - en1 );
