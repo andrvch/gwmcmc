@@ -114,6 +114,7 @@ struct Spectrum {
   int hghrBn, lwrBn, hghrCh, lwrCh;
   float *bkgGrp, *bkgIgn;
   float *chi, *stat;
+  float *lwrGrp, *hghrGrp;
 };
 
 struct Model {
