@@ -220,7 +220,9 @@ int main ( int argc, char *argv[] ) {
 
   for ( int i = 0; i < chn[0].dim; i++ ) {
     chn[0].xx[i] = chn[0].skbin[i];
+    printf ( " %2.2f ", chn[0].xx[i] );
   }
+  printf ( "\n" );
 
   chn[0].didi[0] = chn[0].skbin[chn[0].dim];
 
