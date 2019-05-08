@@ -2525,6 +2525,14 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
   pntr = fopen ( name, "w" );
   for ( int i = 0; i < NSPCTR; i++ ) {
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].lwrGrp[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].hghrGrp[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
       fprintf ( pntr, " %.8E ", spc[i].srcGrp[j] );
     }
     fprintf ( pntr, "\n" );
