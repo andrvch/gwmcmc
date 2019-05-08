@@ -81,8 +81,9 @@ def readspectra(nspec,FileName):
         for line in iter(fp.readline, ''):
             lines.append(str(line))
     nsmpl = len(lines)
+    print nsmpl
     spcs = []
-    nnn = int(nsmpl/nspec)
+    nnn = int(float(nsmpl)/float(nspec))
     print nnn
     for i in range(nspec):
         nbins = len(lines[i*nnn].split())

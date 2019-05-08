@@ -2069,7 +2069,6 @@ __host__ __device__ float wstat ( const float scnts, const float bcnts, const fl
   return sttstc;
 }
 
-
 __global__ void arrayOfCStat ( const int nwl, const int nch, const float t, const float *c, const float *f, float *s ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -2539,6 +2538,10 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", (spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
       fprintf ( pntr, " %.8E ", spc[i].bkgGrp[j] );
     }
     fprintf ( pntr, "\n" );
@@ -2547,11 +2550,11 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])*spc[i].chnnlSttstcs[j] );
+      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])*spc[i].chnnlSttstcs[j] );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])*spc[i].chiSttstcs[j] );
+      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])*spc[i].chiSttstcs[j] );
     }
     fprintf ( pntr, "\n" );
   }
