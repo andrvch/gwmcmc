@@ -136,13 +136,13 @@ struct Model {
   float *RedData2, *Dist2, *EBV2;
   const char *rddnngFl3 = "Drimmel03.dat";
   float *RedData3, *Dist3, *EBV3;
-  //const char *nsaFl = "nsa_spec_B_1e12G.dat";
-  const char *nsaFl = "nsa_spec_B_1e13G.dat";
+  const char *nsaFl = "nsa_spec_B_1e12G.dat";
+  //const char *nsaFl = "nsa_spec_B_1e13G.dat";
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
-  //const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
-  const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
+  const char *nsmaxgFl = "nsmaxg_HB1260ThB00g1438.in";
+  //const char *nsmaxgFl = "nsmaxg_HB1226Thm00g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1226Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm90g1420.in";
   //const char *nsmaxgFl = "nsmaxg_HB1300Thm00g1420.in";
@@ -321,4 +321,5 @@ __host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, c
 __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
 
 __host__ __device__ float gabs ( const float p0, const float p1, const float p2, const float enrgLwr, const float enrgHghr ) ;
+__host__ __device__ float notch ( const float p0, const float p1, const float p2, const float enrgLwr, const float enrgHghr );
 #endif // _STRCTRSANDFNCTNS_CUH_

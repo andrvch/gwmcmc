@@ -91,7 +91,7 @@ def readspectra(nspec,FileName):
             for j in range(nbins):
                 pars[k,j] = lines[k+i*nnn].split()[j]
         spcs.append(pars)
-    return spcs
+    return nnn, spcs
 
 def read_data(FileName):
     lines = []

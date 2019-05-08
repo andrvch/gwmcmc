@@ -1748,7 +1748,10 @@ __global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, c
       //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
       Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
+      //f *= gabs ( wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
       f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      //f *= gabs (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
+      //f *= notch (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f *= arf[e];
       flx[t] = f;
@@ -1757,7 +1760,10 @@ __global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, c
       //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
       Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
+      //f *= gabs (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
       f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      //f *= gabs (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
+      //f *= notch (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f *= arf[e];
       flx[t] = f;
@@ -1766,7 +1772,10 @@ __global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, c
       //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
       Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
       f += Norm * intNsaFlx;
+      //f *= gabs (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
       f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
+      //f *= gabs (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
+      //f *= notch (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );
       f *= absrptn[t];
       f *= arf[e];
       flx[t] = f;
@@ -1849,7 +1858,7 @@ __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
     //arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
     //arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdChnnls, spc[i].srcExptm, spc[i].srcIgn, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
     //arrayOfChiSquareds <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    //arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    //f *= gabs (  wlk[4+w*NPRS], wlk[5+w*NPRS], wlk[6+w*NPRS], en[e], en[e+1] );arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
     arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
     //cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
     //arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdChnnls, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
@@ -1885,14 +1894,23 @@ __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, 
 
 __host__ __device__ float gabs ( const float p0, const float p1, const float p2, const float enrgLwr, const float enrgHghr ) {
   float flx, lflx;
-  float en = enrgHghr - enrgLwr;
-  float pp0 = powf ( 10, p0 );
-  float pp1 = powf ( 10, p1 );
-  float pp2 = powf ( 10, p2 );
-  lflx = - pp2 / powf ( 2 * PI ) / pp1 * expf ( - 0.5 * powf ( ( en - pp0 ) / pp1 ) );
-  flx = expf ( lflx );
+  float en = 0.5 * ( enrgHghr + enrgLwr );
+  lflx = expf ( - 0.5 * powf ( ( en - p0 ) / p1, 2. ) ) / p1;
+  flx = expf ( - p2 * lflx );
   return flx;
 }
+
+__host__ __device__ float notch ( const float p0, const float p1, const float p2, const float enrgLwr, const float enrgHghr ) {
+  float flx, lflx;
+  float en = 0.5 * ( enrgHghr + enrgLwr );
+  if ( en < p0 + p1/2 && en > p0 - p1/2 ) {
+    flx = ( 1 - p2 );
+  } else {
+    flx = 1.;
+  }
+  return flx;
+}
+
 
 __host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 ) {
   float flx;
@@ -2546,7 +2564,7 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", spc[i].srcGrp[j] );
+      fprintf ( pntr, " %.8E ", spc[i].srcGrp[j] - (spc[i].backscal_src/spc[i].backscal_bkg) * spc[i].bkgGrp[j] );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {

@@ -5,6 +5,7 @@ CUDAID=1
 #SPECFILE1="PN_J0633_15asec_grp15_0.fak"
 #SPECFILE2="PN_J0633_15asec_grp15_1.fak"
 #SPECFILE1="PN_J0633_15asec_bkg.pi"
+#SPECFILE1="PN_J0633_15asec_grp15_0.fak"
 SPECFILE1="PN_J0633_15asec_grp1.pi"
 SPECFILE2="M1_J0633_15asec_grp1.pi"
 SPECFILE3="M2_J0633_15asec_grp1.pi"

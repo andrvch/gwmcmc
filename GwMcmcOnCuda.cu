@@ -93,28 +93,28 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].x0[4] = 1.5;
   chn[0].xbnd[8] = -25.;
-  chn[0].xbnd[9] = 2.;
+  chn[0].xbnd[9] = 25.;
 
   chn[0].x0[5] = -5.;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
 
-  chn[0].x0[6] = 0.1;
+  chn[0].x0[6] = 0.2;
   chn[0].xbnd[12] = 0.;
-  chn[0].xbnd[13] = 25.;
+  chn[0].xbnd[13] = 1.2;
 /*
-  chn[0].x0[7] = -5.;
-  chn[0].xbnd[14] = -25.;
+  chn[0].x0[7] = 0.1;
+  chn[0].xbnd[14] = 0.;
   chn[0].xbnd[15] = 25.;
-
-  chn[0].x0[8] = 1.5;
+/*
+  chn[0].x0[8] = -5.;
   chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
 
-  chn[0].x0[9] = -5.;
-  chn[0].xbnd[18] = -25.;
+  chn[0].x0[9] = 0.25;
+  chn[0].xbnd[18] = 0.;
   chn[0].xbnd[19] = 25.;
-
+  /*
   chn[0].x0[10] = 0.1;
   chn[0].xbnd[20] = 0.;
   chn[0].xbnd[21] = 25.;
@@ -125,8 +125,8 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].x0[12] = 0.2;
   chn[0].xbnd[24] = 0.;
-  chn[0].xbnd[25] = 25.;*/
-
+  chn[0].xbnd[25] = 25.;
+  */
   initializeChain ( cdp, chn, mdl, spc );
 
   /*
@@ -231,7 +231,8 @@ int main ( int argc, char *argv[] ) {
 
   for ( int i = 0; i < NSPCTR; i++ ) {
     AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx, spc[i].absrptnFctrs );
-    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
+    BilinearInterpolation <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[i].enrgChnnls, chn[0].xx1, spc[i].nsa1Flxs );
+    //BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
     AssembleArrayOfModelFluxes2 <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( i, 1, spc[i].nmbrOfEnrgChnnls, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].mdlFlxs, chn[0].didi );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, 1, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
     arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, 1 ), block2D () >>> ( 1, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
