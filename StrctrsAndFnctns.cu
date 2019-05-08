@@ -2564,7 +2564,7 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", spc[i].srcGrp[j] - (spc[i].backscal_src/spc[i].backscal_bkg) * spc[i].bkgGrp[j] );
+      fprintf ( pntr, " %.8E ", spc[i].srcGrp[j] ); // - (spc[i].backscal_src/spc[i].backscal_bkg) * spc[i].bkgGrp[j] );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
