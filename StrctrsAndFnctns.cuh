@@ -322,5 +322,7 @@ __host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, c
 __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
 
 __host__ int specData ( Cupar *cdp, const int verbose, Model *mdl, Chain *chn, Spectrum *spc, Spectrum *bkg );
-
+__global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
+__global__ void arrayOfBackgroundFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *xx, float *flx );
+__global__ void combineSourceAndBackground ( const int nwl, const int n, const float scale, float *src, const float *bkg );
 #endif // _STRCTRSANDFNCTNS_CUH_
