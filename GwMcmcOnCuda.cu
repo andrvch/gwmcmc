@@ -196,7 +196,7 @@ int main ( int argc, char *argv[] ) {
   destroyCuda ( cdp );
   freeChain ( chn );
   FreeModel ( mdl );
-  FreeSpec ( spc );
+  freeSpec ( spc, bkg );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While

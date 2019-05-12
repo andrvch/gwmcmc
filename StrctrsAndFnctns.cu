@@ -1266,7 +1266,7 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
   return 0;
 }
 
-__host__ void FreeSpec ( const Spectrum *spc ) {
+__host__ void freeSpec ( const Spectrum *spc, const Spectrum *bkg ) {
   for ( int i = 0; i < NSPCTR; i++ ) {
     cudaFree ( spc[i].rmfVlsInCsc );
     cudaFree ( spc[i].rmfIndxInCsc );
@@ -1317,6 +1317,51 @@ __host__ void FreeSpec ( const Spectrum *spc ) {
     cudaFree ( spc[i].stat );
     cudaFree ( spc[i].lwrGrp );
     cudaFree ( spc[i].hghrGrp );
+    cudaFree ( bkg[i].rmfVlsInCsc );
+    cudaFree ( bkg[i].rmfIndxInCsc );
+    cudaFree ( bkg[i].rmfPntrInCsc );
+    cudaFree ( bkg[i].rmfVls );
+    cudaFree ( bkg[i].rmfIndx );
+    cudaFree ( bkg[i].rmfPntr );
+    cudaFree ( bkg[i].enrgChnnls );
+    cudaFree ( bkg[i].arfFctrs );
+    cudaFree ( bkg[i].srcCnts );
+    cudaFree ( bkg[i].bckgrndCnts );
+    cudaFree ( bkg[i].gdQltChnnls );
+    cudaFree ( bkg[i].lwrChnnlBndrs );
+    cudaFree ( bkg[i].hghrChnnlBndrs );
+    cudaFree ( bkg[i].mdlFlxs );
+    cudaFree ( bkg[i].flddMdlFlxs );
+    cudaFree ( bkg[i].chnnlSttstcs );
+    cudaFree ( bkg[i].ntcdChnnls );
+    cudaFree ( bkg[i].grpVls );
+    cudaFree ( bkg[i].grpIndx );
+    cudaFree ( bkg[i].grpPntr );
+    cudaFree ( bkg[i].grpng );
+    cudaFree ( bkg[i].ntcIndx );
+    cudaFree ( bkg[i].ntcPntr );
+    cudaFree ( bkg[i].ntcVls );
+    cudaFree ( bkg[i].grpIgnVls );
+    cudaFree ( bkg[i].grpIgnIndx );
+    cudaFree ( bkg[i].grpIgnPntr );
+    cudaFree ( bkg[i].iVls );
+    cudaFree ( bkg[i].iIndx );
+    cudaFree ( bkg[i].iPntr );
+    cudaFree ( bkg[i].bkgGrp );
+    cudaFree ( bkg[i].srcGrp );
+    cudaFree ( bkg[i].chiSttstcs );
+    cudaFree ( bkg[i].ignVls );
+    cudaFree ( bkg[i].ignIndx );
+    cudaFree ( bkg[i].ignPntr );
+    cudaFree ( bkg[i].ignRmfVls );
+    cudaFree ( bkg[i].ignRmfIndx );
+    cudaFree ( bkg[i].ignRmfPntr );
+    cudaFree ( bkg[i].bkgIgn );
+    cudaFree ( bkg[i].srcIgn );
+    cudaFree ( bkg[i].chi );
+    cudaFree ( bkg[i].stat );
+    cudaFree ( bkg[i].lwrGrp );
+    cudaFree ( bkg[i].hghrGrp );
   }
 }
 
@@ -1657,9 +1702,9 @@ __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n
   float f = 0, Norm, intNsFlx;
   if ( i < n && j < nwl ) {
     if ( Indx < 3 ) {
-      intNsaFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
+      intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
       Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
-      f += Norm * intNsaFlx;
+      f += Norm * intNsFlx;
       f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
       f *= abs[i+j*n];
       f *= arf[i];
@@ -1739,7 +1784,7 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   return 0;
 }
 
-__host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc, Spectrun *bkg ) {
+__host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc, Spectrum *bkg ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA, beta1 = 1.;
   constantArray <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].nwl/2, 0., chn[0].stt );
