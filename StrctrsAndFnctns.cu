@@ -2559,4 +2559,225 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
   fclose ( pntr );
 }
 
+__host__ int specData ( Cupar *cdp, const int verbose, Model *mdl, Chain *chn, Spectrum *spc, Spectrum *bkg ) {
+  float alpha = ALPHA, beta = BETA;
+  int sumOfAllBins = 0;
+  int sumOfSourceBins = 0;
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    ReadFitsInfo ( spc[i].name, &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].nmbrOfBns, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
+    ReadFitsInfo ( bkg[i].name, &bkg[i].nmbrOfEnrgChnnls, &bkg[i].nmbrOfChnnls, &bkg[i].nmbrOfRmfVls, &bkg[i].nmbrOfBns, &bkg[i].srcExptm, &bkg[i].bckgrndExptm, bkg[i].srcTbl, bkg[i].arfTbl, bkg[i].rmfTbl, bkg[i].bckgrndTbl );
+    if ( verbose == 1 ) {
+      printf ( ".................................................................\n" );
+      printf ( " Spectrum number  -- %i\n", i );
+      printf ( " Spectrum table   -- %s\n", spc[i].srcTbl );
+      printf ( " ARF table        -- %s\n", spc[i].arfTbl );
+      printf ( " RMF table        -- %s\n", spc[i].rmfTbl );
+      printf ( " Background table -- %s\n", spc[i].bckgrndTbl );
+    }
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfPntrInCsc, ( spc[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfIndxInCsc, spc[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfPntr, ( spc[i].nmbrOfChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfIndx, spc[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfVlsInCsc, spc[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].rmfVls, spc[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].enrgChnnls, ( spc[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].arfFctrs, spc[i].nmbrOfEnrgChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].srcCnts, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].bckgrndCnts, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].lwrChnnlBndrs, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].hghrChnnlBndrs, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].gdQltChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].crssctns, spc[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].absrptnFctrs, spc[i].nmbrOfEnrgChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nsa1Flxs, ( spc[i].nmbrOfEnrgChnnls + 1 ) * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nsa2Flxs, ( spc[i].nmbrOfEnrgChnnls + 1 ) * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpng, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpPntr, ( spc[i].nmbrOfBns + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpIndx, spc[i].nmbrOfChnnls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpVls, spc[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].chiSttstcs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].chi, chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].stat, chn[0].nwl * sizeof ( float ) );
+    ReadFitsData ( verbose, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, &spc[i].backscal_src, &spc[i].backscal_bkg, spc[i].srcCnts, spc[i].bckgrndCnts, spc[i].arfFctrs, spc[i].rmfVlsInCsc, spc[i].rmfIndxInCsc, spc[i].rmfPntrInCsc, spc[i].gdQltChnnls, spc[i].lwrChnnlBndrs, spc[i].hghrChnnlBndrs, spc[i].enrgChnnls, spc[i].nmbrOfBns, spc[i].grpVls, spc[i].grpIndx, spc[i].grpPntr, spc[i].grpng );
+    cudaMallocManaged ( ( void ** ) &bkg[i].rmfPntrInCsc, ( bkg[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].rmfIndxInCsc, bkg[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].rmfPntr, ( bkg[i].nmbrOfChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].rmfIndx, bkg[i].nmbrOfRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].rmfVlsInCsc, bkg[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].rmfVls, bkg[i].nmbrOfRmfVls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].enrgChnnls, ( bkg[i].nmbrOfEnrgChnnls + 1 ) * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].arfFctrs, bkg[i].nmbrOfEnrgChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].srcCnts, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].bckgrndCnts, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].lwrChnnlBndrs, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].hghrChnnlBndrs, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].gdQltChnnls, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].flddMdlFlxs, bkg[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ntcdChnnls, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].chnnlSttstcs, bkg[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].grpng, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].grpPntr, ( bkg[i].nmbrOfBns + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].grpIndx, bkg[i].nmbrOfChnnls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].grpVls, bkg[i].nmbrOfChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].chiSttstcs, bkg[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].chi, chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].stat, chn[0].nwl * sizeof ( float ) );
+    ReadFitsData ( verbose, bkg[i].srcTbl, bkg[i].arfTbl, bkg[i].rmfTbl, bkg[i].bckgrndTbl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfRmfVls, &bkg[i].backscal_src, &bkg[i].backscal_bkg, bkg[i].srcCnts, bkg[i].bckgrndCnts, bkg[i].arfFctrs, bkg[i].rmfVlsInCsc, bkg[i].rmfIndxInCsc, bkg[i].rmfPntrInCsc, bkg[i].gdQltChnnls, bkg[i].lwrChnnlBndrs, bkg[i].hghrChnnlBndrs, bkg[i].enrgChnnls, bkg[i].nmbrOfBns, bkg[i].grpVls, bkg[i].grpIndx, bkg[i].grpPntr, bkg[i].grpng );
+    int count = 0;
+    while ( spc[i].lwrChnnlBndrs[spc[i].grpPntr[count]] < spc[i].lwrNtcdEnrg ) {
+      count += 1;
+    }
+    spc[i].lwrBn = count;
+    bkg[i].hghrBn = spc[i].lwrBn;
+    while ( spc[i].hghrChnnlBndrs[spc[i].grpPntr[count]] <= spc[i].hghrNtcdEnrg ) {
+      count += 1;
+    }
+    spc[i].hghrBn = count - 1;
+    bkg[i].hghrBn = spc[i].hghrBn;
+    spc[i].nmbrOfNtcdBns = spc[i].hghrBn - spc[i].lwrBn;
+    bkg[i].nmbrOfNtcdBns = spc[i].nmbrOfNtcdBns;
+    spc[i].nmbrOfUsdBns = spc[i].hghrBn - spc[i].lwrBn;
+    count = 0;
+    while ( spc[i].lwrChnnlBndrs[count] < spc[i].lwrNtcdEnrg ) {
+      count += 1;
+    }
+    spc[i].lwrCh = count;
+    printf ( " %i\n", spc[i].lwrCh );
+    while ( spc[i].hghrChnnlBndrs[count] <= spc[i].hghrNtcdEnrg ) {
+      count += 1;
+    }
+    spc[i].hghrCh = count - 1;
+    bkg[i].lwrCh = spc[i].hghrCh;
+    printf ( " %i\n", spc[i].hghrCh );
+    spc[i].nmbrOfNtcdChnnls = spc[i].hghrCh - spc[i].lwrCh;
+    bkg[i].nmbrOfNtcdChnnls = spc[i].nmbrOfNtcdChnnls;
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcIndx, spc[i].nmbrOfNtcdBns * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcVls, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ntcPntr, ( spc[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ntcIndx, bkg[i].nmbrOfNtcdBns * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ntcVls, bkg[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ntcPntr, ( bkg[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns+1; j++ ) {
+      spc[i].ntcPntr[j] = j;
+      bkg[i].ntcPntr[j] = j;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      spc[i].ntcVls[j] = 1;
+      bkg[i].ntcVls[j] = 1;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      spc[i].ntcIndx[j] = spc[i].lwrBn + j;
+      bkg[i].ntcIndx[j] = bkg[i].lwrBn + j;
+    }
+    cudaMallocManaged ( ( void ** ) &spc[i].ignIndx, spc[i].nmbrOfNtcdChnnls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ignVls, spc[i].nmbrOfNtcdChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ignPntr, ( spc[i].nmbrOfNtcdChnnls + 1 ) * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ignIndx, bkg[i].nmbrOfNtcdChnnls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ignVls, bkg[i].nmbrOfNtcdChnnls * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ignPntr, ( bkg[i].nmbrOfNtcdChnnls + 1 ) * sizeof ( int ) );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdChnnls+1; j++ ) {
+      spc[i].ignPntr[j] = j;
+      bkg[i].ignPntr[j] = j;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdChnnls; j++ ) {
+      spc[i].ignVls[j] = 1;
+      bkg[i].ignVls[j] = 1;
+    }
+    for ( int j = 0; j < spc[i].nmbrOfNtcdChnnls; j++ ) {
+      spc[i].ignIndx[j] = spc[i].lwrCh + j;
+      bkg[i].ignIndx[j] = bkg[i].lwrCh + j;
+    }
+    cudaMallocManaged ( ( void ** ) &spc[i].grpIgnPntr, ( spc[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, spc[i].nmbrOfNtcdBns, spc[i].ntcPntr, spc[i].ntcIndx, cdp[0].MatDescr, spc[i].nmbrOfChnnls, spc[i].grpPntr, spc[i].grpIndx, cdp[0].MatDescr, spc[i].grpIgnPntr, &spc[i].nmbrOfgrpIgnVls );
+    //cudaDeviceSynchronize ();
+    cudaMallocManaged ( ( void ** ) &spc[i].grpIgnIndx, spc[i].nmbrOfgrpIgnVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].grpIgnVls, spc[i].nmbrOfgrpIgnVls * sizeof ( float ) );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, spc[i].nmbrOfNtcdBns, spc[i].ntcVls, spc[i].ntcPntr, spc[i].ntcIndx, cdp[0].MatDescr, spc[i].nmbrOfChnnls, spc[i].grpVls, spc[i].grpPntr, spc[i].grpIndx, cdp[0].MatDescr, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx );
+    cudaMallocManaged ( ( void ** ) &bkg[i].grpIgnPntr, ( bkg[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfBns, cdp[0].MatDescr, bkg[i].nmbrOfNtcdBns, bkg[i].ntcPntr, bkg[i].ntcIndx, cdp[0].MatDescr, bkg[i].nmbrOfChnnls, bkg[i].grpPntr, bkg[i].grpIndx, cdp[0].MatDescr, bkg[i].grpIgnPntr, &bkg[i].nmbrOfgrpIgnVls );
+    //cudaDeviceSynchronize ();
+    cudaMallocManaged ( ( void ** ) &bkg[i].grpIgnIndx, bkg[i].nmbrOfgrpIgnVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].grpIgnVls, bkg[i].nmbrOfgrpIgnVls * sizeof ( float ) );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfBns, cdp[0].MatDescr, bkg[i].nmbrOfNtcdBns, bkg[i].ntcVls, bkg[i].ntcPntr, bkg[i].ntcIndx, cdp[0].MatDescr, bkg[i].nmbrOfChnnls, bkg[i].grpVls, bkg[i].grpPntr, bkg[i].grpIndx, cdp[0].MatDescr, bkg[i].grpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx );
+    cudaMallocManaged ( ( void ** ) &spc[i].srcGrp, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfChnnls, spc[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, spc[i].srcCnts, &beta, spc[i].srcGrp );
+    cudaMallocManaged ( ( void ** ) &bkg[i].srcGrp, bkg[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, bkg[i].grpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx, bkg[i].srcCnts, &beta, bkg[i].srcGrp );
+    cudaMallocManaged ( ( void ** ) &spc[i].bkgGrp, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfChnnls, spc[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, spc[i].bckgrndCnts, &beta, spc[i].bkgGrp );
+    cudaMallocManaged ( ( void ** ) &bkg[i].bkgGrp, bkg[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, bkg[i].grpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx, bkg[i].bckgrndCnts, &beta, bkg[i].bkgGrp );
+    cudaMallocManaged ( ( void ** ) &spc[i].lwrGrp, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].hghrGrp, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      spc[i].lwrGrp[j] = spc[i].lwrChnnlBndrs[spc[i].grpPntr[spc[i].lwrBn+j]];
+      spc[i].hghrGrp[j] = spc[i].hghrChnnlBndrs[spc[i].grpPntr[spc[i].lwrBn+1+j]];
+    }
+    cusparseScsr2csc ( cdp[0].cusparseHandle, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfRmfVls, spc[i].rmfVlsInCsc, spc[i].rmfPntrInCsc, spc[i].rmfIndxInCsc, spc[i].rmfVls, spc[i].rmfIndx, spc[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
+    cusparseScsr2csc ( cdp[0].cusparseHandle, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfRmfVls, bkg[i].rmfVlsInCsc, bkg[i].rmfPntrInCsc, bkg[i].rmfIndxInCsc, bkg[i].rmfVls, bkg[i].rmfIndx, bkg[i].rmfPntr, CUSPARSE_ACTION_NUMERIC, CUSPARSE_INDEX_BASE_ZERO );
+    cudaMallocManaged ( ( void ** ) &spc[i].iPntr, ( spc[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, spc[i].nmbrOfgrpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, cdp[0].MatDescr, spc[i].nmbrOfRmfVls, spc[i].rmfPntr, spc[i].rmfIndx, cdp[0].MatDescr, spc[i].iPntr, &spc[i].nmbrOfiVls );
+    //cudaDeviceSynchronize ();
+    cudaMallocManaged ( ( void ** ) &spc[i].iIndx, spc[i].nmbrOfiVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].iVls, spc[i].nmbrOfiVls * sizeof ( float ) );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, spc[i].nmbrOfgrpIgnVls, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, cdp[0].MatDescr, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx );
+    cudaMallocManaged ( ( void ** ) &bkg[i].iPntr, ( bkg[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfBns, cdp[0].MatDescr, bkg[i].nmbrOfgrpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].iPntr, &bkg[i].nmbrOfiVls );
+    //cudaDeviceSynchronize ();
+    cudaMallocManaged ( ( void ** ) &bkg[i].iIndx, bkg[i].nmbrOfiVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].iVls, bkg[i].nmbrOfiVls * sizeof ( float ) );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfBns, cdp[0].MatDescr, bkg[i].nmbrOfgrpIgnVls, bkg[i].grpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx );
+    //
+    cudaMallocManaged ( ( void ** ) &spc[i].ignRmfPntr, ( spc[i].nmbrOfNtcdChnnls + 1 ) * sizeof ( int ) );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, cdp[0].MatDescr, spc[i].nmbrOfNtcdChnnls, spc[i].ignPntr, spc[i].ignIndx, cdp[0].MatDescr, spc[i].nmbrOfRmfVls, spc[i].rmfPntr, spc[i].rmfIndx, cdp[0].MatDescr, spc[i].ignRmfPntr, &spc[i].nmbrOfignRmfVls );
+    cudaMallocManaged ( ( void ** ) &spc[i].ignRmfIndx, spc[i].nmbrOfignRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].ignRmfVls, spc[i].nmbrOfignRmfVls * sizeof ( float ) );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, cdp[0].MatDescr, spc[i].nmbrOfNtcdChnnls, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, cdp[0].MatDescr, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, cdp[0].MatDescr, spc[i].ignRmfVls, spc[i].ignRmfPntr, spc[i].ignRmfIndx );
+    //
+    cudaMallocManaged ( ( void ** ) &bkg[i].ignRmfPntr, ( bkg[i].nmbrOfNtcdChnnls + 1 ) * sizeof ( int ) );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfChnnls, cdp[0].MatDescr, bkg[i].nmbrOfNtcdChnnls, bkg[i].ignPntr, bkg[i].ignIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].ignRmfPntr, &bkg[i].nmbrOfignRmfVls );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ignRmfIndx, bkg[i].nmbrOfignRmfVls * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &bkg[i].ignRmfVls, bkg[i].nmbrOfignRmfVls * sizeof ( float ) );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfChnnls, cdp[0].MatDescr, bkg[i].nmbrOfNtcdChnnls, bkg[i].ignVls, bkg[i].ignPntr, bkg[i].ignIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].ignRmfVls, bkg[i].ignRmfPntr, bkg[i].ignRmfIndx );
+    //
+    cudaMallocManaged ( ( void ** ) &spc[i].srcIgn, spc[i].nmbrOfNtcdChnnls * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, spc[i].srcCnts, &beta, spc[i].srcIgn );
+    cudaMallocManaged ( ( void ** ) &bkg[i].srcIgn, bkg[i].nmbrOfNtcdChnnls * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, bkg[i].ignVls, bkg[i].ignPntr, bkg[i].ignIndx, bkg[i].srcCnts, &beta, bkg[i].srcIgn );
+    cudaMallocManaged ( ( void ** ) &spc[i].bkgIgn, spc[i].nmbrOfNtcdChnnls * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, spc[i].bckgrndCnts, &beta, spc[i].bkgIgn );
+    cudaMallocManaged ( ( void ** ) &bkg[i].bkgIgn, bkg[i].nmbrOfNtcdChnnls * sizeof ( float ) );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, bkg[i].ignVls, bkg[i].ignPntr, bkg[i].ignIndx, bkg[i].bckgrndCnts, &beta, bkg[i].bkgIgn );
+    AssembleArrayOfPhotoelectricCrossections ( spc[i].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[i].enrgChnnls, mdl[0].atmcNmbrs, spc[i].crssctns );
+    cudaDeviceSynchronize ( );
+    sumOfAllBins += spc[i].nmbrOfNtcdBns ;
+    sumOfSourceBins += spc[i].nmbrOfNtcdBns;
+    if ( verbose == 1 ) {
+      printf ( " Number of energy channels                -- %i\n", spc[i].nmbrOfEnrgChnnls );
+      printf ( " Number of instrument channels            -- %i\n", spc[i].nmbrOfChnnls );
+      printf ( " Number of nonzero elements of RMF matrix -- %i\n", spc[i].nmbrOfRmfVls );
+      printf ( " Number of grouping bins                  -- %i\n", spc[i].nmbrOfBns );
+      printf ( " Number of noticed bins                   -- %i\n", spc[i].nmbrOfNtcdBns );
+      printf ( " Number of noticed channels               -- %i\n", spc[i].nmbrOfNtcdChnnls );
+      printf ( " Exposure time                            -- %4.0f\n", spc[i].srcExptm );
+      printf ( " Exposure time (background)               -- %4.0f\n", spc[i].bckgrndExptm );
+      printf ( " Backscale src                            -- %4.0f\n", spc[i].backscal_src );
+      printf ( " Backscale bkg                            -- %4.0f\n", spc[i].backscal_bkg );
+    }
+  }
+  if ( verbose == 1 ) {
+    printf ( ".................................................................\n" );
+    printf ( " Total number of used data channels         -- %i\n", sumOfAllBins );
+    printf ( " Number of used source channels             -- %i\n", sumOfSourceBins );
+    printf ( " Total number of degrees of freedom         -- %i\n", sumOfAllBins - NPRS );
+    printf ( " number of source degrees of freedom        -- %i\n", sumOfSourceBins - NPRS );
+  }
+  return 0;
+}
+
 #endif // _STRCTRSANDFNCTNS_CU_

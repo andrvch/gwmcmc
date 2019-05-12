@@ -321,4 +321,6 @@ __host__ int chainMomentsAndKde ( Cupar *cdp, Chain *chn );
 __host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, const int dim, const int n, const float *whales );
 __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
 
+__host__ int specData ( Cupar *cdp, const int verbose, Model *mdl, Chain *chn, Spectrum *spc, Spectrum *bkg );
+
 #endif // _STRCTRSANDFNCTNS_CUH_

@@ -57,9 +57,7 @@ int main ( int argc, char *argv[] ) {
     spc[i].hghrNtcdEnrg = ( float ) atof ( argv[6+2*NSPCTR] );
   }
 
-  SpecInfo ( vrb, spc );
-  SpecAlloc ( chn, spc );
-  SpecData ( cdp, vrb, mdl, spc );
+  specData ( cdp, vrb, mdl, chn, spc, bkg );
 
   allocateChain ( chn );
 
