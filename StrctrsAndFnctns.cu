@@ -1227,9 +1227,9 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
   return 0;
 }
 
-__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc ) {
+__host__ int SpecInfo ( const int verbose, Spectrum *spc ) {
   for ( int i = 0; i < NSPCTR; i++ ) {
-    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].nmbrOfBns, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
+    ReadFitsInfo ( spc[i].name, &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].nmbrOfBns, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
   }
   return 0;
 }
@@ -2538,7 +2538,7 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", (spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j] );
+      fprintf ( pntr, " %.8E ", (spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j] );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
@@ -2550,11 +2550,11 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc ) {
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])*spc[i].chnnlSttstcs[j] );
+      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])*spc[i].chnnlSttstcs[j] );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].srcBkg[j])*spc[i].chiSttstcs[j] );
+      fprintf ( pntr, " %.8E ", (spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]-(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])*spc[i].chiSttstcs[j] );
     }
     fprintf ( pntr, "\n" );
   }

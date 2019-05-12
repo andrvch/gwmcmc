@@ -32,44 +32,32 @@ int main ( int argc, char *argv[] ) {
     printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
   }
 
-  Chain chn[1];
-  const char *spcFl1 = argv[2];
-  const char *spcFl2 = argv[3];
-  const char *spcFl3 = argv[4];
-  const char *spcFl4 = argv[5];
-  const char *spcFl5 = argv[6];
-  const char *spcFl6 = argv[7];
-  const char *spcFl7 = argv[8];
-  const char *spcFl8 = argv[9];
-  const char *spcFl9 = argv[10];
-  const char *spcFl10 = argv[11];
-  const char *spcFl11 = argv[12];
-  const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR11] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
+  Model mdl[1];
+  InitializeModel ( mdl );
 
-  chn[0].name = argv[NSPCTR11+2];
-  chn[0].nwl = atoi ( argv[NSPCTR11+3] );
-  chn[0].nst = atoi ( argv[NSPCTR11+4] );
-  chn[0].indx = atoi ( argv[NSPCTR11+5] );
+  Chain chn[1];
+  Spectrum spc[NSPCTR];
+  Spectrum bkg[NSPCTR];
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    spc[i].name = argv[2+2*i];
+    bkg[i].name = argv[2+2*i+1];
+  }
+
+  chn[0].name = argv[2+2*NSPCTR];
+  chn[0].nwl = atoi ( argv[3+2*NSPCTR] );
+  chn[0].nst = atoi ( argv[4+2*NSPCTR] );
+  chn[0].indx = atoi ( argv[5+2*NSPCTR] );
   chn[0].dim = NPRS;
   chn[0].dim1 = chn[0].dim + 3;
   chn[0].dlt = 1.E-4;
   chn[0].nkb = 100;
 
-  Model mdl[1];
-  Spectrum spc[NSPCTR];
-
-  const float lwrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+6] );
-  const float hghrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+7] );
-
   for ( int i = 0; i < NSPCTR; i++ ) {
-    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
-    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
+    spc[i].lwrNtcdEnrg = ( float ) atof ( argv[6+2*NSPCTR] );
+    spc[i].hghrNtcdEnrg = ( float ) atof ( argv[6+2*NSPCTR] );
   }
 
-  InitializeModel ( mdl );
-
-  SpecInfo ( spcLst, vrb, spc );
+  SpecInfo ( vrb, spc );
   SpecAlloc ( chn, spc );
   SpecData ( cdp, vrb, mdl, spc );
 
