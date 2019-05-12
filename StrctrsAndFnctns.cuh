@@ -11,7 +11,7 @@
 #define INCXX 1
 #define INCYY 1
 #define RANK 1
-#define NPRS 7 // Number of parameters
+#define NPRS 9 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
@@ -97,6 +97,7 @@ struct Chain {
 };
 
 struct Spectrum {
+  char *name;
   char *spcLst[NSPCTR];
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   float lwrNtcdEnrg, hghrNtcdEnrg;
@@ -190,7 +191,6 @@ __global__ void metropolisPoposal2 ( const int, const int, const int, const floa
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
-__host__ int initializeChain ( Cupar*, Chain*, Model *mdl, Spectrum *spc );
 __host__ int initializeRandomForWalk ( Cupar*, Chain* );
 __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
@@ -219,9 +219,7 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn );
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
-__host__ int SpecData ( Cupar*, const int, Model*, Spectrum* );
-__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int, Spectrum* );
-__host__ int SpecAlloc ( Chain*, Spectrum* );
+
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, int*, float*, float*, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] );
 __host__ int ReadFitsData ( const int, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float*, const int, float*, int*, int*, float* );
 __host__ void FreeModel ( const Model* );
@@ -230,10 +228,10 @@ __global__ void BilinearInterpolation ( const int, const int, const int, const i
 __global__ void BilinearInterpolationNsmax ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const float*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const float*, float*, float* );
 __global__ void LinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const float*, float*, float* );
-__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const float*, const float*, float*, const float* );
 
-__host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum* );
-__host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum* );
+
+__host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum*, Spectrum* );
+__host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum*, Spectrum* );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsmax ( const float, const float, const float, const float );
@@ -286,8 +284,6 @@ __global__ void arrayOfWStat ( const int nwl, const int nch, const float ts, con
 
 __host__ __device__ float wstat ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg );
 
-__global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi );
-
 __global__ void powWalkers ( const int n, const float c, const float *a, float *d );
 __global__ void scaleWalkers ( const int n, const float c, const float *a, float *d );
 
@@ -320,4 +316,11 @@ __host__ int chainMomentsAndKde ( Cupar *cdp, Chain *chn );
 __host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, const int dim, const int n, const float *whales );
 __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
 
+__global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
+
+__host__ int specData ( Cupar*, const int, Model*, Spectrum*, Spectrum* );
+__host__ int initializeChain ( Cupar*, Chain* );
+
+__global__ void arrayOfBackgroundFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *xx, float *flx );
+__global__ void combineSourceAndBackground ( const int nwl, const int n, const float scale, float *src, const float *bkg )
 #endif // _STRCTRSANDFNCTNS_CUH_
