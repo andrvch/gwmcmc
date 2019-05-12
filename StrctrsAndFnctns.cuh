@@ -191,7 +191,7 @@ __global__ void metropolisPoposal2 ( const int, const int, const int, const floa
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
-__host__ int initializeChain ( Cupar*, Chain*, Model *mdl, Spectrum *spc );
+__host__ int initializeChain ( Cupar*, Chain* );
 __host__ int initializeRandomForWalk ( Cupar*, Chain* );
 __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
@@ -233,8 +233,8 @@ __global__ void LinearInterpolation ( const int, const int, const int, const flo
 __global__ void LinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const float*, float*, float* );
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const float*, const float*, float*, const float* );
 
-__host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum* );
-__host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum* );
+__host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum*, Spectrum* );
+__host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum*, Spectrum* );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsmax ( const float, const float, const float, const float );
