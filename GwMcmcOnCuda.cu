@@ -110,39 +110,9 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[8] = 1.5;
   chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
-
-  chn[0].x0[9] = -5.;
-  chn[0].xbnd[18] = -25.;
-  chn[0].xbnd[19] = 25.;
-
-  chn[0].x0[10] = 0.1;
-  chn[0].xbnd[20] = 0.;
-  chn[0].xbnd[21] = 25.;
-
-  chn[0].x0[11] = -5.;
-  chn[0].xbnd[22] = -25.;
-  chn[0].xbnd[23] = 25.;
-
-  chn[0].x0[12] = 0.2;
-  chn[0].xbnd[24] = 0.;
-  chn[0].xbnd[25] = 25.;*/
+*/
 
   initializeChain ( cdp, chn, mdl, spc );
-
-  /*
-  cudaDeviceSynchronize ();
-
-  for ( int i = 0; i < spc[0].nmbrOfNtcdChnnls; i++ ) {
-    printf ( " %2.2f ", spc[0].flddMdlFlxs[i]  );
-    printf ( " %2.2f ", spc[0].chnnlSttstcs[i]  );
-  }
-  printf ( "\n" );
-
-  for ( int i = 0; i < chn[0].nwl; i++ ) {
-    printf ( " %2.2f ", chn[0].stt[i]  );
-  }
-  printf ( "\n" );
-  */
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
@@ -226,19 +196,7 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].didi[0] = chn[0].skbin[chn[0].dim];
 
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA, beta1 = 1.;
-
-  for ( int i = 0; i < NSPCTR; i++ ) {
-    AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx, spc[i].absrptnFctrs );
-    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
-    AssembleArrayOfModelFluxes2 <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( i, 1, spc[i].nmbrOfEnrgChnnls, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].mdlFlxs, chn[0].didi );
-    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, 1, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
-    arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, 1 ), block2D () >>> ( 1, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, 1, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta, spc[i].stat, INCYY );
-    arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, 1 ), block2D () >>> ( 1, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chiSttstcs );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, 1, &alpha, spc[i].chiSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta, spc[i].chi, INCYY );
-  }
+  modelStatistic00 ( cdp, mdl, chn, spc );
 
   cudaDeviceSynchronize ();
 
