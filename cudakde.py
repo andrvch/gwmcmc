@@ -16,6 +16,7 @@ from pycuda import driver, compiler, gpuarray, tools
 import time
 # -- initialize the device
 import pycuda.autoinit
+from matplotlib.ticker import LogFormatterSciNotation
 
 kernel_code_template_cov_1d = """
 __global__ void gauss_kde1d ( float *a, float *b, float *pdf ) {
@@ -49,6 +50,49 @@ __global__ void gauss_kde ( float *a, float *b, float *c, float *pdf ) {
     pdf[id] = (1/(2*pi))*%(DET_C)s*sum_ker/ndata;
 }
 """
+
+class CustomTicker(LogFormatterSciNotation):
+    def __call__(self, x, pos=None):
+        if x not in [0.1,1,10]:
+            return LogFormatterSciNotation.__call__(self,x, pos=None)
+        else:
+            return "{x:g}".format(x=x)
+
+def ticks_format(value, index):
+    """
+    get the value and returns the value as:
+       integer: [0,99]
+       1 digit float: [0.1, 0.99]
+       n*10^m: otherwise
+    To have all the number of the same size they are all returned as latex strings
+    """
+    exp = np.floor(np.log10(value))
+    base = value/10**exp
+    if exp == 0 or exp == 1:
+        return '${0:d}$'.format(int(value))
+    if exp == -1:
+        return '${0:.1f}$'.format(value)
+    else:
+        return '${0:d}\\times10^{{{1:d}}}$'.format(int(base), int(exp))
+
+def readspectra(nspec,FileName):
+    lines = []
+    with open(FileName) as fp:
+        for line in iter(fp.readline, ''):
+            lines.append(str(line))
+    nsmpl = len(lines)
+    print nsmpl
+    spcs = []
+    nnn = int(float(nsmpl)/float(nspec))
+    print nnn
+    for i in range(nspec):
+        nbins = len(lines[i*nnn].split())
+        pars = np.empty([nnn,nbins])
+        for k in range(nnn):
+            for j in range(nbins):
+                pars[k,j] = lines[k+i*nnn].split()[j]
+        spcs.append(pars)
+    return spcs
 
 def read_data(FileName):
     lines = []

@@ -97,6 +97,7 @@ struct Chain {
 };
 
 struct Spectrum {
+  char *name;
   char *spcLst[NSPCTR];
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   float lwrNtcdEnrg, hghrNtcdEnrg;
@@ -114,6 +115,7 @@ struct Spectrum {
   int hghrBn, lwrBn, hghrCh, lwrCh;
   float *bkgGrp, *bkgIgn;
   float *chi, *stat;
+  float *lwrGrp, *hghrGrp;
 };
 
 struct Model {
@@ -189,7 +191,7 @@ __global__ void metropolisPoposal2 ( const int, const int, const int, const floa
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
-__host__ int initializeChain ( Cupar*, Chain*, Model *mdl, Spectrum *spc );
+__host__ int initializeChain ( Cupar*, Chain* );
 __host__ int initializeRandomForWalk ( Cupar*, Chain* );
 __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
@@ -219,7 +221,7 @@ __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
 __host__ int SpecData ( Cupar*, const int, Model*, Spectrum* );
-__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int, Spectrum* );
+__host__ int SpecInfo ( const int, Spectrum* );
 __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, int*, float*, float*, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] );
 __host__ int ReadFitsData ( const int, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float*, const int, float*, int*, int*, float* );
@@ -231,8 +233,8 @@ __global__ void LinearInterpolation ( const int, const int, const int, const flo
 __global__ void LinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const float*, float*, float* );
 __global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const float*, const float*, float*, const float* );
 
-__host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum* );
-__host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum* );
+__host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum*, Spectrum* );
+__host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum*, Spectrum* );
 __host__ __device__ float PowerLaw ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsa ( const float, const float, const float, const float );
 __host__ __device__ float IntegrateNsmax ( const float, const float, const float, const float );
@@ -250,7 +252,7 @@ __host__ void AssembleArrayOfPhotoelectricCrossections ( const int, const int, i
 __global__ void AssembleArrayOfNoticedChannels ( const int, const float, const float, const float*, const float*, const float*, float* );
 
 __host__ int InitializeModel ( Model* );
-__host__ void FreeSpec ( const Spectrum* );
+__host__ void freeSpec ( const Spectrum*, const Spectrum* );
 
 extern "C" float photo_ ( float*, float*, int*, int*, int* );
 extern "C" float gphoto_ ( float*, float*, int*, int* );
@@ -319,4 +321,8 @@ __host__ int chainMomentsAndKde ( Cupar *cdp, Chain *chn );
 __host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, const int dim, const int n, const float *whales );
 __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
 
+__host__ int specData ( Cupar *cdp, const int verbose, Model *mdl, Chain *chn, Spectrum *spc, Spectrum *bkg );
+__global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
+__global__ void arrayOfBackgroundFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *xx, float *flx );
+__global__ void combineSourceAndBackground ( const int nwl, const int n, const float scale, float *src, const float *bkg );
 #endif // _STRCTRSANDFNCTNS_CUH_
