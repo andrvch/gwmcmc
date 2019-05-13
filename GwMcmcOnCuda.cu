@@ -70,14 +70,6 @@ int main ( int argc, char *argv[] ) {
 
   SpecData ( cdp, vrb, mdl, spc, bkg );
 
-  for ( int i = 0; i < bkg[0].nmbrOfNtcdBns; i++ ) {
-    printf ( " %2.2f ", bkg[0].srcCnts[bkg[0].lwrCh+i] );
-    printf ( " %2.2f ", spc[0].bckgrndCnts[bkg[0].lwrCh+i] );
-    printf ( " %2.2f ", bkg[0].srcIgn[i] );
-    printf ( " %2.2f ", bkg[0].srcGrp[i] );
-  }
-  printf ( "\n" );
-
   allocateChain ( chn );
 
   chn[0].x0[0] = 5.9;
@@ -128,15 +120,6 @@ int main ( int argc, char *argv[] ) {
   if ( chn[0].indx == 0 ) {
     modelStatistic0 ( cdp, mdl, chn, spc, bkg );
   }
-
-  cudaDeviceSynchronize ();
-
-  for ( int i = 0; i < bkg[0].nmbrOfNtcdBns; i++ ) {
-    printf ( " %2.2f ", bkg[0].srcGrp[i] );
-    printf ( " %2.2f ", bkg[0].flddMdlFlxs[i]*bkg[0].srcExptm );
-    printf ( " %2.2f ", spc[0].bkgGrp[i] );
-  }
-  printf ( "\n" );
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
@@ -216,9 +199,13 @@ int main ( int argc, char *argv[] ) {
     chn[0].xx[i] = chn[0].skbin[i];
     printf ( " %2.2f ", chn[0].xx[i] );
   }
-  printf ( "\n" );
-
   chn[0].didi[0] = chn[0].skbin[chn[0].dim];
+  printf ( " %2.2f ", chn[0].didi[0] );
+  chn[0].stt[0] = chn[0].skbin[chn[0].dim+1];
+  printf ( " %2.2f ", chn[0].stt[0] );
+  chn[0].chi[0] = chn[0].skbin[chn[0].dim+2];
+  printf ( " %2.2f ", chn[0].chi[0] );
+  printf ( "\n" );
 
   modelStatistic00 ( cdp, mdl, chn, spc, bkg );
 
