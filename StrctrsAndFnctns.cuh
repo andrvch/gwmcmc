@@ -220,7 +220,7 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn );
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
-__host__ int SpecData ( Cupar*, const int, Model*, Spectrum* );
+__host__ int SpecData ( Cupar*, const int, Model*, Spectrum*, Spectrum* );
 __host__ int SpecInfo ( const int, Spectrum* );
 __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, int*, float*, float*, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] );

@@ -63,7 +63,7 @@ int main ( int argc, char *argv[] ) {
   SpecAlloc ( chn, spc );
   SpecAlloc ( chn, bkg );
 
-  SpecData ( cdp, vrb, mdl, spc );
+  SpecData ( cdp, vrb, mdl, spc, bkg );
 
   allocateChain ( chn );
 
