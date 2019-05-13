@@ -60,10 +60,23 @@ int main ( int argc, char *argv[] ) {
 
   SpecInfo ( vrb, spc );
   SpecInfo ( vrb, bkg );
+
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    bkg[i].nmbrOfBns = spc[i].nmbrOfBns;
+  }
+
   SpecAlloc ( chn, spc );
   SpecAlloc ( chn, bkg );
 
   SpecData ( cdp, vrb, mdl, spc, bkg );
+
+  for ( int i = 0; i < bkg[0].nmbrOfNtcdBns; i++ ) {
+    printf ( " %2.2f ", bkg[0].srcCnts[bkg[0].lwrCh+i] );
+    printf ( " %2.2f ", spc[0].bckgrndCnts[bkg[0].lwrCh+i] );
+    printf ( " %2.2f ", bkg[0].srcIgn[i] );
+    printf ( " %2.2f ", bkg[0].srcGrp[i] );
+  }
+  printf ( "\n" );
 
   allocateChain ( chn );
 
@@ -85,16 +98,16 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].x0[4] = 1.5;
   chn[0].xbnd[8] = -25.;
-  chn[0].xbnd[9] = 2.;
+  chn[0].xbnd[9] = 25.;
 
   chn[0].x0[5] = -5.;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
 
-  chn[0].x0[6] = 0.1;
-  chn[0].xbnd[12] = 0.;
+  chn[0].x0[6] = 1.5;
+  chn[0].xbnd[12] = -25.;
   chn[0].xbnd[13] = 25.;
-/*
+
   chn[0].x0[7] = -5.;
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
@@ -102,10 +115,28 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[8] = 1.5;
   chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
-*/
+
+  chn[0].x0[9] = -5.;
+  chn[0].xbnd[18] = -25.;
+  chn[0].xbnd[19] = 25.;
+
+  chn[0].x0[10] = 0.1;
+  chn[0].xbnd[20] = 0.;
+  chn[0].xbnd[21] = 25.;
 
   initializeChain ( cdp, chn );
-  modelStatistic0 ( cdp, mdl, chn, spc, bkg );
+  if ( chn[0].indx == 0 ) {
+    modelStatistic0 ( cdp, mdl, chn, spc, bkg );
+  }
+
+  cudaDeviceSynchronize ();
+
+  for ( int i = 0; i < bkg[0].nmbrOfNtcdBns; i++ ) {
+    printf ( " %2.2f ", bkg[0].srcGrp[i] );
+    printf ( " %2.2f ", bkg[0].flddMdlFlxs[i]*bkg[0].srcExptm );
+    printf ( " %2.2f ", spc[0].bkgGrp[i] );
+  }
+  printf ( "\n" );
 
   if ( vrb ) {
     printf ( ".................................................................\n" );

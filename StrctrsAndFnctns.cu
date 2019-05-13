@@ -1198,7 +1198,7 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
     cudaMallocManaged ( ( void ** ) &spc[i].srcGrp, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
     cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfChnnls, spc[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, spc[i].srcCnts, &beta, spc[i].srcGrp );
     cudaMallocManaged ( ( void ** ) &bkg[i].srcGrp, bkg[i].nmbrOfNtcdBns * sizeof ( float ) );
-    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, bkg[i].nmbrOfChnnls, bkg[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, bkg[i].grpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx, bkg[i].srcCnts, &beta, bkg[i].srcGrp );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfChnnls, spc[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, bkg[i].srcCnts, &beta, bkg[i].srcGrp );
     cudaMallocManaged ( ( void ** ) &spc[i].bkgGrp, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
     cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfChnnls, spc[i].nmbrOfgrpIgnVls, &alpha, cdp[0].MatDescr, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, spc[i].bckgrndCnts, &beta, spc[i].bkgGrp );
     cudaMallocManaged ( ( void ** ) &spc[i].lwrGrp, spc[i].nmbrOfNtcdBns * sizeof ( float ) );
@@ -1216,27 +1216,27 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
     cudaMallocManaged ( ( void ** ) &spc[i].iVls, spc[i].nmbrOfiVls * sizeof ( float ) );
     cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, spc[i].nmbrOfgrpIgnVls, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, cdp[0].MatDescr, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx );
     cudaMallocManaged ( ( void ** ) &bkg[i].iPntr, ( spc[i].nmbrOfNtcdBns + 1 ) * sizeof ( int ) );
-    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, bkg[i].nmbrOfgrpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].iPntr, &bkg[i].nmbrOfiVls );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, spc[i].nmbrOfgrpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].iPntr, &bkg[i].nmbrOfiVls );
     //cudaDeviceSynchronize ();
     cudaMallocManaged ( ( void ** ) &bkg[i].iIndx, bkg[i].nmbrOfiVls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &bkg[i].iVls, bkg[i].nmbrOfiVls * sizeof ( float ) );
-    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, bkg[i].nmbrOfgrpIgnVls, bkg[i].grpIgnVls, bkg[i].grpIgnPntr, bkg[i].grpIgnIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfBns, cdp[0].MatDescr, spc[i].nmbrOfgrpIgnVls, spc[i].grpIgnVls, spc[i].grpIgnPntr, spc[i].grpIgnIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx );
     cudaMallocManaged ( ( void ** ) &spc[i].ignRmfPntr, ( spc[i].nmbrOfNtcdChnnls + 1 ) * sizeof ( int ) );
     cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, cdp[0].MatDescr, spc[i].nmbrOfNtcdChnnls, spc[i].ignPntr, spc[i].ignIndx, cdp[0].MatDescr, spc[i].nmbrOfRmfVls, spc[i].rmfPntr, spc[i].rmfIndx, cdp[0].MatDescr, spc[i].ignRmfPntr, &spc[i].nmbrOfignRmfVls );
     cudaMallocManaged ( ( void ** ) &spc[i].ignRmfIndx, spc[i].nmbrOfignRmfVls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &spc[i].ignRmfVls, spc[i].nmbrOfignRmfVls * sizeof ( float ) );
     cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, cdp[0].MatDescr, spc[i].nmbrOfNtcdChnnls, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, cdp[0].MatDescr, spc[i].nmbrOfRmfVls, spc[i].rmfVls, spc[i].rmfPntr, spc[i].rmfIndx, cdp[0].MatDescr, spc[i].ignRmfVls, spc[i].ignRmfPntr, spc[i].ignRmfIndx );
     cudaMallocManaged ( ( void ** ) &bkg[i].ignRmfPntr, ( bkg[i].nmbrOfNtcdChnnls + 1 ) * sizeof ( int ) );
-    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfChnnls, cdp[0].MatDescr, bkg[i].nmbrOfNtcdChnnls, bkg[i].ignPntr, bkg[i].ignIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].ignRmfPntr, &bkg[i].nmbrOfignRmfVls );
+    cusparseXcsrgemmNnz ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, cdp[0].MatDescr, spc[i].nmbrOfNtcdChnnls, spc[i].ignPntr, spc[i].ignIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].ignRmfPntr, &bkg[i].nmbrOfignRmfVls );
     cudaMallocManaged ( ( void ** ) &bkg[i].ignRmfIndx, bkg[i].nmbrOfignRmfVls * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &bkg[i].ignRmfVls, bkg[i].nmbrOfignRmfVls * sizeof ( float ) );
-    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfChnnls, cdp[0].MatDescr, bkg[i].nmbrOfNtcdChnnls, bkg[i].ignVls, bkg[i].ignPntr, bkg[i].ignIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].ignRmfVls, bkg[i].ignRmfPntr, bkg[i].ignRmfIndx );
+    cusparseScsrgemm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfChnnls, cdp[0].MatDescr, spc[i].nmbrOfNtcdChnnls, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, cdp[0].MatDescr, bkg[i].nmbrOfRmfVls, bkg[i].rmfVls, bkg[i].rmfPntr, bkg[i].rmfIndx, cdp[0].MatDescr, bkg[i].ignRmfVls, bkg[i].ignRmfPntr, bkg[i].ignRmfIndx );
     cudaMallocManaged ( ( void ** ) &spc[i].srcIgn, spc[i].nmbrOfNtcdChnnls * sizeof ( float ) );
     cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, spc[i].srcCnts, &beta, spc[i].srcIgn );
     cudaMallocManaged ( ( void ** ) &spc[i].bkgIgn, spc[i].nmbrOfNtcdChnnls * sizeof ( float ) );
     cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, spc[i].bckgrndCnts, &beta, spc[i].bkgIgn );
     cudaMallocManaged ( ( void ** ) &bkg[i].srcIgn, spc[i].nmbrOfNtcdChnnls * sizeof ( float ) );
-    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, bkg[i].ignVls, bkg[i].ignPntr, bkg[i].ignIndx, bkg[i].srcCnts, &beta, bkg[i].srcIgn );
+    cusparseScsrmv ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdChnnls, spc[i].nmbrOfChnnls, spc[i].nmbrOfNtcdChnnls, &alpha, cdp[0].MatDescr, spc[i].ignVls, spc[i].ignPntr, spc[i].ignIndx, bkg[i].srcCnts, &beta, bkg[i].srcIgn );
     AssembleArrayOfPhotoelectricCrossections ( spc[i].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[i].enrgChnnls, mdl[0].atmcNmbrs, spc[i].crssctns );
     cudaDeviceSynchronize ( );
     sumOfAllBins += spc[i].nmbrOfNtcdBns;
@@ -1852,7 +1852,11 @@ __global__ void arrayOfBackgroundFluxes ( const int Indx, const int nwl, const i
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   if ( i < n && j < nwl ) {
-    flx[i+j*n] = arf[i] * PowerLaw ( xx[6+j*NPRS], xx[7+j*NPRS], en[i], en[i+1] );
+    if ( Indx == 0 || Indx == 3 ) {
+      flx[i+j*n] = arf[i] * PowerLaw ( xx[6+j*NPRS], xx[7+j*NPRS], en[i], en[i+1] );
+    } else {
+      flx[i+j*n] = arf[i] * PowerLaw ( xx[8+j*NPRS], xx[9+j*NPRS], en[i], en[i+1] );
+    }
   }
 }
 
@@ -1881,13 +1885,18 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
     arrayOfBackgroundFluxes <<< grid2D ( bkg[i].nmbrOfEnrgChnnls, chn[0].nwl/2 ), block2D () >>> ( i, chn[0].nwl/2, bkg[i].nmbrOfEnrgChnnls, bkg[i].enrgChnnls, bkg[i].arfFctrs, chn[0].xx1, bkg[i].mdlFlxs );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl/2, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
-    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdChnnls, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
-    arrayOfChiSquareds <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
+    arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    arrayOfCStat <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
     cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt1, INCYY );
-    arrayOfChiSquareds <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, bkg[i].grpVls, INCXX, &beta1, chn[0].stt1, INCYY );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi1, INCYY );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, bkg[i].grpVls, INCXX, &beta1, chn[0].chi1, INCYY );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt1, INCYY );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl/2, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl/2, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
+    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
+    arrayOfChiSquareds <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chiSttstcs );
+    arrayOfChiSquareds <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chiSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, spc[i].chiSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi1, INCYY );
+    //cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, bkg[i].chiSttstcs, bkg[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi1, INCYY );
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
@@ -1914,13 +1923,18 @@ __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
     arrayOfBackgroundFluxes <<< grid2D ( bkg[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].enrgChnnls, bkg[i].arfFctrs, chn[0].xx, bkg[i].mdlFlxs );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
-    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdChnnls, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
-    arrayOfChiSquareds <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
+    arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    arrayOfCStat <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
     cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
-    arrayOfChiSquareds <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, bkg[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, bkg[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
+    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
+    arrayOfChiSquareds <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chiSttstcs );
+    arrayOfChiSquareds <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chiSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chiSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
+    //cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chiSttstcs, bkg[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
@@ -1944,13 +1958,18 @@ __host__ int modelStatistic00 ( const Cupar *cdp, const Model *mdl, Chain *chn, 
     arrayOfBackgroundFluxes <<< grid2D ( bkg[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].enrgChnnls, bkg[i].arfFctrs, chn[0].xx, bkg[i].mdlFlxs );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
-    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdChnnls, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
-    arrayOfChiSquareds <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
+    arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    arrayOfCStat <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
     cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
-    arrayOfChiSquareds <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, bkg[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, bkg[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
+    combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
+    arrayOfChiSquareds <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chiSttstcs );
+    arrayOfChiSquareds <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chiSttstcs );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chiSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
+    //cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chiSttstcs, bkg[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].chi, INCYY );
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
@@ -2627,11 +2646,7 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc, const 
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", (spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j] );
-    }
-    fprintf ( pntr, "\n" );
-    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", spc[i].bkgGrp[j] );
+      fprintf ( pntr, " %.8E ", bkg[i].srcGrp[j] );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
@@ -2639,19 +2654,15 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc, const 
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", -(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]+(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]+(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])*spc[i].chnnlSttstcs[j] );
-    }
-    fprintf ( pntr, "\n" );
-    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", -(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]+(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j]+(spc[i].backscal_src/spc[i].backscal_bkg)*spc[i].bkgGrp[j])*spc[i].chiSttstcs[j] );
-    }
-    fprintf ( pntr, "\n" );
-    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", bkg[i].srcGrp[j] );
-    }
-    fprintf ( pntr, "\n" );
-    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
       fprintf ( pntr, " %.8E ", bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", -(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])*spc[i].chnnlSttstcs[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", -(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])*spc[i].chiSttstcs[j] );
     }
     fprintf ( pntr, "\n" );
   }
