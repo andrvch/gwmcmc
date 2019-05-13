@@ -104,7 +104,8 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[17] = 25.;
 */
 
-  initializeChain ( cdp, chn, mdl, spc );
+  initializeChain ( cdp, chn );
+  modelStatistic0 ( cdp, mdl, chn, spc, bkg );
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
@@ -119,7 +120,7 @@ int main ( int argc, char *argv[] ) {
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
       streachMove ( cdp, chn );
-      modelStatistic1 ( cdp, mdl, chn, spc );
+      modelStatistic1 ( cdp, mdl, chn, spc, bkg );
       streachUpdate ( cdp, chn, mdl );
       chn[0].isb += 1;
     }
@@ -188,7 +189,7 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].didi[0] = chn[0].skbin[chn[0].dim];
 
-  modelStatistic00 ( cdp, mdl, chn, spc );
+  modelStatistic00 ( cdp, mdl, chn, spc, bkg );
 
   cudaDeviceSynchronize ();
 
