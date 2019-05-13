@@ -50,16 +50,12 @@ int main ( int argc, char *argv[] ) {
   chn[0].dlt = 1.E-4;
   chn[0].nkb = 100;
 
-  Model mdl[1];
-
-  const float lwrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+6] );
-  const float hghrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+7] );
-
   for ( int i = 0; i < NSPCTR; i++ ) {
-    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
-    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
+    spc[i].lwrNtcdEnrg = ( float ) atof ( argv[NSPCTR11+6] );
+    spc[i].hghrNtcdEnrg = ( float ) atof ( argv[NSPCTR11+7] );
   }
 
+  Model mdl[1];
   InitializeModel ( mdl );
 
   SpecInfo ( vrb, spc );
