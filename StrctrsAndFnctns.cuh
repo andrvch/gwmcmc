@@ -319,7 +319,7 @@ __host__ int sortQKde ( Chain *chn );
 __host__ int chainMomentsAndKde ( Cupar *cdp, Chain *chn );
 
 __host__ void writeWhalesToFile ( const char *chainname, const int chaninindx, const int dim, const int n, const float *whales );
-__host__ void writeSpectraToFile ( const char *name, const Spectrum *spc );
+__host__ void writeSpectraToFile ( const char *name, const Spectrum *spc, const Spectrum *bkg );
 __host__ int modelStatistic00 ( const Cupar *cdp, const Model *mdl, Chain *chn, Spectrum *spc, Spectrum *bkg );
 
 __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
