@@ -97,6 +97,7 @@ struct Chain {
 };
 
 struct Spectrum {
+  char *name;
   char *spcLst[NSPCTR];
   char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
   float lwrNtcdEnrg, hghrNtcdEnrg;
@@ -220,7 +221,7 @@ __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
 __host__ int SpecData ( Cupar*, const int, Model*, Spectrum* );
-__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int, Spectrum* );
+__host__ int SpecInfo ( const int, Spectrum* );
 __host__ int SpecAlloc ( Chain*, Spectrum* );
 __host__ int ReadFitsInfo ( const char*, int*, int*, int*, int*, float*, float*, char srcTbl[FLEN_CARD], char arfTbl[FLEN_CARD], char rmfTbl[FLEN_CARD], char bckgrndTbl[FLEN_CARD] );
 __host__ int ReadFitsData ( const int, const char srcTbl[FLEN_CARD], const char arfTbl[FLEN_CARD], const char rmfTbl[FLEN_CARD], const char bckgrndTbl[FLEN_CARD], const int, const int, const int, float*, float*, float*, float*, float*, float*, int*, int*, float*, float*, float*, float*, const int, float*, int*, int*, float* );

@@ -1227,9 +1227,9 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
   return 0;
 }
 
-__host__ int SpecInfo ( const char *spcLst[NSPCTR], const int verbose, Spectrum *spc ) {
+__host__ int SpecInfo ( const int verbose, Spectrum *spc ) {
   for ( int i = 0; i < NSPCTR; i++ ) {
-    ReadFitsInfo ( spcLst[i], &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].nmbrOfBns, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
+    ReadFitsInfo ( spc[i].name, &spc[i].nmbrOfEnrgChnnls, &spc[i].nmbrOfChnnls, &spc[i].nmbrOfRmfVls, &spc[i].nmbrOfBns, &spc[i].srcExptm, &spc[i].bckgrndExptm, spc[i].srcTbl, spc[i].arfTbl, spc[i].rmfTbl, spc[i].bckgrndTbl );
   }
   return 0;
 }
