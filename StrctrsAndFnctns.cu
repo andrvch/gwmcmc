@@ -1242,9 +1242,7 @@ __host__ int SpecData ( Cupar *cdp, const int verbose, Model *mdl, Spectrum *spc
     AssembleArrayOfPhotoelectricCrossections ( spc[i].nmbrOfEnrgChnnls, ATNMR, mdl[0].sgFlg, spc[i].enrgChnnls, mdl[0].atmcNmbrs, spc[i].crssctns );
     cudaDeviceSynchronize ( );
     sumOfAllBins += spc[i].nmbrOfNtcdBns;
-    if ( i < NSPCTRCHI ) {
-      sumOfSourceBins += spc[i].nmbrOfNtcdBns;
-    }
+    sumOfSourceBins += spc[i].nmbrOfNtcdBns;
     if ( verbose == 1 ) {
       printf ( " Number of energy channels                -- %i\n", spc[i].nmbrOfEnrgChnnls );
       printf ( " Number of instrument channels            -- %i\n", spc[i].nmbrOfChnnls );
