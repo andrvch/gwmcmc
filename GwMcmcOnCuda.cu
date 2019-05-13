@@ -32,46 +32,32 @@ int main ( int argc, char *argv[] ) {
     printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
   }
 
-  Chain chn[1];
-  const char *spcFl1 = argv[2];
-  const char *spcFl2 = argv[3];
-  const char *spcFl3 = argv[4];
-  const char *spcFl4 = argv[5];
-  const char *spcFl5 = argv[6];
-  const char *spcFl6 = argv[7];
-  const char *spcFl7 = argv[8];
-  const char *spcFl8 = argv[9];
-  const char *spcFl9 = argv[10];
-  const char *spcFl10 = argv[11];
-  const char *spcFl11 = argv[12];
-  const char *spcFl12 = argv[13];
-  const char *spcLst[NSPCTR11] = { spcFl1, spcFl2, spcFl3, spcFl4, spcFl5, spcFl6, spcFl7, spcFl8, spcFl9, spcFl10, spcFl11, spcFl12 };
+  Model mdl[1];
+  InitializeModel ( mdl );
 
-  chn[0].name = argv[NSPCTR11+2];
-  chn[0].nwl = atoi ( argv[NSPCTR11+3] );
-  chn[0].nst = atoi ( argv[NSPCTR11+4] );
-  chn[0].indx = atoi ( argv[NSPCTR11+5] );
+  Chain chn[1];
+  Spectrum spc[NSPCTR];
+  Spectrum bkg[NSPCTR];
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    spc[i].name = argv[2+2*i];
+    bkg[i].name = argv[2+2*i+1];
+  }
+
+  chn[0].name = argv[2+2*NSPCTR];
+  chn[0].nwl = atoi ( argv[3+2*NSPCTR] );
+  chn[0].nst = atoi ( argv[4+2*NSPCTR] );
+  chn[0].indx = atoi ( argv[5+2*NSPCTR] );
   chn[0].dim = NPRS;
   chn[0].dim1 = chn[0].dim + 3;
   chn[0].dlt = 1.E-4;
   chn[0].nkb = 100;
 
-  Model mdl[1];
-  Spectrum spc[NSPCTR];
-
-  const float lwrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+6] );
-  const float hghrNtcdEnrg1 = ( float ) atof ( argv[NSPCTR11+7] );
-
   for ( int i = 0; i < NSPCTR; i++ ) {
-    spc[i].lwrNtcdEnrg = lwrNtcdEnrg1;
-    spc[i].hghrNtcdEnrg = hghrNtcdEnrg1;
+    spc[i].lwrNtcdEnrg = ( float ) atof ( argv[6+2*NSPCTR] );
+    spc[i].hghrNtcdEnrg = ( float ) atof ( argv[6+2*NSPCTR] );
   }
 
-  InitializeModel ( mdl );
-
-  SpecInfo ( spcLst, vrb, spc );
-  SpecAlloc ( chn, spc );
-  SpecData ( cdp, vrb, mdl, spc );
+  specData ( cdp, vrb, mdl, chn, spc, bkg );
 
   allocateChain ( chn );
 
@@ -99,50 +85,20 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
 
-  chn[0].x0[6] = 0.1;
-  chn[0].xbnd[12] = 0.;
+  chn[0].x0[6] = 1.5;
+  chn[0].xbnd[12] = -25.;
   chn[0].xbnd[13] = 25.;
-/*
+
   chn[0].x0[7] = -5.;
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
 
-  chn[0].x0[8] = 1.5;
-  chn[0].xbnd[16] = -25.;
+  chn[0].x0[8] = 0.1;
+  chn[0].xbnd[16] = 0.;
   chn[0].xbnd[17] = 25.;
 
-  chn[0].x0[9] = -5.;
-  chn[0].xbnd[18] = -25.;
-  chn[0].xbnd[19] = 25.;
-
-  chn[0].x0[10] = 0.1;
-  chn[0].xbnd[20] = 0.;
-  chn[0].xbnd[21] = 25.;
-
-  chn[0].x0[11] = -5.;
-  chn[0].xbnd[22] = -25.;
-  chn[0].xbnd[23] = 25.;
-
-  chn[0].x0[12] = 0.2;
-  chn[0].xbnd[24] = 0.;
-  chn[0].xbnd[25] = 25.;*/
-
-  initializeChain ( cdp, chn, mdl, spc );
-
-  /*
-  cudaDeviceSynchronize ();
-
-  for ( int i = 0; i < spc[0].nmbrOfNtcdChnnls; i++ ) {
-    printf ( " %2.2f ", spc[0].flddMdlFlxs[i]  );
-    printf ( " %2.2f ", spc[0].chnnlSttstcs[i]  );
-  }
-  printf ( "\n" );
-
-  for ( int i = 0; i < chn[0].nwl; i++ ) {
-    printf ( " %2.2f ", chn[0].stt[i]  );
-  }
-  printf ( "\n" );
-  */
+  initializeChain ( cdp, chn );
+  modelStatistic0 ( cdp, mdl, chn, spc, bkg );
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
@@ -157,7 +113,7 @@ int main ( int argc, char *argv[] ) {
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
       streachMove ( cdp, chn );
-      modelStatistic1 ( cdp, mdl, chn, spc );
+      modelStatistic1 ( cdp, mdl, chn, spc, bkg );
       streachUpdate ( cdp, chn, mdl );
       chn[0].isb += 1;
     }
@@ -226,19 +182,7 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].didi[0] = chn[0].skbin[chn[0].dim];
 
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA, beta1 = 1.;
-
-  for ( int i = 0; i < NSPCTR; i++ ) {
-    AssembleArrayOfAbsorptionFactors <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls, ATNMR, spc[i].crssctns, mdl[0].abndncs, mdl[0].atmcNmbrs, chn[0].xx, spc[i].absrptnFctrs );
-    BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, 1 ), block2D () >>> ( 1, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
-    AssembleArrayOfModelFluxes2 <<< grid2D ( spc[i].nmbrOfEnrgChnnls, 1 ), block2D () >>> ( i, 1, spc[i].nmbrOfEnrgChnnls, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].mdlFlxs, chn[0].didi );
-    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, 1, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
-    arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, 1 ), block2D () >>> ( 1, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, 1, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta, spc[i].stat, INCYY );
-    arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, 1 ), block2D () >>> ( 1, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chiSttstcs );
-    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, 1, &alpha, spc[i].chiSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta, spc[i].chi, INCYY );
-  }
+  modelStatistic0 ( cdp, mdl, chn, spc, bkg );
 
   cudaDeviceSynchronize ();
 
@@ -252,7 +196,7 @@ int main ( int argc, char *argv[] ) {
   destroyCuda ( cdp );
   freeChain ( chn );
   FreeModel ( mdl );
-  FreeSpec ( spc );
+  freeSpec ( spc, bkg );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While
