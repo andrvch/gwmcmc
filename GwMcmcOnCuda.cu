@@ -59,7 +59,10 @@ int main ( int argc, char *argv[] ) {
   InitializeModel ( mdl );
 
   SpecInfo ( vrb, spc );
+  SpecInfo ( vrb, bkg );
   SpecAlloc ( chn, spc );
+  SpecAlloc ( chn, bkg );
+
   SpecData ( cdp, vrb, mdl, spc );
 
   allocateChain ( chn );
@@ -200,6 +203,7 @@ int main ( int argc, char *argv[] ) {
   freeChain ( chn );
   FreeModel ( mdl );
   FreeSpec ( spc );
+  FreeSpec ( bkg );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While

@@ -1741,7 +1741,6 @@ __global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, c
   int w = threadIdx.y + blockDim.y * blockIdx.y;
   int t = e + w * nmbrOfEnrgChnnls;
   float f = 0, Norm, intNsaFlx;
-  float scl = backscal_src / backscal_bkg;
   if ( e < nmbrOfEnrgChnnls && w < nwl ) {
     if ( spIndx == 0 ) {
       intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
