@@ -2643,7 +2643,7 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc, const 
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", bkg[i].srcGrp[j] );
+      fprintf ( pntr, " %.8E ", (spc[i].backscal_src/spc[i].backscal_bkg)*bkg[i].srcGrp[j] );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
@@ -2651,7 +2651,7 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc, const 
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
-      fprintf ( pntr, " %.8E ", bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm );
+      fprintf ( pntr, " %.8E ", (spc[i].backscal_src/spc[i].backscal_bkg)*bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
@@ -2660,6 +2660,22 @@ __host__ void writeSpectraToFile ( const char *name, const Spectrum *spc, const 
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
       fprintf ( pntr, " %.8E ", -(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])/abs(spc[i].flddMdlFlxs[j]*spc[i].srcExptm-spc[i].srcGrp[j])*spc[i].chiSttstcs[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", bkg[i].srcGrp[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", -(bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm-bkg[i].srcGrp[j])/abs(bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm-bkg[i].srcGrp[j])*bkg[i].chnnlSttstcs[j] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < bkg[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", -(bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm-bkg[i].srcGrp[j])/abs(bkg[i].flddMdlFlxs[j]*bkg[i].srcExptm-bkg[i].srcGrp[j])*bkg[i].chiSttstcs[j] );
     }
     fprintf ( pntr, "\n" );
   }
