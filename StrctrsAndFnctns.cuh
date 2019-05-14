@@ -11,7 +11,7 @@
 #define INCXX 1
 #define INCYY 1
 #define RANK 1
-#define NPRS 7 // Number of parameters
+#define NPRS 11 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
