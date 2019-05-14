@@ -96,10 +96,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
 
-  chn[0].x0[6] = 1.5;
-  chn[0].xbnd[12] = -25.;
+  chn[0].x0[6] = 0.1;
+  chn[0].xbnd[12] = 0.0;
   chn[0].xbnd[13] = 25.;
-
+/*
   chn[0].x0[7] = -5.;
   chn[0].xbnd[14] = -25.;
   chn[0].xbnd[15] = 25.;
@@ -115,7 +115,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[10] = 1.2;
   chn[0].xbnd[20] = 1.0;
   chn[0].xbnd[21] = 2.5;
-
+/*
   chn[0].x0[11] = 0.03;
   chn[0].xbnd[22] = 0.001;
   chn[0].xbnd[23] = 1.5;
@@ -127,7 +127,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[13] = 0.1;
   chn[0].xbnd[26] = 0.;
   chn[0].xbnd[27] = 25.;
-
+*/
   initializeChain ( cdp, chn );
   if ( chn[0].indx == 0 ) {
     modelStatistic0 ( cdp, mdl, chn, spc, bkg );
@@ -209,17 +209,17 @@ int main ( int argc, char *argv[] ) {
 
   for ( int i = 0; i < chn[0].dim; i++ ) {
     chn[0].xx[i] = chn[0].skbin[i];
-    //printf ( " %2.2f ", chn[0].xx[i] );
+    printf ( " %2.2f ", chn[0].xx[i] );
   }
   //chn[0].xx[10] = 0.05;
   //chn[0].xx[11] = 100.;
   chn[0].didi[0] = chn[0].skbin[chn[0].dim];
-  //printf ( " %2.2f ", chn[0].didi[0] );
+  printf ( " %2.2f ", chn[0].didi[0] );
   chn[0].stt[0] = chn[0].skbin[chn[0].dim+1];
-  //printf ( " %2.2f ", chn[0].stt[0] );
+  printf ( " %2.2f ", chn[0].stt[0] );
   chn[0].chi[0] = chn[0].skbin[chn[0].dim+2];
-  //printf ( " %2.2f ", chn[0].chi[0] );
-  //printf ( "\n" );
+  printf ( " %2.2f ", chn[0].chi[0] );
+  printf ( "\n" );
 
   modelStatistic00 ( cdp, mdl, chn, spc, bkg );
 

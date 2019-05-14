@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 from pylab import *
 from cudakde import *
 
-smpls = read_data(sys.argv[1])
-nwlkrs = int(sys.argv[2])
+smpls = read_data(sys.argv[1]+"%i"%(int(sys.argv[2]))+".chain")
+nwlkrs = int(sys.argv[3])
 
 nprmtrs = shape(smpls)[0]
 nstps = int(shape(smpls)[1]/float(nwlkrs))
@@ -34,4 +34,4 @@ for i in range(nprmtrs):
         ax[i].errorbar(stps,wlkrs[i,j,:])
 
 #plt.show()
-plt.savefig(sys.argv[1]+".jpg")
+plt.savefig(sys.argv[1]+"%i"%(int(sys.argv[2]))+"_chain"+".jpg")

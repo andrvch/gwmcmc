@@ -33,6 +33,8 @@ printf "\n"
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
   ./runSFH $CUDAID $SPECFILE1 $SPECFILE2 $SPECFILE3 $SPECFILE4 $SPECFILE5 $SPECFILE6 $SPECFILE7 $SPECFILE8 $SPECFILE9 $SPECFILE10 $SPECFILE11 $SPECFILE12 $CHAINFILE $NWALK $LSTEP $i $emin $emax > $LOGFILE
+  ./plotChain.py $CHAINFILE $i $NWALK
+  ./plotSpectraFromFile.py "Spectra.out"
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"
