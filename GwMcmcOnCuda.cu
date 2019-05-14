@@ -59,8 +59,16 @@ int main ( int argc, char *argv[] ) {
   InitializeModel ( mdl );
 
   SpecInfo ( vrb, spc );
+  SpecInfo ( vrb, bkg );
+
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    bkg[i].nmbrOfBns = spc[i].nmbrOfBns;
+  }
+
   SpecAlloc ( chn, spc );
-  SpecData ( cdp, vrb, mdl, spc );
+  SpecAlloc ( chn, bkg );
+
+  SpecData ( cdp, vrb, mdl, spc, bkg );
 
   allocateChain ( chn );
 
@@ -82,14 +90,14 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].x0[4] = 1.5;
   chn[0].xbnd[8] = -25.;
-  chn[0].xbnd[9] = 2.;
+  chn[0].xbnd[9] = 25.;
 
   chn[0].x0[5] = -5.;
   chn[0].xbnd[10] = -25.;
   chn[0].xbnd[11] = 25.;
 
   chn[0].x0[6] = 0.1;
-  chn[0].xbnd[12] = 0.;
+  chn[0].xbnd[12] = 0.0;
   chn[0].xbnd[13] = 25.;
 /*
   chn[0].x0[7] = -5.;
@@ -99,9 +107,31 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[8] = 1.5;
   chn[0].xbnd[16] = -25.;
   chn[0].xbnd[17] = 25.;
-*/
 
-  initializeChain ( cdp, chn, mdl, spc );
+  chn[0].x0[9] = -5.;
+  chn[0].xbnd[18] = -25.;
+  chn[0].xbnd[19] = 25.;
+
+  chn[0].x0[10] = 1.2;
+  chn[0].xbnd[20] = 1.0;
+  chn[0].xbnd[21] = 2.5;
+/*
+  chn[0].x0[11] = 0.03;
+  chn[0].xbnd[22] = 0.001;
+  chn[0].xbnd[23] = 1.5;
+
+  chn[0].x0[12] = 0.07;
+  chn[0].xbnd[24] = 0.0;
+  chn[0].xbnd[25] = 10.;
+
+  chn[0].x0[13] = 0.1;
+  chn[0].xbnd[26] = 0.;
+  chn[0].xbnd[27] = 25.;
+*/
+  initializeChain ( cdp, chn );
+  if ( chn[0].indx == 0 ) {
+    modelStatistic0 ( cdp, mdl, chn, spc, bkg );
+  }
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
@@ -116,7 +146,7 @@ int main ( int argc, char *argv[] ) {
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
       streachMove ( cdp, chn );
-      modelStatistic1 ( cdp, mdl, chn, spc );
+      modelStatistic1 ( cdp, mdl, chn, spc, bkg );
       streachUpdate ( cdp, chn, mdl );
       chn[0].isb += 1;
     }
@@ -181,18 +211,24 @@ int main ( int argc, char *argv[] ) {
     chn[0].xx[i] = chn[0].skbin[i];
     printf ( " %2.2f ", chn[0].xx[i] );
   }
+  //chn[0].xx[10] = 0.05;
+  //chn[0].xx[11] = 100.;
+  chn[0].didi[0] = chn[0].skbin[chn[0].dim];
+  printf ( " %2.2f ", chn[0].didi[0] );
+  chn[0].stt[0] = chn[0].skbin[chn[0].dim+1];
+  printf ( " %2.2f ", chn[0].stt[0] );
+  chn[0].chi[0] = chn[0].skbin[chn[0].dim+2];
+  printf ( " %2.2f ", chn[0].chi[0] );
   printf ( "\n" );
 
-  chn[0].didi[0] = chn[0].skbin[chn[0].dim];
-
-  modelStatistic00 ( cdp, mdl, chn, spc );
+  modelStatistic00 ( cdp, mdl, chn, spc, bkg );
 
   cudaDeviceSynchronize ();
 
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeSpectraToFile ( "Spectra.out", spc );
+  writeSpectraToFile ( "Spectra.out", spc, bkg );
   writeWhalesToFile ( chn[0].name, chn[0].indx, chn[0].dim1, chn[0].nwl*chn[0].nst, chn[0].whales );
   writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors, chn[0].dist, chn[0].chiTwo );
 
@@ -200,6 +236,7 @@ int main ( int argc, char *argv[] ) {
   freeChain ( chn );
   FreeModel ( mdl );
   FreeSpec ( spc );
+  FreeSpec ( bkg );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While
