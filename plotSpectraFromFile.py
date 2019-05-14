@@ -16,12 +16,13 @@ from cudakde import *
 nspec = 6
 spcs = readspectra(nspec,sys.argv[1])
 
-fig, ax = plt.subplots(ncols=1, nrows=2)
+fig, ax = plt.subplots(nrows=2)
+gs = gridspec.GridSpec(3,1)
+ax[0] = plt.subplot(gs[:2,0])
+ax[1] = plt.subplot(gs[2:3,0])
+
 setcolours = [ 'g', 'b', 'r' ]
 bkgcolours = [ 'gray', 'gray', 'gray' ]
-ax[0].set_xscale('log')
-ax[1].set_xscale('log')
-ax[0].set_yscale('log')
 
 for i in range(nspec/2):
     nbins = shape(spcs[i])[1]
@@ -34,14 +35,46 @@ for i in range(nspec/2):
     #ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][5][0],spcs[i][5]),alpha=0.25,color=setcolours[i])
     ax[1].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][7][0],spcs[i][7]),color=setcolours[i])
 
-plt.savefig("spectraPSR"+".jpg")
-#plt.show()
+subs = [1.0, 2.0, 4.0, 7.0]
 
-fig, ax = plt.subplots(ncols=1, nrows=2)
-setcolours = [ 'g', 'b', 'r' ]
 ax[0].set_xscale('log')
 ax[1].set_xscale('log')
 ax[0].set_yscale('log')
+
+for i in range(2):
+    #ax[i].set_xlim(erange[0],erange[1])
+    #ax[i].set_xscale('log')
+    #ax[i].xaxis.set_major_formatter(CustomTicker())
+    ax[i].xaxis.set_minor_locator(ticker.LogLocator(subs=subs)) #set the ticks position
+    ax[i].xaxis.set_major_formatter(ticker.NullFormatter())   # remove the major ticks
+    ax[i].tick_params(axis='both',which='major',labelsize=10)
+    ax[i].tick_params(axis='both',which='minor',labelsize=10)
+
+ax[1].xaxis.set_minor_formatter(ticker.FuncFormatter(ticks_format))  #add the custom ticks
+
+plt.setp(ax[1].get_xticklabels(minor=True),visible=True)
+
+plt.setp([a.get_xticklabels() for a in ax[:1]], visible=False)
+plt.setp([a.get_xticklabels(minor=True) for a in ax[:1]], visible=False)
+
+#ax[i].set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
+ax[1].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
+ax[0].set_ylabel(r'$ \rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
+ax[1].set_ylabel(r'$ \chi^{2} $',fontsize=10)
+
+l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=1)
+l.set_zorder(5)
+
+plt.savefig("spectraPSR"+".jpg")
+plt.savefig("spectraPSR"+".eps")
+#plt.show()
+
+fig, ax = plt.subplots(nrows=2)
+gs = gridspec.GridSpec(3,1)
+ax[0] = plt.subplot(gs[:2,0])
+ax[1] = plt.subplot(gs[2:3,0])
+
+setcolours = [ 'g', 'b', 'r' ]
 
 for i in range(nspec/2):
     nbins = shape(spcs[i+nspec/2])[1]
@@ -54,5 +87,36 @@ for i in range(nspec/2):
     #ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i+nspec/2][5][0],spcs[i+nspec/2][5]),alpha=0.25,color=setcolours[i])
     ax[1].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i+nspec/2][7][0],spcs[i+nspec/2][7]),color=setcolours[i])
 
+subs = [1.0, 2.0, 4.0, 7.0]
+
+ax[0].set_xscale('log')
+ax[1].set_xscale('log')
+ax[0].set_yscale('log')
+
+for i in range(2):
+    #ax[i].set_xlim(erange[0],erange[1])
+    #ax[i].set_xscale('log')
+    #ax[i].xaxis.set_major_formatter(CustomTicker())
+    ax[i].xaxis.set_minor_locator(ticker.LogLocator(subs=subs)) #set the ticks position
+    ax[i].xaxis.set_major_formatter(ticker.NullFormatter())   # remove the major ticks
+    ax[i].tick_params(axis='both', which='major', labelsize=10)
+    ax[i].tick_params(axis='both', which='minor', labelsize=10)
+
+ax[1].xaxis.set_minor_formatter(ticker.FuncFormatter(ticks_format))  #add the custom ticks
+
+plt.setp(ax[1].get_xticklabels(minor=True), visible=True)
+
+plt.setp([a.get_xticklabels() for a in ax[:1]], visible=False)
+plt.setp([a.get_xticklabels(minor=True) for a in ax[:1]], visible=False)
+
+#ax[i].set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
+ax[1].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
+ax[0].set_ylabel(r'$ \rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
+ax[1].set_ylabel(r'$ \chi^{2} $',fontsize=10)
+
+l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=1)
+l.set_zorder(5)
+
 plt.savefig("spectraPWN"+".jpg")
+plt.savefig("spectraPWN"+".eps")
 #plt.show()
