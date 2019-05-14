@@ -1825,6 +1825,13 @@ __global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, c
   }
 }
 
+__host__ __device__ float gabs ( const float p0, const float p1, const float p2, const float enrgLwr, const float enrgHghr ) {
+  float flx, lflx;
+  float en = 0.5 * ( enrgHghr + enrgLwr );
+  lflx = expf ( - 0.5 * powf ( ( en - p0 ) / p1, 2. ) ) / p1;
+  flx = expf ( - p2 * lflx );
+  return flx;
+}
 
 __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -1832,7 +1839,7 @@ __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n
   float f = 0, Norm, intNsFlx;
   if ( i < n && j < nwl ) {
     if ( Indx < 3 ) {
-      intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
+      intNsFlx = integrateNsaWithGabs ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1], xx[10+j*NPRS], xx[11+j*NPRS], xx[12+j*NPRS] );
       Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
       f += Norm * intNsFlx;
       f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
@@ -1847,6 +1854,31 @@ __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n
     }
   }
 }
+
+__global__ void arrayOfSourceFluxes2 ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float f = 0, Norm, intNsFlx;
+  if ( i < n && j < nwl ) {
+    if ( Indx < 3 ) {
+      intNsFlx = integrateNsaWithGabs ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1], 1.2, 0.03, 0.08 );
+      Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
+      f += Norm * intNsFlx;
+      //f *= gabs ( 0.6, 0.01, 0.05, en[i], en[i+1] );
+      //f *= gabs ( 1.2, 0.01, 0.05, en[i], en[i+1] );
+      f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
+      f *= abs[i+j*n];
+      f *= arf[i];
+      flx[i+j*n] = f;
+    } else {
+      f += PowerLaw ( xx[4+j*NPRS], xx[5+j*NPRS], en[i], en[i+1] );
+      f *= abs[i+j*n];
+      f *= arf[i];
+      flx[i+j*n] = f;
+    }
+  }
+}
+
 
 __global__ void arrayOfBackgroundFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *xx, float *flx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -1991,6 +2023,21 @@ __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, 
 __host__ __device__ float IntegrateNsa ( const float flx1, const float flx2, const float en1, const float en2 ) {
   float flx;
   flx = 0.5 * ( flx1 + flx2 ) * ( en2 - en1 );
+  return flx;
+}
+
+__host__ __device__ float gabs1 ( const float p0, const float p1, const float p2, const float en ) {
+  float flx, lflx;
+  lflx = expf ( - 0.5 * powf ( ( en - p0 ) / p1, 2. ) ) / p1;
+  flx = expf ( - p2 * lflx );
+  return flx;
+}
+
+__host__ __device__ float integrateNsaWithGabs ( const float flx0, const float flx1, const float en0, const float en1, const float p0, const float p1, const float p2  ) {
+  float flx, fak0, fak1;
+  fak0 = gabs1 ( p0, p1, p2, en0 );
+  fak1 = gabs1 ( p0, p1, p2, en1 );
+  flx = 0.5 * ( flx0 * fak0 + flx1 * fak1 ) * ( en1 - en0 );
   return flx;
 }
 
