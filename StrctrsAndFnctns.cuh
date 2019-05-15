@@ -332,4 +332,6 @@ __global__ void arrayOfSourceFluxes2 ( const int Indx, const int nwl, const int 
 __host__ __device__ float gabs1 ( const float p0, const float p1, const float p2, const float en );
 __host__ __device__ float integrateNsaWithGabs ( const float flx0, const float flx1, const float en0, const float en1, const float p0, const float p1, const float p2  );
 
+__host__ void writeKdeToFile ( const char *name, const int dim, const int n, const float *bin, const float *kde );
+
 #endif // _STRCTRSANDFNCTNS_CUH_

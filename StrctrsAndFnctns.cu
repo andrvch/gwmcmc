@@ -2668,6 +2668,22 @@ __host__ int sortQKde ( Chain *chn ) {
   return 0;
 }
 
+__host__ void writeKdeToFile ( const char *name, const int dim, const int n, const float *bin, const float *kde ) {
+  FILE *pntr;
+  pntr = fopen ( name, "w" );
+  for ( int i = 0; i < dim; i++ ) {
+    for ( int j = 0; j < n; j++ ) {
+      fprintf ( pntr, " %.8E ", bin[i+j*dim] );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < n; j++ ) {
+      fprintf ( pntr, " %.8E ", kde[i+j*dim] );
+    }
+    fprintf ( pntr, "\n" );
+  }
+  fclose ( pntr );
+}
+
 __host__ void writeWhalesToFile ( const char *chainname, const int chainindx, const int dim, const int n, const float *whales ) {
   FILE *pntr;
   char name[FLEN_CARD];
