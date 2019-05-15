@@ -4,7 +4,6 @@
 import os, sys
 import math
 import numpy as np
-import time
 from cudakde import *
 
 Mns = 1.4
@@ -33,7 +32,6 @@ kde[7][0] = 10**kde[7][0]/1.E3
 eqh_inter = np.empty([npars,len(quantiles)])
 
 for i in range(npars):
-    #xi,zi = kde_gauss_cuda1d(samples[i],nbins)
     zin,eqh_inter[i,:] = prc(kde[i][0],kde[i][1],qqq)
     print eqh_inter[i,:]
 
