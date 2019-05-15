@@ -15,6 +15,7 @@ from cudakde import *
 
 nspec = 6
 spcs = readspectra(nspec,sys.argv[1]+"spec"+".spec")
+erange = [0.4,7.0]
 
 fig, ax = plt.subplots(nrows=2)
 gs = gridspec.GridSpec(3,1)
@@ -42,7 +43,7 @@ ax[1].set_xscale('log')
 ax[0].set_yscale('log')
 
 for i in range(2):
-    #ax[i].set_xlim(erange[0],erange[1])
+    ax[i].set_xlim(erange[0],erange[1])
     #ax[i].set_xscale('log')
     #ax[i].xaxis.set_major_formatter(CustomTicker())
     ax[i].xaxis.set_minor_locator(ticker.LogLocator(subs=subs)) #set the ticks position
@@ -76,6 +77,7 @@ ax[1] = plt.subplot(gs[2:3,0])
 
 setcolours = [ 'g', 'b', 'r' ]
 
+
 for i in range(nspec/2):
     nbins = shape(spcs[i+nspec/2])[1]
     xxen = 0.5*(spcs[i+nspec/2][0]+spcs[i+nspec/2][1])
@@ -94,7 +96,7 @@ ax[1].set_xscale('log')
 ax[0].set_yscale('log')
 
 for i in range(2):
-    #ax[i].set_xlim(erange[0],erange[1])
+    ax[i].set_xlim(erange[0],erange[1])
     #ax[i].set_xscale('log')
     #ax[i].xaxis.set_major_formatter(CustomTicker())
     ax[i].xaxis.set_minor_locator(ticker.LogLocator(subs=subs)) #set the ticks position

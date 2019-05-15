@@ -23,13 +23,12 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 npars = 10
 kde = readspectra(npars,sys.argv[1]+"kde"+".kde")
 
-kde[0] = 10**kde[0]*kb/1.6022E-12/redshift
-kde[1] = 10**kde[1]*Rns
-kde[3] = 10**kde[3]/1.E-5
-kde[5] = 10**kde[5]/1.E-5
-kde[6] = kde[6]*10.
-kde[7] = 10**kde[7]/1.E3
-
+kde[0][0] = 10**kde[0][0]*kb/1.6022E-12/redshift
+kde[1][0] = 10**kde[1][0]*Rns
+kde[3][0] = 10**kde[3][0]/1.E-5
+kde[5][0] = 10**kde[5][0]/1.E-5
+kde[6][0] = kde[6][0]*10.
+kde[7][0] = 10**kde[7][0]/1.E3
 
 eqh_inter = np.empty([npars,len(quantiles)])
 
