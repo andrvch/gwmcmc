@@ -1919,8 +1919,8 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
     //cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, chn[0].nwl/2, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfignRmfVls, &alpha, cdp[0].MatDescr, bkg[i].ignRmfVls, bkg[i].ignRmfPntr, bkg[i].ignRmfIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdChnnls );
     //combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdChnnls, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
     //arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdChnnls, spc[i].srcExptm, spc[i].srcIgn, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    //arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    //arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
     //arrayOfCStat <<< grid2D ( bkg[i].nmbrOfNtcdChnnls, chn[0].nwl/2 ), block2D () >>> ( chn[0].nwl/2, bkg[i].nmbrOfNtcdChnnls, bkg[i].srcExptm, bkg[i].srcIgn, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
     cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl/2, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt1, INCYY );
     //cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdChnnls, chn[0].nwl/2, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdChnnls, spc[i].grpVls, INCXX, &beta1, chn[0].stt1, INCYY );
@@ -1960,8 +1960,8 @@ __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
     //cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdChnnls, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfignRmfVls, &alpha, cdp[0].MatDescr, bkg[i].ignRmfVls, bkg[i].ignRmfPntr, bkg[i].ignRmfIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdChnnls );
     //combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdChnnls, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
     //arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdChnnls, spc[i].srcExptm, spc[i].srcIgn, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    //arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    //arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
     //arrayOfCStat <<< grid2D ( bkg[i].nmbrOfNtcdChnnls, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdChnnls, bkg[i].srcExptm, bkg[i].srcIgn, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
     cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
     //cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdChnnls, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdChnnls, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
@@ -1998,8 +1998,8 @@ __host__ int modelStatistic00 ( const Cupar *cdp, const Model *mdl, Chain *chn, 
     //cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
     //combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
     //arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    //arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
-    arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    arrayOfWStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].bckgrndExptm, spc[i].backscal_src, spc[i].backscal_bkg, spc[i].srcGrp, spc[i].bkgGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
+    //arrayOfChiSquaredsWithBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].bkgGrp, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
     //arrayOfCStat <<< grid2D ( bkg[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, bkg[i].nmbrOfNtcdBns, bkg[i].srcExptm, bkg[i].srcGrp, bkg[i].flddMdlFlxs, bkg[i].chnnlSttstcs );
     cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, spc[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, spc[i].chnnlSttstcs, spc[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
     //cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, bkg[i].nmbrOfNtcdBns, chn[0].nwl, &alpha, bkg[i].chnnlSttstcs, bkg[i].nmbrOfNtcdBns, spc[i].grpVls, INCXX, &beta1, chn[0].stt, INCYY );
@@ -2668,8 +2668,10 @@ __host__ int sortQKde ( Chain *chn ) {
   return 0;
 }
 
-__host__ void writeKdeToFile ( const char *name, const int dim, const int n, const float *bin, const float *kde ) {
+__host__ void writeKdeToFile ( const char *chainname, const int dim, const int n, const float *bin, const float *kde ) {
   FILE *pntr;
+  char name[FLEN_CARD];
+  snprintf ( name, sizeof ( name ), "%s%s%s", chainname, "kde", ".kde" );
   pntr = fopen ( name, "w" );
   for ( int i = 0; i < dim; i++ ) {
     for ( int j = 0; j < n; j++ ) {
@@ -2698,8 +2700,10 @@ __host__ void writeWhalesToFile ( const char *chainname, const int chainindx, co
   fclose ( pntr );
 }
 
-__host__ void writeSpectraToFile ( const char *name, const Spectrum *spc, const Spectrum *bkg ) {
+__host__ void writeSpectraToFile ( const char *chainname, const Spectrum *spc, const Spectrum *bkg ) {
   FILE *pntr;
+  char name[FLEN_CARD];
+  snprintf ( name, sizeof ( name ), "%s%s%s", chainname, "spec", ".spec" );
   pntr = fopen ( name, "w" );
   for ( int i = 0; i < NSPCTR; i++ ) {
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
