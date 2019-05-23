@@ -1839,9 +1839,9 @@ __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n
   float f = 0, Norm, intNsFlx;
   if ( i < n && j < nwl ) {
     if ( Indx < 3 ) {
-      //intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
-      intNsFlx = BlackBody ( xx[0+j*NPRS], xx[1+j*NPRS], en[i], en[i+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
-      Norm = 1.; //powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
+      intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
+      //intNsFlx = BlackBody ( xx[0+j*NPRS], xx[1+j*NPRS], en[i], en[i+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
+      Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
       f += Norm * intNsFlx;
       f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
       f *= abs[i+j*n];
@@ -1879,7 +1879,6 @@ __global__ void arrayOfSourceFluxes2 ( const int Indx, const int nwl, const int 
     }
   }
 }
-
 
 __global__ void arrayOfBackgroundFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *xx, float *flx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
