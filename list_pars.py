@@ -25,7 +25,7 @@ def FoldInput(infile):
 
 prst = FoldInput(sys.argv[1])
 
-models = ['bbody','nsa12','nsa13','1260','123100','123190','130100','130190']
+models = ['bb','nsa12','nsa13','ns1260','ns123100','ns123190','ns130100','ns130190']
 
-data = {r'A$Mod.$': models, r'B$N_{\rm H}$': prst[6], r'C$\Gamma_{\rm psr}$': prst[2], r'D$K_{\rm psr}$': prst[3], r'E$T$': prst[0], r'F$R$': prst[1], r'G$D$': prst[7], r'H$\Gamma_{\rm pwn}$': prst[4], r'J$K_{\rm pwn}$': prst[5], r'K$\chi^{2}$': prst[8]}
+data = {r'A$Mod.$': models, r'B$N_{\rm H}$': prst[6], r'F$\Gamma_{\rm psr}$': prst[2], r'G$K_{\rm psr}$': prst[3], r'C$T$': prst[0], r'D$R$': prst[1], r'E$D$': prst[7], r'H$\Gamma_{\rm pwn}$': prst[4], r'J$K_{\rm pwn}$': prst[5], r'K$W$': prst[8], r'K$\chi^{2}$': prst[9]}
 asciitable.write(data, sys.stdout, Writer = asciitable.Latex, latexdict = {'preamble': r'\begin{center}', 'tablefoot': r'\end{center}', 'tabletype': 'table*', 'units':{'$N_{\rm H}$':'$\rm 10^{21} ./ cm^{-2}$'}})
