@@ -25,6 +25,37 @@ ax[1] = plt.subplot(gs[2:3,0])
 setcolours = [ 'g', 'b', 'r' ]
 bkgcolours = [ 'gray', 'gray', 'gray' ]
 
+totW = 0
+totChi = 0
+totCounts = 0
+totModel = 0
+totSourceCounts = 0
+totBins = 0
+
+for i in range(nspec):
+    totBins += len(spcs[i][2])
+    totCounts += np.sum(spcs[i][2])
+    totModel += np.sum(spcs[i][4])
+    totSourceCounts += np.sum(spcs[i][2]-spcs[i][3])
+    totW += np.sum(abs(spcs[i][6]))
+    totChi += np.sum(abs(spcs[i][7]))
+    print "spectrum number           -- %i"%(i)
+    print "Number of bins            -- %2.0f"%(len(spcs[i][2]))
+    print "Number of counts          -- %2.0f"%(np.sum(spcs[i][2]))
+    print "Number of source counts   -- %2.0f"%(np.sum(spcs[i][2]-spcs[i][3]))
+    print "Number of model counts    -- %2.0f"%(np.sum(spcs[i][4]))
+    print "W Statistic               -- %2.0f"%(np.sum(abs(spcs[i][6])))
+    print "Chi-Squared Statistic     -- %2.0f"%(np.sum(abs(spcs[i][7])))
+
+print "Summing over all the spectra:"
+
+print "Total number of bins          -- %2.0f"%(totBins)
+print "Total number of counts        -- %2.0f"%(totCounts)
+print "Total number of source counts -- %2.0f"%(totSourceCounts)
+print "Total number of model counts  -- %2.0f"%(totModel)
+print "Total W Statistic             -- %2.0f"%(totW)
+print "Total Chi-Squared Statistic   -- %2.0f"%(totChi)
+
 for i in range(nspec/2):
     nbins = shape(spcs[i])[1]
     xxen = 0.5*(spcs[i][0]+spcs[i][1])
