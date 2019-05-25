@@ -33,8 +33,8 @@ for i in range(nspec/2):
     #ax[0].errorbar(xxen,spcs[i][3],xerr=xxenerr,yerr=np.sqrt(spcs[i][3]),color=bkgcolours[i],alpha=0.25,fmt=' ',capsize=0)
     #ax[0].errorbar(xxen,spcs[i][8],xerr=xxenerr,yerr=np.sqrt(spcs[i][8]),color=setcolours[i],fmt=' ',capsize=0)
     ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][4][0],spcs[i][4]),color=setcolours[i])
-    ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][5][0],spcs[i][5]),color=setcolours[i])
-    ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][6][0],spcs[i][6]),color=setcolours[i])
+    ax[0].errorbar(xxen,spcs[i][5],color=setcolours[i],fmt='--')
+    ax[0].errorbar(xxen,spcs[i][6],color=setcolours[i],fmt='-.')
     #ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][5][0],spcs[i][5]),alpha=0.25,color=setcolours[i])
     ax[1].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][9][0],spcs[i][9]),color=setcolours[i])
 
@@ -62,9 +62,10 @@ plt.setp([a.get_xticklabels(minor=True) for a in ax[:1]], visible=False)
 
 ax[0].set_ylim(0.1,150.0)
 ax[1].set_ylim(-5.,5.)
+ax[1].set_yticks(np.arange(-5., 5.1, step=1.))
 
-ax[1].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
-ax[0].set_ylabel(r'$ \rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
+ax[1].set_xlabel(r'$ \rm Photon \, Energy  \, [\, \rm keV\,] $',fontsize=10)
+ax[0].set_ylabel(r'$ \rm Counts $',fontsize=10)
 ax[1].set_ylabel(r'$ \chi^{2} $',fontsize=10)
 
 l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=1)
@@ -114,9 +115,12 @@ plt.setp(ax[1].get_xticklabels(minor=True), visible=True)
 plt.setp([a.get_xticklabels() for a in ax[:1]], visible=False)
 plt.setp([a.get_xticklabels(minor=True) for a in ax[:1]], visible=False)
 
+ax[1].set_ylim(-5.,5.)
+ax[1].set_yticks(np.arange(-5., 7.5, step=2.5))
+
 #ax[i].set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
 ax[1].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)
-ax[0].set_ylabel(r'$ \rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
+ax[0].set_ylabel(r'$ \rm Counts $',fontsize=10)
 ax[1].set_ylabel(r'$ \chi^{2} $',fontsize=10)
 
 l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=1)
