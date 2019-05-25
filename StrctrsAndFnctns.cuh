@@ -109,7 +109,7 @@ struct Spectrum {
   int *grpIndx, *grpPntr, *grpIgnIndx, *grpIgnPntr, *iPntr, *iIndx, *ignRmfIndx, *ignRmfPntr;
   int *ntcIndx, *ntcPntr, *ignPntr, *ignIndx;
   float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
-  float *crssctns, *absrptnFctrs, *mdlFlxs, *flddMdlFlxs, *ntcdChnnls, *chnnlSttstcs, *chiSttstcs, smOfNtcdChnnls;
+  float *crssctns, *absrptnFctrs, *mdlFlxs, *nsFlxs, *plFlxs, *flddMdlFlxs, *flddNSFlxs, *flddPLFlxs, *ntcdChnnls, *chnnlSttstcs, *chiSttstcs, smOfNtcdChnnls;
   float *nsa1Flxs, *nsa2Flxs;
   int nmbrOfgrpIgnVls, nmbrOfignRmfVls;
   int hghrBn, lwrBn, hghrCh, lwrCh;
@@ -137,8 +137,8 @@ struct Model {
   float *RedData2, *Dist2, *EBV2;
   const char *rddnngFl3 = "Drimmel03.dat";
   float *RedData3, *Dist3, *EBV3;
-  //const char *nsaFl = "nsa_spec_B_1e12G.dat";
-  const char *nsaFl = "nsa_spec_B_1e13G.dat";
+  const char *nsaFl = "nsa_spec_B_1e12G.dat";
+  //const char *nsaFl = "nsa_spec_B_1e13G.dat";
   int numNsaE = 1000;
   int numNsaT = 14;
   float *nsaDt, *nsaE, *nsaT, *nsaFlxs;
@@ -333,5 +333,8 @@ __host__ __device__ float gabs1 ( const float p0, const float p1, const float p2
 __host__ __device__ float integrateNsaWithGabs ( const float flx0, const float flx1, const float en0, const float en1, const float p0, const float p1, const float p2  );
 
 __host__ void writeKdeToFile ( const char *name, const int dim, const int n, const float *bin, const float *kde );
+
+__global__ void arrayOfNSFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
+__global__ void arrayOfPLFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

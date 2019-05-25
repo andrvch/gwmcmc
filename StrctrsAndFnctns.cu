@@ -1289,9 +1289,13 @@ __host__ int SpecAlloc ( Chain *chn, Spectrum *spc ) {
     cudaMallocManaged ( ( void ** ) &spc[i].crssctns, spc[i].nmbrOfEnrgChnnls * ATNMR * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].absrptnFctrs, spc[i].nmbrOfEnrgChnnls * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].nsFlxs, spc[i].nmbrOfEnrgChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].plFlxs, spc[i].nmbrOfEnrgChnnls * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].nsa1Flxs, ( spc[i].nmbrOfEnrgChnnls + 1 ) * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].nsa2Flxs, ( spc[i].nmbrOfEnrgChnnls + 1 ) * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].flddMdlFlxs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].flddNSFlxs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &spc[i].flddPLFlxs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].ntcdChnnls, spc[i].nmbrOfChnnls * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].chnnlSttstcs, spc[i].nmbrOfChnnls * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &spc[i].grpng, spc[i].nmbrOfChnnls * sizeof ( float ) );
@@ -1323,9 +1327,13 @@ __host__ void FreeSpec ( const Spectrum *spc ) {
     cudaFree ( spc[i].crssctns );
     cudaFree ( spc[i].absrptnFctrs );
     cudaFree ( spc[i].mdlFlxs );
+    cudaFree ( spc[i].nsFlxs );
+    cudaFree ( spc[i].plFlxs );
     cudaFree ( spc[i].nsa1Flxs );
     cudaFree ( spc[i].nsa2Flxs );
     cudaFree ( spc[i].flddMdlFlxs );
+    cudaFree ( spc[i].flddNSFlxs );
+    cudaFree ( spc[i].flddPLFlxs );
     cudaFree ( spc[i].chnnlSttstcs );
     cudaFree ( spc[i].ntcdChnnls );
     cudaFree ( spc[i].grpVls );
@@ -1856,6 +1864,46 @@ __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n
   }
 }
 
+__global__ void arrayOfNSFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float f = 0, Norm, intNsFlx;
+  if ( i < n && j < nwl ) {
+    if ( Indx < 3 ) {
+      intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
+      //intNsFlx = BlackBody ( xx[0+j*NPRS], xx[1+j*NPRS], en[i], en[i+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
+      Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
+      f += Norm * intNsFlx;
+      f *= abs[i+j*n];
+      f *= arf[i];
+      flx[i+j*n] = f;
+    } else {
+      f *= abs[i+j*n];
+      f *= arf[i];
+      flx[i+j*n] = f;
+    }
+  }
+}
+
+__global__ void arrayOfPLFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float f = 0;
+  if ( i < n && j < nwl ) {
+    if ( Indx < 3 ) {
+      f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
+      f *= abs[i+j*n];
+      f *= arf[i];
+      flx[i+j*n] = f;
+    } else {
+      f += PowerLaw ( xx[4+j*NPRS], xx[5+j*NPRS], en[i], en[i+1] );
+      f *= abs[i+j*n];
+      f *= arf[i];
+      flx[i+j*n] = f;
+    }
+  }
+}
+
 __global__ void arrayOfSourceFluxes2 ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -1993,8 +2041,12 @@ __host__ int modelStatistic00 ( const Cupar *cdp, const Model *mdl, Chain *chn, 
     //BilinearInterpolationNsmax <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsmaxgFlxs, mdl[0].nsmaxgE, mdl[0].nsmaxgT, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
     BilinearInterpolation <<< grid2D ( spc[i].nmbrOfEnrgChnnls+1, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfEnrgChnnls+1, 0, GRINDX, mdl[0].nsaFlxs, mdl[0].nsaE, mdl[0].nsaT, mdl[0].numNsaE, mdl[0].numNsaT, spc[i].enrgChnnls, chn[0].xx, spc[i].nsa1Flxs );
     arrayOfSourceFluxes <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].mdlFlxs, chn[0].didi );
+    arrayOfNSFluxes <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].nsFlxs, chn[0].didi );
+    arrayOfPLFluxes <<< grid2D ( spc[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].enrgChnnls, spc[i].arfFctrs, spc[i].absrptnFctrs, chn[0].xx, spc[i].nsa1Flxs, spc[i].plFlxs, chn[0].didi );
     //arrayOfBackgroundFluxes <<< grid2D ( bkg[i].nmbrOfEnrgChnnls, chn[0].nwl ), block2D () >>> ( i, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].enrgChnnls, bkg[i].arfFctrs, chn[0].xx, bkg[i].mdlFlxs );
     cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].mdlFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddMdlFlxs, spc[i].nmbrOfNtcdBns );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].nsFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddNSFlxs, spc[i].nmbrOfNtcdBns );
+    cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, spc[i].nmbrOfNtcdBns, chn[0].nwl, spc[i].nmbrOfEnrgChnnls, spc[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, spc[i].iVls, spc[i].iPntr, spc[i].iIndx, spc[i].plFlxs, spc[i].nmbrOfEnrgChnnls, &beta, spc[i].flddPLFlxs, spc[i].nmbrOfNtcdBns );
     //cusparseScsrmm ( cdp[0].cusparseHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, bkg[i].nmbrOfNtcdBns, chn[0].nwl, bkg[i].nmbrOfEnrgChnnls, bkg[i].nmbrOfiVls, &alpha, cdp[0].MatDescr, bkg[i].iVls, bkg[i].iPntr, bkg[i].iIndx, bkg[i].mdlFlxs, bkg[i].nmbrOfEnrgChnnls, &beta, bkg[i].flddMdlFlxs, bkg[i].nmbrOfNtcdBns );
     //combineSourceAndBackground <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].backscal_src/spc[i].backscal_bkg, spc[i].flddMdlFlxs, bkg[i].flddMdlFlxs );
     //arrayOfCStat <<< grid2D ( spc[i].nmbrOfNtcdBns, chn[0].nwl ), block2D () >>> ( chn[0].nwl, spc[i].nmbrOfNtcdBns, spc[i].srcExptm, spc[i].srcGrp, spc[i].flddMdlFlxs, spc[i].chnnlSttstcs );
@@ -2724,6 +2776,14 @@ __host__ void writeSpectraToFile ( const char *chainname, const Spectrum *spc, c
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
       fprintf ( pntr, " %.8E ", spc[i].flddMdlFlxs[j]*spc[i].srcExptm );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].flddNSFlxs[j]*spc[i].srcExptm );
+    }
+    fprintf ( pntr, "\n" );
+    for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
+      fprintf ( pntr, " %.8E ", spc[i].flddPLFlxs[j]*spc[i].srcExptm );
     }
     fprintf ( pntr, "\n" );
     for ( int j = 0; j < spc[i].nmbrOfNtcdBns; j++ ) {
