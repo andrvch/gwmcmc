@@ -21,6 +21,37 @@ totModel = 0
 totSourceCounts = 0
 totBins = 0
 
+totPSRW = 0
+totPSRChi = 0
+totPSRCounts = 0
+totPSRModel = 0
+totPSRSourceCounts = 0
+totPSRBins = 0
+
+for i in range(nspec/2):
+    totPSRBins += len(spcs[i][2])
+    totPSRCounts += np.sum(spcs[i][2])
+    totPSRModel += np.sum(spcs[i][4])
+    totPSRSourceCounts += np.sum(spcs[i][2]-spcs[i][3])
+    totPSRW += np.sum(abs(spcs[i][6]))
+    totPSRChi += np.sum(abs(spcs[i][7]))
+
+totPWNW = 0
+totPWNChi = 0
+totPWNCounts = 0
+totPWNModel = 0
+totPWNSourceCounts = 0
+totPWNBins = 0
+
+for i in range(nspec/2):
+    totPWNBins += len(spcs[i+nspec/2][2])
+    totPWNCounts += np.sum(spcs[i+nspec/2][2])
+    totPWNModel += np.sum(spcs[i+nspec/2][4])
+    totPWNSourceCounts += np.sum(spcs[i+nspec/2][2]-spcs[i+nspec/2][3])
+    totPWNW += np.sum(abs(spcs[i+nspec/2][6]))
+    totPWNChi += np.sum(abs(spcs[i+nspec/2][7]))
+
+
 for i in range(nspec):
     totBins += len(spcs[i][2])
     totCounts += np.sum(spcs[i][2])
@@ -45,42 +76,70 @@ print "Total number of model counts  -- %2.0f"%(totModel)
 print "Total W Statistic             -- %2.0f"%(totW)
 print "Total Chi-Squared Statistic   -- %2.0f"%(totChi)
 
-specs = ['pn','MOS1','MOS2','pn','MOS1','MOS2','Total']
+specs = ['pn','MOS1','MOS2','Total','pn','MOS1','MOS2','Total','Total']
 
 prst = []
 lst = []
-for i in range(nspec):
+for i in range(nspec/2):
     lst.append(r'$%i$'%len(spcs[i][2]))
+lst.append(r'$%i$'%totPSRBins)
+for i in range(nspec/2):
+    lst.append(r'$%i$'%len(spcs[i+nspec/2][2]))
+lst.append(r'$%i$'%totPWNBins)
 lst.append(r'$%i$'%totBins)
 prst.append(lst)
 lst = []
-for i in range(nspec):
+for i in range(nspec/2):
     lst.append(r'$%2.0f$'%np.sum(spcs[i][2]))
+lst.append(r'$%2.0f$'%totPSRCounts)
+for i in range(nspec/2):
+    lst.append(r'$%2.0f$'%np.sum(spcs[i+nspec/2][2]))
+lst.append(r'$%2.0f$'%totPWNCounts)
 lst.append(r'$%2.0f$'%totCounts)
 prst.append(lst)
 lst = []
-for i in range(nspec):
+for i in range(nspec/2):
     lst.append(r'$%2.0f$'%np.sum(spcs[i][2]-spcs[i][3]))
+lst.append(r'$%2.0f$'%totPSRSourceCounts)
+for i in range(nspec/2):
+    lst.append(r'$%2.0f$'%np.sum(spcs[i+nspec/2][2]-spcs[i+nspec/2][3]))
+lst.append(r'$%2.0f$'%totPWNSourceCounts)
 lst.append(r'$%2.0f$'%totSourceCounts)
 prst.append(lst)
 lst = []
-for i in range(nspec):
+for i in range(nspec/2):
     lst.append(r'$%2.0f$'%np.sum(spcs[i][4]))
+lst.append(r'$%2.0f$'%totPSRModel)
+for i in range(nspec/2):
+    lst.append(r'$%2.0f$'%np.sum(spcs[i+nspec/2][4]))
+lst.append(r'$%2.0f$'%totPWNModel)
 lst.append(r'$%2.0f$'%totModel)
 prst.append(lst)
 lst = []
-for i in range(nspec):
+for i in range(nspec/2):
     lst.append(r'$%2.0f$'%np.sum(abs(spcs[i][6])))
+lst.append(r'$%2.0f$'%totPSRW)
+for i in range(nspec/2):
+    lst.append(r'$%2.0f$'%np.sum(abs(spcs[i+nspec/2][6])))
+lst.append(r'$%2.0f$'%totPWNW)
 lst.append(r'$%2.0f$'%totW)
 prst.append(lst)
 lst = []
-for i in range(nspec):
+for i in range(nspec/2):
     lst.append(r'$%2.0f$'%np.sum(abs(spcs[i][7])))
+lst.append(r'$%2.0f$'%totPSRChi)
+for i in range(nspec/2):
+    lst.append(r'$%2.0f$'%np.sum(abs(spcs[i+nspec/2][7])))
+lst.append(r'$%2.0f$'%totPWNChi)
 lst.append(r'$%2.0f$'%totChi)
 prst.append(lst)
 lst = []
-for i in range(nspec):
+for i in range(nspec/2):
     lst.append(r'$%2.0f$'%(len(spcs[i][2])-7))
+lst.append(r'$%2.0f$'%(totPSRBins-7))
+for i in range(nspec/2):
+    lst.append(r'$%2.0f$'%(len(spcs[i+nspec/2][2])-7))
+lst.append(r'$%2.0f$'%(totPWNBins-7))
 lst.append(r'$%2.0f$'%(totBins-7))
 prst.append(lst)
 lst = []
