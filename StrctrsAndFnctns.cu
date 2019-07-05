@@ -1698,6 +1698,56 @@ __global__ void ReverseLinearInterpolationNoErrors ( const int nmbrOfWlkrs, cons
   }
 }
 
+__host__ void readGreenSamples ( const char *flNm, const int numDist, const int numSmpl, float *greenData, float *Dist, float *EE ) {
+  FILE *flPntr;
+  float value;
+  int i = 0;
+  flPntr = fopen ( flNm, "r" );
+  while ( fscanf ( flPntr, "%e", &value ) == 1 ) {
+    greenData[i] = value;
+    i += 1;
+  }
+  for (int j = 0; j < numDist; j++) {
+    Dist[j] = log10f ( greenData[j*numSmpl] );
+  }
+  for (int i = 0; i < numSmpl; i++) {
+    for (int j = 0; j < numDist; j++) {
+      EE[j+i*numDist] = greenData[i+1+j*numSmpl];
+    }
+  }
+  fclose ( flPntr );
+}
+
+__global__ void chooseSample ( const int nDB, const int si, const float *EE, float *EBV ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nDB ) {
+    EBV[i] = EE[i+si*nDB];
+  }
+}
+
+__global__ void LinearInterpolationFromSamples ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int si, const float *Dist, const float *EBV, const float *wlkrs, float *dist ) {
+  int w = threadIdx.x + blockDim.x * blockIdx.x;
+  float xxout, a, dmNh0, dmNh1, tmpMNh;
+  int v;
+  if ( w < nmbrOfWlkrs ) {
+    xxout = wlkrs[NHINDX+w*NPRS] / 0.7;
+    v = FindElementIndex ( EBV, nmbrOfDistBins, xxout );
+    a = ( xxout - EBV[v] ) / ( EBV[v+1] - EBV[v] );
+    if ( v < nmbrOfDistBins ) dmNh0 = Dist[v]; else dmNh0 = 0;
+    if ( v+1 < nmbrOfDistBins ) dmNh1 = Dist[v+1]; else dmNh1 = 0;
+    tmpMNh = a * dmNh1 + ( -dmNh0 * a + dmNh0 );
+    //tmpMNh = powf ( 10, tmpMNh );
+    dist[w+si*nmbrOfWlkrs] = tmpMNh;
+  }
+}
+
+__global__ void chooseDistance ( const int nwl, const int *kex, const float *didi11, float *didi1 ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  if ( i < nwl ) {
+    didi1[i] = didi11[i+kex[i]*nwl];
+  }
+}
+
 __global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi ) {
   int e = threadIdx.x + blockDim.x * blockIdx.x;
   int w = threadIdx.y + blockDim.y * blockIdx.y;
@@ -2366,6 +2416,7 @@ __host__ int InitializeModel ( Model *mdl ) {
   SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl1, mdl[0].nmbrOfDistBins1, mdl[0].RedData1, mdl[0].Dist1, mdl[0].EBV1 );
   SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl2, mdl[0].nmbrOfDistBins1, mdl[0].RedData2, mdl[0].Dist2, mdl[0].EBV2 );
   SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl3, mdl[0].nmbrOfDistBins1, mdl[0].RedData3, mdl[0].Dist3, mdl[0].EBV3 );
+  SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
   return 0;

@@ -128,10 +128,10 @@ struct Model {
   const char *rddnngFl = "reddeningJ0633.dat";
   const int nmbrOfDistBins = 442;
   const int numRedCol = 4;
-  float *RedData, *Dist, *EBV, *errDist, *errEBV;
-  const char *rddnngFl1 = "Green15.dat";
-  const int nmbrOfDistBins1 = 1000;
-  const int numRedCol1 = 2;
+  float *RedData, *Dist, *EE, *EBV, *errDist, *errEBV;
+  const char *rddnngFl1 = "Green19.dat";
+  const int nmbrOfDistBins1 = 120;
+  const int numRedCol1 = 6;
   float *RedData1, *Dist1, *EBV1;
   const char *rddnngFl2 = "Sale14.dat";
   float *RedData2, *Dist2, *EBV2;
@@ -336,5 +336,10 @@ __host__ void writeKdeToFile ( const char *name, const int dim, const int n, con
 
 __global__ void arrayOfNSFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
 __global__ void arrayOfPLFluxes ( const int Indx, const int nwl, const int n, const float *en, const float *arf, const float *abs, const float *xx, const float *nsFlx, float *flx, const float *dist );
+
+__host__ void readGreenSamples ( const char *flNm, const int numDist, const int numSmpl, float *greenData, float *Dist, float *EE );
+__global__ void chooseSample ( const int nDB, const int si, const float *EE, float *EBV );
+__global__ void LinearInterpolationFromSamples ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int si, const float *Dist, const float *EBV, const float *wlkrs, float *dist );
+__global__ void chooseDistance ( const int nwl, const int *kex, const float *didi11, float *didi1 );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
