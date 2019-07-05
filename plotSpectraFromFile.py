@@ -38,7 +38,7 @@ for i in range(nspec/2):
     #ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][5][0],spcs[i][5]),alpha=0.25,color=setcolours[i])
     ax[1].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i][9][0],spcs[i][9]),color=setcolours[i])
 
-subs = [1.0, 2.0, 4.0, 7.0]
+subs = [1., 2., 3., 4.0, 5.0, 7.]
 
 ax[0].set_xscale('log')
 ax[1].set_xscale('log')
@@ -62,7 +62,7 @@ plt.setp([a.get_xticklabels(minor=True) for a in ax[:1]], visible=False)
 
 ax[0].set_ylim(0.1,150.0)
 ax[1].set_ylim(-5.,5.)
-ax[1].set_yticks(np.arange(-5., 5.1, step=1.))
+ax[1].set_yticks(np.arange(-5., 5.1, step=2.5))
 
 ax[1].set_xlabel(r'$ \rm Photon \, Energy  \, [\, \rm keV\,] $',fontsize=10)
 ax[0].set_ylabel(r'$ \rm Counts $',fontsize=10)
@@ -93,7 +93,7 @@ for i in range(nspec/2):
     #ax[0].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i+nspec/2][5][0],spcs[i+nspec/2][5]),alpha=0.25,color=setcolours[i])
     ax[1].step(np.append(xxen[0]-xxenerr[0],xxen+xxenerr),np.append(spcs[i+nspec/2][9][0],spcs[i+nspec/2][9]),color=setcolours[i])
 
-subs = [1.0, 2.0, 4.0, 7.0]
+subs = [1., 2., 3., 4., 5., 7.]
 
 ax[0].set_xscale('log')
 ax[1].set_xscale('log')
@@ -115,8 +115,9 @@ plt.setp(ax[1].get_xticklabels(minor=True), visible=True)
 plt.setp([a.get_xticklabels() for a in ax[:1]], visible=False)
 plt.setp([a.get_xticklabels(minor=True) for a in ax[:1]], visible=False)
 
+ax[0].set_ylim(0.1,150.0)
 ax[1].set_ylim(-5.,5.)
-ax[1].set_yticks(np.arange(-5., 7.5, step=2.5))
+ax[1].set_yticks(np.arange(-5., 5.1, step=2.5))
 
 #ax[i].set_ylabel(r'$\rm normalized \, counts \, s^{-1} \, keV^{-1} $',fontsize=10)
 ax[1].set_xlabel(r'$ \rm Photon \, energy  \, [\, \rm keV\,] $',fontsize=10)

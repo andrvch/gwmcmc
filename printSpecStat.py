@@ -180,5 +180,5 @@ lst = []
 print prst
 print prst[0]
 
-data = {r'ASpectrum': specs, r'Bins': prst[0], r'Counts': prst[1], r'DCounts-Background': prst[2], r'EModel': prst[3], r'FNS Model': prst[4], r'GPL Model': prst[5], r'H$W$': prst[6], r'J$\chi^{2}$': prst[7], r'H$d.o.f$': prst[8] }
+data = {r'ASpectrum': specs, r'Bins': prst[0], r'Counts': prst[1], r'DCounts-Background': prst[2], r'EModel': prst[3], r'FNS Model': prst[4], r'GPL Model': prst[5], r'H$W$': prst[6], r'J$\chi^{2}$': prst[7], r'K$d.o.f$': prst[8] }
 asciitable.write(data, sys.stdout, Writer = asciitable.Latex, latexdict = {'preamble': r'\begin{center}', 'tablefoot': r'\end{center}', 'tabletype': 'table*', 'units':{'$N_{\rm H}$':'$\rm 10^{21} ./ cm^{-2}$'}})
