@@ -4,6 +4,7 @@
 import math, sys
 import numpy as np
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import *
 import dustmaps
@@ -14,7 +15,7 @@ from astropy import units
 l = 205.09 * units.deg
 b = -0.93 * units.deg
 ndist = 120
-d = np.linspace(0.,10.,ndist) * units.kpc
+d = np.linspace(0.1,10.,ndist) * units.kpc
 nsmpl = 5
 
 coords = SkyCoord(l, b, distance=d, frame='galactic')
@@ -40,4 +41,6 @@ for i in range(nsmpl):
     plt.plot(d,ebv,color='gray')
 plt.plot(d,ebvmed,color='black')
 #plt.plot(d,ebvbestfit,color='red')
-plt.show()
+
+plt.savefig("Green19samples"+".jpg")
+#plt.show()
