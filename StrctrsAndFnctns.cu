@@ -2427,16 +2427,18 @@ __host__ int InitializeModel ( Model *mdl ) {
   //SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
   //SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV1 );
   readGreenSamples ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].numRedCol, mdl[0].RedData, mdl[0].Dist, mdl[0].EE );
+  /*
   for ( int i = 0; i < mdl[0].nmbrOfDistBins; i++ ) {
     printf ( " %2.6f ", mdl[0].Dist[i] );
     for ( int j = 0; j < mdl[0].numRedCol-1; j++ ) {
       printf ( " %2.6f ", mdl[0].EE[i+j*mdl[0].nmbrOfDistBins] );
     }
     printf ( "\n" );
-  }
-  SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl1, mdl[0].nmbrOfDistBins1, mdl[0].RedData1, mdl[0].Dist1, mdl[0].EBV1 );
+  }*/
+  /*SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl1, mdl[0].nmbrOfDistBins1, mdl[0].RedData1, mdl[0].Dist1, mdl[0].EBV1 );
   SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl2, mdl[0].nmbrOfDistBins1, mdl[0].RedData2, mdl[0].Dist2, mdl[0].EBV2 );
   SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl3, mdl[0].nmbrOfDistBins1, mdl[0].RedData3, mdl[0].Dist3, mdl[0].EBV3 );
+  */
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   //SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
