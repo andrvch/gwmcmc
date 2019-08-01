@@ -42,5 +42,10 @@ for i in range(nsmpl):
 plt.plot(d,ebvmed,color='black')
 #plt.plot(d,ebvbestfit,color='red')
 
-plt.savefig("Green19samples"+".jpg")
+plt.xlabel(r'$\rm Distance \, [ \, kpc \, ]$',fontsize=14)
+plt.ylabel(r'$E(B-V)$',fontsize=14)
+plt.tick_params(labelsize=14)
+plt.minorticks_on()
+
+plt.savefig("Green19samples"+".eps")
 #plt.show()
