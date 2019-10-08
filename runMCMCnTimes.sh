@@ -16,6 +16,7 @@ let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
   ./runGwMcmcOnCuda $CUDAID $SPECFILE1 $CHAINFILE $NWALK $LSTEP $i > $LOGFILE
+  ./plotChain.py $CHAINFILE $i $NWALK
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"
