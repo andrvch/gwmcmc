@@ -15,7 +15,7 @@ from cudakde import *
 
 nspec = 6
 spcs = readspectra(nspec,sys.argv[1]+"spec"+".spec")
-erange = [0.4,7.0]
+erange = [0.3,10.0]
 
 fig, ax = plt.subplots(nrows=2)
 gs = gridspec.GridSpec(3,1)

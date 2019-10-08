@@ -31,6 +31,14 @@ print samples.shape
 
 npars = len(samples)
 
+samples[0] = 10**samples[0] #10**samples[0]*kb/1.6022E-12/redshift
+samples[1] = 10**samples[1]*Rns
+samples[3] = 10**samples[3]/1.E-5
+samples[5] = 10**samples[5]/1.E-5
+samples[6] = samples[6]*10.
+samples[7] = 10**samples[7]/1.E3
+
+samples[9] = (1.E5*samples[1])**2./(samples[7]*3.08567802E21)**2*(samples[0])**4.*5.6704e-5
 #samples[0] = 10**samples[0] #*kb/1.6022E-12/redshift
 #samples[1] = 10**(0.5*samples[1])*10**samples[7]
 #samples[3] = 10**samples[3]/1.E-5
@@ -47,7 +55,7 @@ for i in range(npars):
     zin,eqh_inter[i,:] = prc(xi,zi,qqq)
     print eqh_inter[i,:]
 
-f = open(sys.argv[1]+"."+"%2.2f"%(qqlevel)+"."+"crdbl", "w")
+f = open(sys.argv[1]+"."+"%2.2f"%(qqlevel)+"."+"flux.crdbl", "w")
 for i in range(npars):
     for j in range(3):
         f.write(" %.15E "%(eqh_inter[i,j]))
