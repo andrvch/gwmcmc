@@ -134,7 +134,7 @@ __host__ int readTimesInfo ( const char *spcFl, int *nmbrOfPhtns, float *srcExpt
   fits_get_num_rows ( fptr, &nrows, &status );
   printf ( "%i\n", status );
   *nmbrOfPhtns = nrows;
-  printf ( "%i\n", *nmbrOfPhtns );
+  printf ( "number of events -- %i\n", *nmbrOfPhtns );
   //snprintf ( card, sizeof ( card ), "%s%s", spcFl, "[EVENTS]" );
   //fits_open_file ( &fptr, card, READONLY, &status );
   fits_read_key ( fptr, TFLOAT, "DURATION", srcExptm, NULL, &status );
