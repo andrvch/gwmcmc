@@ -21,7 +21,7 @@ mm = [2,3,4,5,6]
 plt.plot(mm,samples[0],'-o')
 
 plt.xticks(mm)
-plt.xlabel(r'$m$')
-plt.ylabel(r'$O_{m1}$')
+plt.xlabel(r'$m$',fontsize=16)
+plt.ylabel(r'$O_{m1}$',fontsize=16)
 #plt.show()
 plt.savefig(sys.argv[1]+"oddsODS"+".eps")
