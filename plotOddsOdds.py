@@ -19,6 +19,8 @@ samples = read_data(sys.argv[1])
 mm = [2,3,4,5,6]
 
 plt.plot(mm,samples[0],'-o')
+
+plt.xticks(mm)
 plt.xlabel(r'$m$')
 plt.ylabel(r'$O_{m1}$')
 #plt.show()
