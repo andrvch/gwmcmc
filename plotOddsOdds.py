@@ -18,10 +18,15 @@ samples = read_data(sys.argv[1])
 
 mm = [2,3,4,5,6]
 
-plt.plot(mm,samples[0],'-o')
+fig, ax = plt.subplots()
+
+plt.setp(ax.get_yticklabels(), fontsize=12)
+plt.setp(ax.get_xticklabels(), fontsize=12)
+
+ax.plot(mm,samples[0],'-o')
 
 plt.xticks(mm)
-plt.xlabel(r'$m$',fontsize=16)
-plt.ylabel(r'$O_{m1}$',fontsize=16)
+plt.xlabel(r'$m$',fontsize=14)
+plt.ylabel(r'$O_{m1}$',fontsize=14)
 #plt.show()
 plt.savefig(sys.argv[1]+"oddsODS"+".eps")
