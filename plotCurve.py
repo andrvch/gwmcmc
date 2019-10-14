@@ -56,4 +56,4 @@ ax.set_ylabel("number of photons",fontsize=14)
 plt.setp(ax.get_yticklabels(), fontsize=14)
 plt.setp(ax.get_xticklabels(), fontsize=14)
 
-plt.savefig(sys.argv[1]+"curve"+".eps")
+plt.savefig(sys.argv[1]+"curve"+".jpg")
