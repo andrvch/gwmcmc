@@ -61,19 +61,15 @@ samples2[3] = log10(4.*PIPI) + 2.*samples[7] + samples2[1]
 samples2[4] = log10(4.*PIPI) + 2.*samples[7] + samples2[2]
 samples2[5] = samples2[3] - log10(edot)
 samples2[6] = samples2[4] - log10(edot)
-#samples[0] = 10**samples[0] #*kb/1.6022E-12/redshift
-#samples[1] = 10**(0.5*samples[1])*10**samples[7]
-#samples[3] = 10**samples[3]/1.E-5
-#samples[5] = 10**samples[5]/1.E-5
-#samples[6] = samples[6]*10.
-#samples[7] = 10**samples[7]/1.E3
+
+npars = 7
 
 eqh_inter = np.empty([npars,len(quantiles)])
 
 sttime=time.time()
 
 for i in range(npars):
-    xi,zi = kde_gauss_cuda1d(samples[i],nbins)
+    xi,zi = kde_gauss_cuda1d(samples2[i],nbins)
     zin,eqh_inter[i,:] = prc(xi,zi,qqq)
     print eqh_inter[i,:]
 

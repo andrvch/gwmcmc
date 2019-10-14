@@ -11,8 +11,10 @@ from cudakde import *
 def FoldInput(infile):
     inf = open(infile)
     lines = inf.readlines()
+    #print lines
     pars = []
     for line in lines:
+        #print line.split()[0]
         pp = read_data(line.split()[0])
         pars.append(pp)
     prst = []
@@ -28,4 +30,4 @@ prst = FoldInput(sys.argv[1])
 models = ['bb','nsa12','nsa13','ns1260','ns123100','ns123190','ns130100','ns130190']
 
 data = {r'A $Mod.$': models, r'B Bol. lum.': prst[0], r'C $Psr. flux$': prst[1], r'D PWN flux': prst[2], r'E Psr. Lum.': prst[3], r'F PWN Lum': prst[4], r'G Psr. eff.': prst[5], r'H PWN eff': prst[6]}
-asciitable.write(data, sys.stdout, Writer = asciitable.Latex, latexdict = {'preamble': r'\begin{center}', 'tablefoot': r'\end{center}', 'tabletype': 'table*')
+asciitable.write(data, sys.stdout, Writer = asciitable.Latex, latexdict = {'preamble': r'\begin{center}', 'tablefoot': r'\end{center}', 'tabletype': 'table*', 'units':{'$N_{\rm H}$':'$\rm 10^{21} ./ cm^{-2}$'}})
