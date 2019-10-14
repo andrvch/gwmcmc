@@ -14,6 +14,10 @@ kb = 1.38E-16
 kev = 1.6022E-9
 gr = math.sqrt(1 - 2.952 * Mns / Rns)
 redshift = 1. / gr
+PIPI = 3.14159265359
+pc = 3.08567802e18
+
+edot = 1.2e35
 
 nbins = 100
 
@@ -31,14 +35,32 @@ print samples.shape
 
 npars = len(samples)
 
-samples[0] = 10**samples[0] #10**samples[0]*kb/1.6022E-12/redshift
-samples[1] = 10**samples[1]*Rns
-samples[3] = 10**samples[3]/1.E-5
-samples[5] = 10**samples[5]/1.E-5
+samples[0] = samples[0] #10**samples[0]*kb/1.6022E-12/redshift
+samples[1] = samples[1] + log10(1.E5*Rns)
+samples[3] = samples[3]
+samples[5] = samples[5]
 samples[6] = samples[6]*10.
-samples[7] = 10**samples[7]/1.E3
+samples[7] = samples[7] + log10(pc)
 
-samples[9] = (1.E5*samples[1])**2./(samples[7]*3.08567802E21)**2*(samples[0])**4.*5.6704e-5
+samples2 = np.copy(samples)
+
+def plflux(g,k,e1,e2):
+    if g != 2:
+        f = (e2**(-g+2)-e1**(-g+2))/(-g+2)
+    else:
+        f = log(e2)-log(e1)
+    return log10(kev) + k + log10(f)
+
+samples2[0] = log10(4.*PIPI*5.6704e-5) + 2.*samples[1] + 4.*samples[0]
+
+for i in range(shape(samples)[1]):
+    samples2[1,i] = plflux(samples[2,i],samples[3,i],2.,10.)
+    samples2[2,i] = plflux(samples[4,i],samples[5,i],2.,10.)
+
+samples2[3] = log10(4.*PIPI) + 2.*samples[1] + samples2[1]
+samples2[4] = log10(4.*PIPI) + 2.*samples[1] + samples2[2]
+samples2[5] = samples2[3] - log10(edot)
+samples2[6] = samples2[4] - log10(edot)
 #samples[0] = 10**samples[0] #*kb/1.6022E-12/redshift
 #samples[1] = 10**(0.5*samples[1])*10**samples[7]
 #samples[3] = 10**samples[3]/1.E-5
