@@ -52,17 +52,18 @@ def plflux(g,k,e1,e2):
     return log10(kev) + k + log10(f)
 
 samples2[0] = log10(4.*PIPI*5.6704e-5) + 2.*samples[1] + 4.*samples[0]
+samples2[1] = samples2[0] - log10(4.*PIPI) - 2.*samples[7]
 
 for i in range(shape(samples)[1]):
-    samples2[1,i] = plflux(samples[2,i],samples[3,i],2.,10.)
-    samples2[2,i] = plflux(samples[4,i],samples[5,i],2.,10.)
+    samples2[2,i] = plflux(samples[2,i],samples[3,i],2.,10.)
+    samples2[3,i] = plflux(samples[4,i],samples[5,i],2.,10.)
 
-samples2[3] = log10(4.*PIPI) + 2.*samples[7] + samples2[1]
 samples2[4] = log10(4.*PIPI) + 2.*samples[7] + samples2[2]
-samples2[5] = samples2[3] - log10(edot)
+samples2[5] = log10(4.*PIPI) + 2.*samples[7] + samples2[3]
 samples2[6] = samples2[4] - log10(edot)
+samples2[7] = samples2[5] - log10(edot)
 
-npars = 7
+npars = 8
 
 eqh_inter = np.empty([npars,len(quantiles)])
 
