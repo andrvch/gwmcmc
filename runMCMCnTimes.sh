@@ -11,6 +11,7 @@ let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
   ./runSFH $CUDAID $CHAINFILE $NWALK $LSTEP $i $DIM > $LOGFILE
+  ./plotChain.py $CHAINFILE $i $NWALK
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"
