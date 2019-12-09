@@ -174,6 +174,17 @@ __global__ void chainFunction ( const int dim, const int nwl, const int nst, con
   }
 }
 
+__global__ void chainFunctionU ( const int dim, const int nwl, const int nst, const float *xx, float *ff ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  int t1 = i + j * ( dim - 1 );
+  float d = dim * 1.;
+  if ( i < dim - 1 && j < nwl*nst ) {
+    ff[t1] = 0.5 * ( xx[t+1] + xx[t] ) / d;
+  }
+}
+
 __global__ void normArray ( const int n, float *a ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   float c = a[0];
@@ -379,6 +390,8 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cnd, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ff, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].fconst, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   return 0;
 }
 
@@ -545,7 +558,10 @@ __host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
   float alpha = ALPHA, beta = BETA;
   int NN[RANK] = { chn[0].nst };
   cufftPlanMany ( &cdp[0].cufftPlan, RANK, NN, NULL, 1, chn[0].nst, NULL, 1, chn[0].nst, CUFFT_C2C, chn[0].nwl );
-  chainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nst, 0, chn[0].smpls, chn[0].chnFnctn );
+  //chainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nst, 0, chn[0].smpls, chn[0].chnFnctn );
+  chainFunctionU <<< grid2D ( chn[0].dim-1, chn[0].nwl * chn[0].nst ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].ff );
+  constantArray <<< grid1D ( chn[0].nst * chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nst*chn[0].nwl, alpha, chn[0].fconst );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl*chn[0].nst, &alpha, chn[0].ff, chn[0].dim-1, chn[0].fconst, incxx, &beta, chn[0].chnFnctn, incyy );
   constantArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, alpha / chn[0].nst, chn[0].stps );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nwl, chn[0].nst, &alpha, chn[0].chnFnctn, chn[0].nwl, chn[0].stps, incxx, &beta, chn[0].smOfChn, incyy );
   shiftWalkers <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, chn[0].chnFnctn, chn[0].smOfChn, chn[0].cntrlChnFnctn );
@@ -667,6 +683,8 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].sstt );
   cudaFree ( chn[0].ccnd );
   cudaFree ( chn[0].cnd );
+  cudaFree ( chn[0].ff );
+  cudaFree ( chn[0].fconst );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {

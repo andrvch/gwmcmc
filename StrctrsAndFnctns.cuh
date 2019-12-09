@@ -41,6 +41,8 @@ struct Chain {
   cufftComplex *ftOfChn;
   int mmm;
   float *cnd, *ccnd;
+  float *ff;
+  float *fconst;
 };
 
 __host__ int grid1D ( const int );
@@ -115,5 +117,5 @@ __host__ __device__ double funcVV ( const float );
 __global__ void returnXXStatistic ( const int, const int, const float*, float* );
 
 __global__ void arrayOf2DConditions ( const int, const int, const float*, float* );
-
+__global__ void chainFunctionU ( const int, const int, const int, const float*, float* );
 #endif // _STRCTRSANDFNCTNS_CUH_
