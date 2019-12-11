@@ -42,12 +42,16 @@ int main ( int argc, char *argv[] ) {
   chn[0].dlt = 1.E-6;
   chn[0].nbm = atoi ( argv[7] );
 
-  readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+  //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+  chn[0].nph = 372383;
+  //chn[0].nph = 272217;
 
   allocateChain ( chn );
   allocateTimes ( chn );
 
-  readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
+  //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
+
+  simpleReadDataFloat ( chn[0].dfl, chn[0].atms );
 
   chn[0].scale = chn[0].nph * logf ( chn[0].nbm ) + chn[0].nph * logf ( chn[0].nph * 1. ) - logf ( chn[0].nph * 1. ) - ( chn[0].nph + chn[0].nbm - 1. ) * logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. ) + logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. );
 
@@ -58,8 +62,8 @@ int main ( int argc, char *argv[] ) {
   chn[0].scale = chn[0].scale + sumsum;
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].x0[0] = 3.362332;
-  chn[0].x0[1] = 0.0;
+  chn[0].x0[0] = 592.42; //1.68799e-3; //3.362332;
+  chn[0].x0[1] = 1./chn[0].nbm/2.;
   //}
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
@@ -76,7 +80,7 @@ int main ( int argc, char *argv[] ) {
     printf ( " Start ...                                                  \n" );
   }
 
-  chn[0].sigma[0] = 1.E-6;
+  chn[0].sigma[0] = 0.5E-3;
   chn[0].sigma[1] = 1. / chn[0].nbm / 10.;
 
   //cudaDeviceSynchronize ();
