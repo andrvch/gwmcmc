@@ -3,7 +3,7 @@
 
 import os, sys
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import math
 from pylab import *
@@ -173,9 +173,9 @@ for i in range(nPlot):
     for j in range(nwalkers):
         ax[i].errorbar(steps,sampler.chain[j,:,i])
 setp([a.get_xticklabels() for a in ax[:nPlot-1]], visible=False)
-plt.show()
-#plt.savefig(sys.argv[1]+"chain"+".jpg")
-burn = int(raw_input("How many steps to discard: "))
+#plt.show()
+plt.savefig(sys.argv[2]+"chain"+".jpg")
+burn = 0 #int(raw_input("How many steps to discard: "))
 
 samples = sampler.chain[:,burn:,:].reshape((-1,ndim))
 likely = sampler.lnprobability[:,burn:].reshape((-1))
