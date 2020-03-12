@@ -1,0 +1,5 @@
+nsmdip    4     0.0001  10. F_nsmdip add    0      0
+$NSmodel  1
+logTinf   K     5.4     5.2   5.2    5.7    5.7    0.1
+dist      kpc   1.0     0.01  0.01   100.0  100.0  0.1
+theta_m   deg   60      0     0      90     90     15
