@@ -71,7 +71,7 @@ ax[1].set_ylabel(r'$ \chi^{2} $',fontsize=10)
 l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=1)
 l.set_zorder(5)
 
-plt.savefig(sys.argv[1]+"spectraPSR"+".jpg")
+plt.savefig(sys.argv[1]+"spectraPSR"+".png")
 plt.savefig(sys.argv[1]+"spectraPSR"+".eps")
 #plt.show()
 
@@ -127,6 +127,6 @@ ax[1].set_ylabel(r'$ \chi^{2} $',fontsize=10)
 l = ax[0].legend(['pn','MOS1','MOS2'],fontsize=9,loc=1)
 l.set_zorder(5)
 
-plt.savefig(sys.argv[1]+"specPWN"+".jpg")
+plt.savefig(sys.argv[1]+"specPWN"+".png")
 plt.savefig(sys.argv[1]+"specPWN"+".eps")
 #plt.show()
