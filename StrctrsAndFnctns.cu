@@ -1588,6 +1588,10 @@ __host__ void FreeModel ( const Model *mdl ) {
   cudaFree ( mdl[0].nsaT );
   cudaFree ( mdl[0].nsaE );
   cudaFree ( mdl[0].nsaFlxs );
+  cudaFree ( mdl[0].nsdDt );
+  cudaFree ( mdl[0].nsdT );
+  cudaFree ( mdl[0].nsdE );
+  cudaFree ( mdl[0].nsdFlxs );
   cudaFree ( mdl[0].nsmaxgDt );
   cudaFree ( mdl[0].nsmaxgT );
   cudaFree ( mdl[0].nsmaxgE );
@@ -1746,141 +1750,6 @@ __global__ void chooseDistance ( const int nwl, const int *kex, const float *did
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
     didi1[i] = didi11[i+kex[i]*nwl];
-  }
-}
-
-__global__ void AssembleArrayOfModelFluxes ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi ) {
-  int e = threadIdx.x + blockDim.x * blockIdx.x;
-  int w = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = e + w * nmbrOfEnrgChnnls;
-  float f = 0, Norm, intNsaFlx;
-  float scl = backscal_src / backscal_bkg;
-  if ( e < nmbrOfEnrgChnnls && w < nwl ) {
-    if ( spIndx == 0 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
-      f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f += scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 1 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[2+w*NPRS], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
-      f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f += scl * PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 2 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
-      f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f += scl * PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 3 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f += scl * PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 4 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f += scl * PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 5 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f += scl * PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 6 ) {
-      f += PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 7 ) {
-      f += PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 8 ) {
-      f += PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 9 ) {
-      f += PowerLaw ( wlk[6+w*NPRS], wlk[7+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 10 ) {
-      f += PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 11 ) {
-      f += PowerLaw ( wlk[8+w*NPRS], wlk[9+w*NPRS], en[e], en[e+1] );
-      f *= arf[e];
-      flx[t] = f;
-    }
-  }
-}
-
-__global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi ) {
-  int e = threadIdx.x + blockDim.x * blockIdx.x;
-  int w = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = e + w * nmbrOfEnrgChnnls;
-  float f = 0, Norm, intNsaFlx;
-  if ( e < nmbrOfEnrgChnnls && w < nwl ) {
-    if ( spIndx == 0 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
-      f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 1 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
-      f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 2 ) {
-      intNsaFlx = IntegrateNsa ( nsa1Flx[e+w*(nmbrOfEnrgChnnls+1)], nsa1Flx[e+1+w*(nmbrOfEnrgChnnls+1)], en[e], en[e+1] );
-      //intNsaFlx = BlackBody ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] );
-      Norm = powf ( 10., - 2 * didi[w] + 2 * wlk[1+w*NPRS] + 2 * KMCMPCCM ); //
-      f += Norm * intNsaFlx;
-      f += PowerLaw ( wlk[2+w*NPRS], wlk[3+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 3 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 4 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f *= arf[e];
-      flx[t] = f;
-    } else if ( spIndx == 5 ) {
-      f += PowerLaw ( wlk[4+w*NPRS], wlk[5+w*NPRS], en[e], en[e+1] );
-      f *= absrptn[t];
-      f *= arf[e];
-      flx[t] = f;
-    }
   }
 }
 
@@ -2421,6 +2290,10 @@ __host__ int InitializeModel ( Model *mdl ) {
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaE, mdl[0].numNsaE * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaT, mdl[0].numNsaT * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsaFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsdDt, ( mdl[0].numNsdE + 1 ) * ( mdl[0].numNsdT + 1 ) * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsdE, mdl[0].numNsdE * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsdT, mdl[0].numNsdT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].nsdFlxs, mdl[0].numNsdE * mdl[0].numNsdT * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgE, mdl[0].numNsaE * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgT, mdl[0].numNsaT * sizeof ( float ) );
@@ -2443,6 +2316,7 @@ __host__ int InitializeModel ( Model *mdl ) {
   SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl3, mdl[0].nmbrOfDistBins1, mdl[0].RedData3, mdl[0].Dist3, mdl[0].EBV3 );
   */
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
+  SimpleReadNsaTable ( mdl[0].nsdFl, mdl[0].numNsdE, mdl[0].numNsdT, mdl[0].nsdDt, mdl[0].nsdT, mdl[0].nsdE, mdl[0].nsaFlxs );
   //SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
   return 0;
