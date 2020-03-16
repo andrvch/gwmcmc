@@ -11,7 +11,7 @@
 #define INCXX 1
 #define INCYY 1
 #define RANK 1
-#define NPRS 7 // Number of parameters
+#define NPRS 5 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
@@ -231,7 +231,6 @@ __global__ void BilinearInterpolation ( const int, const int, const int, const i
 __global__ void BilinearInterpolationNsmax ( const int, const int, const int, const int, const float*, const float*, const float*, const int, const int, const float*, const float*, float* );
 __global__ void LinearInterpolation ( const int, const int, const int, const float*, const float*, const float*, const float*, float*, float* );
 __global__ void LinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const float*, float*, float* );
-__global__ void AssembleArrayOfModelFluxes ( const int, const int, const int, const float, const float, const float*, const float*, const float*, const float*, const float*, float*, const float* );
 
 __host__ int modelStatistic1 ( const Cupar*, const Model*, Chain*, Spectrum* );
 __host__ int modelStatistic0 ( const Cupar*, const Model*, Chain*, Spectrum* );
@@ -286,8 +285,6 @@ __global__ void arrayOfChiSquaredsWithBackground ( const int nwl, const int nch,
 __global__ void arrayOfWStat ( const int nwl, const int nch, const float ts, const float tb, const float backscal_src, const float backscal_bkg, const float *d, const float *b, const float *f, float *s );
 
 __host__ __device__ float wstat ( const float scnts, const float bcnts, const float mdl, const float ts, const float tb, const float backscal_src, const float backscal_bkg );
-
-__global__ void AssembleArrayOfModelFluxes2 ( const int spIndx, const int nwl, const int nmbrOfEnrgChnnls, const float backscal_src, const float backscal_bkg, const float *en, const float *arf, const float *absrptn, const float *wlk, const float *nsa1Flx, float *flx, const float *didi );
 
 __global__ void powWalkers ( const int n, const float c, const float *a, float *d );
 __global__ void scaleWalkers ( const int n, const float c, const float *a, float *d );

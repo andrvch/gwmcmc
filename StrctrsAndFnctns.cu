@@ -1897,21 +1897,22 @@ __global__ void arrayOfSourceFluxes ( const int Indx, const int nwl, const int n
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   float f = 0, Norm, intNsFlx;
   if ( i < n && j < nwl ) {
-    if ( Indx < 3 ) {
-      intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
-      //intNsFlx = BlackBody ( xx[0+j*NPRS], xx[1+j*NPRS], en[i], en[i+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
-      Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
-      f += Norm * intNsFlx;
-      f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
-      f *= abs[i+j*n];
-      f *= arf[i];
-      flx[i+j*n] = f;
-    } else {
+    //if ( Indx < 3 ) {
+    intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
+    //intNsFlx = BlackBody ( xx[0+j*NPRS], xx[1+j*NPRS], en[i], en[i+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
+    Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
+    f += Norm * intNsFlx;
+    f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
+    f *= abs[i+j*n];
+    f *= arf[i];
+    flx[i+j*n] = f;
+    //}
+    /* else {
       f += PowerLaw ( xx[4+j*NPRS], xx[5+j*NPRS], en[i], en[i+1] );
       f *= abs[i+j*n];
       f *= arf[i];
       flx[i+j*n] = f;
-    }
+    }*/
   }
 }
 
@@ -1920,19 +1921,20 @@ __global__ void arrayOfNSFluxes ( const int Indx, const int nwl, const int n, co
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   float f = 0, Norm, intNsFlx;
   if ( i < n && j < nwl ) {
-    if ( Indx < 3 ) {
-      intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
-      //intNsFlx = BlackBody ( xx[0+j*NPRS], xx[1+j*NPRS], en[i], en[i+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
-      Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
-      f += Norm * intNsFlx;
+    //if ( Indx < 3 ) {
+    intNsFlx = IntegrateNsa ( nsFlx[i+j*(n+1)], nsFlx[i+1+j*(n+1)], en[i], en[i+1] );
+    //intNsFlx = BlackBody ( xx[0+j*NPRS], xx[1+j*NPRS], en[i], en[i+1] );//PowerLaw ( wlk[0+w*NPRS], wlk[1+w*NPRS], en[e], en[e+1] )
+    Norm = powf ( 10., 2. * ( - dist[j] + xx[1+j*NPRS] + KMCMPCCM ) );
+    f += Norm * intNsFlx;
+    f *= abs[i+j*n];
+    f *= arf[i];
+    flx[i+j*n] = f;
+    //}
+    /*else {
       f *= abs[i+j*n];
       f *= arf[i];
       flx[i+j*n] = f;
-    } else {
-      f *= abs[i+j*n];
-      f *= arf[i];
-      flx[i+j*n] = f;
-    }
+    }*/
   }
 }
 
@@ -1941,17 +1943,18 @@ __global__ void arrayOfPLFluxes ( const int Indx, const int nwl, const int n, co
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   float f = 0;
   if ( i < n && j < nwl ) {
-    if ( Indx < 3 ) {
-      f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
-      f *= abs[i+j*n];
-      f *= arf[i];
-      flx[i+j*n] = f;
-    } else {
+    //if ( Indx < 3 ) {
+    f += PowerLaw ( xx[2+j*NPRS], xx[3+j*NPRS], en[i], en[i+1] );
+    f *= abs[i+j*n];
+    f *= arf[i];
+    flx[i+j*n] = f;
+    //}
+    /*else {
       f += PowerLaw ( xx[4+j*NPRS], xx[5+j*NPRS], en[i], en[i+1] );
       f *= abs[i+j*n];
       f *= arf[i];
       flx[i+j*n] = f;
-    }
+    }*/
   }
 }
 
