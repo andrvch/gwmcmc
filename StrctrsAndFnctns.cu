@@ -2316,7 +2316,7 @@ __host__ int InitializeModel ( Model *mdl ) {
   SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl3, mdl[0].nmbrOfDistBins1, mdl[0].RedData3, mdl[0].Dist3, mdl[0].EBV3 );
   */
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
-  SimpleReadNsaTable ( mdl[0].nsdFl, mdl[0].numNsdE, mdl[0].numNsdT, mdl[0].nsdDt, mdl[0].nsdT, mdl[0].nsdE, mdl[0].nsaFlxs );
+  SimpleReadNsaTable ( mdl[0].nsdFl, mdl[0].numNsdE, mdl[0].numNsdT, mdl[0].nsdDt, mdl[0].nsdT, mdl[0].nsdE, mdl[0].nsdFlxs );
   //SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
   return 0;

@@ -22,7 +22,7 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 npars = 8
 kde = readspectra(npars,sys.argv[1]+"kde"+".kde")
 
-#kde[0][0] = 10**kde[0][0]*kb/1.6022E-12/redshift
+kde[0][0] = kde[0][0] - math.log10(redshift) #10**kde[0][0]*kb/1.6022E-12/redshift
 #kde[1][0] = 10**kde[1][0]*Rns
 kde[3][0] = 10**kde[3][0]/1.E-5
 #kde[5][0] = 10**kde[5][0]/1.E-5

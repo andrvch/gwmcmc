@@ -17,8 +17,11 @@ name = sys.argv[1]
 time = float(sys.argv[2])
 num = int(sys.argv[3])
 AllData(name+".pi")
-AllModels += "(nsa+powerlaw)*phabs"
-pars = (5.7, 1.4, 13., 1.E12, 1.E-6, 1.5, 4.E-5, 0.15)
+
+AllModels += "(nsmdip+powerlaw)*phabs"
+pars = (2, 5.6, 1., 0., 1., 1.6, 4.E-5, 0.12)
+#AllModels += "(nsa+powerlaw)*phabs"
+#pars = (5.7, 1.4, 13., 1.E12, 1.E-6, 1.5, 4.E-5, 0.15)
 AllModels(1).setPars(pars)
 for i in range(num):
     if time == 0:
