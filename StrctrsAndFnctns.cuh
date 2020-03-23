@@ -21,8 +21,10 @@
 #define NSPCTRCHI NSPCTR
 #define ATNMR 18
 #define NELMS 30
-#define MNS 2.0e0f
-#define RNS 1.143e1f
+//#define MNS 2.0e0f
+//#define RNS 1.143e1f
+#define MNS 1.4e0f
+#define RNS 1.260e1f
 #define PCCM 3.08567802e18f
 #define KMCM 1.0e5f
 #define KMCMPCCM -13.48935060694014384023e0f
@@ -138,8 +140,8 @@ struct Model {
   float *RedData2, *Dist2, *EBV2;
   const char *rddnngFl3 = "Drimmel03.dat";
   float *RedData3, *Dist3, *EBV3;
-  const char *nsdFl = "spdip02m90-test.dat";
-  int numNsdE = 143;
+  const char *nsdFl = "spdip01m00-test.dat";
+  int numNsdE = 169;
   int numNsdT = 6;
   float *nsdDt, *nsdE, *nsdT, *nsdFlxs;
   const char *nsaFl = "nsa_spec_B_1e12G.dat";
