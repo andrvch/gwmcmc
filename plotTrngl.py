@@ -15,7 +15,7 @@ import time
 from cudakde import *
 
 Mns = 1.4
-Rns = 13.
+Rns = 12.6
 kb = 1.38E-16
 kev = 1.6022E-9
 gr = math.sqrt(1 - 2.952 * Mns / Rns)
@@ -97,4 +97,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+".trngl"+".jpeg")
+plt.savefig(sys.argv[1]+".trngl"+".png")
