@@ -1,11 +1,11 @@
 #!/bin/bash
 CUDAID=1
-SPECFILE1="PN_psr12asec_grp1_0.fak"
-SPECFILE2="PN_psr12asec_grp1_1.fak"
-SPECFILE3="PN_psr12asec_grp1_2.fak"
-#SPECFILE1="PN_psr12asec_grp1.pi"
-#SPECFILE2="M1_psr12asec_grp1.pi"
-#SPECFILE3="M2_psr12asec_grp1.pi"
+#SPECFILE1="PN_psr12asec_grp1_0.fak"
+#SPECFILE2="PN_psr12asec_grp1_1.fak"
+#SPECFILE3="PN_psr12asec_grp1_2.fak"
+SPECFILE1="PN_psr12asec_grp1.pi"
+SPECFILE2="M1_psr12asec_grp1.pi"
+SPECFILE3="M2_psr12asec_grp1.pi"
 CHAINFILE=$1
 LOGFILE=$2
 NWALK=128
