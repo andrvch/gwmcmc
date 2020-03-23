@@ -6,12 +6,15 @@ import math
 import numpy as np
 from cudakde import *
 
-Mns = 1.4
-Rns = 13.
+Mns = 2.0
+Rns = 11.43
 kb = 1.38E-16
 kev = 1.6022E-9
 gr = math.sqrt(1 - 2.952 * Mns / Rns)
 redshift = 1. / gr
+
+print 'redshift:'
+print redshift
 
 qqlevel = 90  # percent
 quont = [0.99,0.90,0.68,0.40]
@@ -22,12 +25,12 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 npars = 8
 kde = readspectra(npars,sys.argv[1]+"kde"+".kde")
 
-kde[0][0] = kde[0][0] - math.log10(redshift) #10**kde[0][0]*kb/1.6022E-12/redshift
+kde[0][0] = kde[0][0] # - math.log10(redshift) #10**kde[0][0]*kb/1.6022E-12/redshift
 #kde[1][0] = 10**kde[1][0]*Rns
-kde[3][0] = 10**kde[3][0]/1.E-5
+#kde[3][0] = 10**kde[3][0]/1.E-5
 #kde[5][0] = 10**kde[5][0]/1.E-5
-kde[4][0] = kde[4][0]*10.
-kde[5][0] = 10**kde[5][0]/1.E3
+kde[2][0] = kde[4][0]*10.
+#kde[5][0] = 10**kde[5][0]/1.E3
 
 #pars = np.empty([npars+1,len(kde[0])])
 #kde[0][0] = 10**kde[0][0]*1.E3 #*kb/1.6022E-12/redshift

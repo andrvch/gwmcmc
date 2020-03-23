@@ -21,8 +21,8 @@
 #define NSPCTRCHI NSPCTR
 #define ATNMR 18
 #define NELMS 30
-#define MNS 1.4e0f
-#define RNS 1.3e1f
+#define MNS 2.0e0f
+#define RNS 1.143e1f
 #define PCCM 3.08567802e18f
 #define KMCM 1.0e5f
 #define KMCMPCCM -13.48935060694014384023e0f
@@ -116,6 +116,7 @@ struct Spectrum {
   float *bkgGrp, *bkgIgn;
   float *chi, *stat;
   float *lwrGrp, *hghrGrp;
+  int *vv, *ww;
 };
 
 struct Model {
@@ -342,5 +343,9 @@ __host__ void readGreenSamples ( const char *flNm, const int numDist, const int 
 __global__ void chooseSample ( const int nDB, const int si, const float *EE, float *EBV );
 __global__ void LinearInterpolationFromSamples ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int si, const float *Dist, const float *EBV, const float *wlkrs, float *dist );
 __global__ void chooseDistance ( const int nwl, const int *kex, const float *didi11, float *didi1 );
+
+__host__ void SimpleReadNsdTable ( const char *flNm, const int numEn, const int numTe, float *data, float *Te, float *En, float *fluxes );
+
+__global__ void BilinearInterpolationNsd ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs, int*, int* );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

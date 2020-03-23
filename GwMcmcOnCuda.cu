@@ -73,11 +73,11 @@ int main ( int argc, char *argv[] ) {
 
   allocateChain ( chn );
 
-  chn[0].x0[0] = 6.0;
-  chn[0].xbnd[0] = 5.5;
-  chn[0].xbnd[1] = 6.5;
+  chn[0].x0[0] = 5.5;
+  chn[0].xbnd[0] = 5.2;
+  chn[0].xbnd[1] = 5.7;
 
-  chn[0].x0[1] = 0.;
+  chn[0].x0[1] = -3.;
   chn[0].xbnd[2] = -25.;
   chn[0].xbnd[3] = 25.;
 
@@ -121,10 +121,20 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[26] = 0.;
   chn[0].xbnd[27] = 25.;
 */
+
   initializeChain ( cdp, chn );
   if ( chn[0].indx == 0 ) {
     modelStatistic0 ( cdp, mdl, chn, spc );
   }
+  /*cudaDeviceSynchronize ();
+  for ( int i = 0; i < spc[0].nmbrOfEnrgChnnls; i++ ) {
+    printf ( " %.8E - ", spc[0].enrgChnnls[i] );
+    //printf ( " - %.8E - ", chn[0].xx[i] );
+    printf ( " - %i - ", spc[0].vv[i] );
+    printf ( " - %i - ", spc[0].ww[i] );
+    printf ( " - %.8E\n ", spc[0].nsa1Flxs[i] );
+  }
+  printf ( "\n" );*/
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
