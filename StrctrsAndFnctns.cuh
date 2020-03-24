@@ -141,6 +141,7 @@ struct Model {
   const char *rddnngFl3 = "Drimmel03.dat";
   float *RedData3, *Dist3, *EBV3;
   const char *nsdFl = "spdip01m90-test.dat";
+  //const char *nsdFl = "spdip01m00-test.dat";
   int numNsdE = 169;
   int numNsdT = 6;
   float *nsdDt, *nsdE, *nsdT, *nsdFlxs;
