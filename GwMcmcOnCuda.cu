@@ -42,14 +42,14 @@ int main ( int argc, char *argv[] ) {
   chn[0].dlt = 1.E-6;
   chn[0].nbm = atoi ( argv[7] );
 
-  //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
-  chn[0].nph = 372383;
+  readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
+  //chn[0].nph = 372383;
   //chn[0].nph = 272217;
 
   allocateChain ( chn );
   allocateTimes ( chn );
 
-  //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
+  readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
 
   simpleReadDataFloat ( chn[0].dfl, chn[0].atms );
 
@@ -62,7 +62,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].scale = chn[0].scale + sumsum;
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].x0[0] = 592.4215; //1.68799e-3; //3.362332;
+  chn[0].x0[0] = atoi ( argv[8] ); //592.4215; //1.68799e-3; //3.362332;
   chn[0].x0[1] = 1./chn[0].nbm/2.;
   //}
 
