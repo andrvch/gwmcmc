@@ -62,13 +62,13 @@ int main ( int argc, char *argv[] ) {
   chn[0].scale = chn[0].scale + sumsum;
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].x0[0] = atoi ( argv[8] ); //592.4215; //1.68799e-3; //3.362332;
+  chn[0].x0[0] = ( float ) atof ( argv[8] ); //592.4215; //1.68799e-3; //3.362332;
   chn[0].x0[1] = 1./chn[0].nbm/2.;
   //}
 
   //for ( int i = 0; i < chn[0].dim; i++ ) {
-  chn[0].xbnd[0] = 0.0;
-  chn[0].xbnd[1] = 1000.0;
+  chn[0].xbnd[0] = 2.62;
+  chn[0].xbnd[1] = 2.70;
   chn[0].xbnd[2] = 0.0;
   chn[0].xbnd[3] = 1./chn[0].nbm;
   //}
@@ -80,7 +80,7 @@ int main ( int argc, char *argv[] ) {
     printf ( " Start ...                                                  \n" );
   }
 
-  chn[0].sigma[0] = 0.5E-3;
+  chn[0].sigma[0] = ( float ) atof ( argv[9] );
   chn[0].sigma[1] = 1. / chn[0].nbm / 10.;
 
   //cudaDeviceSynchronize ();

@@ -55,13 +55,13 @@ yqu = [zin.min(),zin.min(),zin.max()+0.16*(zin.max()-zin.min()),zin.max()+0.16*(
 ax.fill(xqu,yqu,color='0.75')
 ax.plot([eqh_inter[0,1],eqh_inter[0,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
 
-ax.set_xlim(592.420,592.426)
+ax.set_xlim(2.668020,2.668030)
 ax.set_ylim(0.0,zin.max()+0.16*(zin.max()-zin.min()))
 
-ax.set_xlabel("frequency",fontsize=11)
-ax.set_ylabel("p.d.f.",fontsize=11)
-plt.setp(ax.get_yticklabels(), fontsize=11)
-plt.setp(ax.get_xticklabels(), fontsize=11)
+ax.set_xlabel("frequency",fontsize=9)
+ax.set_ylabel("p.d.f.",fontsize=9)
+plt.setp(ax.get_yticklabels(), fontsize=9)
+plt.setp(ax.get_xticklabels(), fontsize=9)
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trnglFreq"+".jpg")
+plt.savefig(sys.argv[1]+"trnglFreq"+".png")

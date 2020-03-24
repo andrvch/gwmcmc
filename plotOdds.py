@@ -21,8 +21,8 @@ print samples.shape
 odds = -0.5 * samples[-2]
 frqs = samples[0]
 plt.plot(frqs,np.exp(odds)/frqs,'o')
-plt.xlim(3.362327,3.362337)
+plt.xlim(2.668016,2.6680315)
 oddsN = np.exp(odds)/frqs
 print oddsN.sum()/len(oddsN)
 #plt.show()
-plt.savefig(sys.argv[1]+"odds"+".jpg")
+plt.savefig(sys.argv[1]+"odds"+".png")
