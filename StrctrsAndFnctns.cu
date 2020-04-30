@@ -173,12 +173,12 @@ __global__ void potentialXXStatistic ( const int m, const int nn, const int nwl,
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
   if ( i < m && j < nn && k < nwl ) {
-    uu[i+j*m+k*m*nn] = potentialEnergy ( dd[i+j*m+k*m*nn] );
+    uu[i+j*m+k*m*nn] = potentialEnergy ( dd[i+j*m+k*m*nn], 10., 10., 0.1 );
   }
 }
 
-__host__ __device__ double potentialEnergy ( const float x ) {
-  return pow ( 1 - pow ( x, 2. ), 2. );
+__host__ __device__ double potentialEnergy ( const float x, const float b, const float g, const float a ) {
+  return b / ( 1 + exp ( g * ( x - a ) ) );
 }
 
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *xx, float *cc ) {

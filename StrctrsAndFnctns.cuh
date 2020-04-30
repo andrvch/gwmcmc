@@ -130,6 +130,5 @@ __global__ void kineticXXStatistic ( const int m, const int n, const int ds, con
 __global__ void distancesXXStatistic ( const int m, const int n, const int ds, const int nwl, const int *t, const int *g, const float *xx, float *ss );
 
 __global__ void potentialXXStatistic ( const int m, const int nn, const int nwl, const float *dd, float *uu );
-__host__ __device__ double potentialEnergy ( const float x );
-
+__host__ __device__ double potentialEnergy ( const float x, const float b, const float g, const float a );
 #endif // _STRCTRSANDFNCTNS_CUH_
