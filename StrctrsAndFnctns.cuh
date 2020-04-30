@@ -11,6 +11,9 @@
 #define INCXX 1
 #define INCYY 1
 #define THRDSPERBLCK 32
+#define THRD1 4
+#define THRD2 16
+#define THRD3 16
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
 
@@ -34,7 +37,7 @@ struct Cupar {
 
 struct Chain {
   char *name;
-  int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
+  int indx, ds, em, en, enn, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
   float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt;
   float *stps, *smOfChn, *cntrlChnFnctn, *cmSmMtrx, *chnFnctn, *atcrrFnctn, *cmSmAtCrrFnctn, atcTime;
@@ -43,7 +46,11 @@ struct Chain {
   float *cnd, *ccnd;
   float *ff;
   float *fconst;
+  int *gindx, *tindx;
 };
+
+__host__ dim3 grid3D ( const int m, const int n, const int w );
+__host__ dim3 block3D ();
 
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
@@ -118,4 +125,11 @@ __global__ void returnXXStatistic ( const int, const int, const float*, float* )
 
 __global__ void arrayOf2DConditions ( const int, const int, const float*, float* );
 __global__ void chainFunctionU ( const int, const int, const int, const float*, float* );
+
+__global__ void kineticXXStatistic ( const int m, const int n, const int ds, const int nwl, const float *xx, float *ss );
+__global__ void distancesXXStatistic ( const int m, const int n, const int ds, const int nwl, const int *t, const int *g, const float *xx, float *ss );
+
+__global__ void potentialXXStatistic ( const int m, const int nn, const int nwl, const float *dd, float *uu );
+__host__ __device__ double potentialEnergy ( const float x );
+
 #endif // _STRCTRSANDFNCTNS_CUH_

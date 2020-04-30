@@ -31,6 +31,16 @@ __host__ dim3 block2D () {
   return block;
 }
 
+__host__ dim3 grid3D ( const int m, const int n, const int w ) {
+  dim3 grid ( ( m + THRD1 - 1 ) / THRD1, ( m + THRD2 - 1 ) / THRD2, ( w + THRD3 - 1 ) / THRD3 );
+  return grid;
+}
+
+__host__ dim3 block3D () {
+  dim3 block ( THRD1, THRD2, THRD3 );
+  return block;
+}
+
 __host__ __device__ Complex addComplex ( Complex a, Complex b ) {
   Complex c;
   c.x = a.x + b.x;
@@ -118,6 +128,57 @@ __global__ void returnXXStatistic ( const int dim, const int nwl, const float *x
   if ( i < dim - 1 && j < nwl ) {
     s[t1] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d;
   }
+}
+
+__global__ void kineticXXStatistic ( const int m, const int n, const int ds, const int nwl, const float *xx, float *ss ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  float d = m;
+  float sum;
+  if ( i < m && j < n && k < nwl ) {
+    if ( i == m-1 ) {
+      sum = 0;
+      for ( int l = 0; l < ds; l++ ) {
+        sum += pow ( xx[l+j*ds*m+k*ds*m*n] - xx[l+i*ds+j*ds*m+k*ds*m*n], 2. );
+      }
+      ss[i+j*m+k*n*m] = d * sum;
+    } else {
+      sum = 0;
+      for ( int l = 0; l < ds; l++ ) {
+        sum += pow ( xx[l+(i+1)*ds+j*ds*m+k*ds*m*n] - xx[l+i*ds+j*ds*m+k*ds*m*n], 2. );
+      }
+      ss[i+j*m+k*m*n] = d * sum;
+    }
+  }
+}
+
+__global__ void distancesXXStatistic ( const int m, const int n, const int ds, const int nwl, const int *t, const int *g, const float *xx, float *ss ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  int nn = n*(n-1)/2;
+  float sum;
+  if ( i < m && j < nn && k < nwl ) {
+    sum = 0;
+    for ( int l = 0; l < ds; l++ ) {
+      sum += pow ( xx[l+i*ds+t[j]*ds*m+k*ds*m*n] - xx[l+i*ds+g[j]*ds*m+k*ds*m*n], 2. );
+    }
+    ss[i+j*m+k*m*nn] = sum;
+  }
+}
+
+__global__ void potentialXXStatistic ( const int m, const int nn, const int nwl, const float *dd, float *uu ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  if ( i < m && j < nn && k < nwl ) {
+    uu[i+j*m+k*m*nn] = potentialEnergy ( dd[i+j*m+k*m*nn] );
+  }
+}
+
+__host__ __device__ double potentialEnergy ( const float x ) {
+  return pow ( 1 - pow ( x, 2. ), 2. );
 }
 
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *xx, float *cc ) {
@@ -349,6 +410,8 @@ __host__ int initializeCuda ( Cupar *cdp ) {
 }
 
 __host__ int allocateChain ( Chain *chn ) {
+  cudaMallocManaged ( ( void ** ) &chn[0].gindx, chn[0].en*(chn[0].en-1)/2 * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].tindx, chn[0].en*(chn[0].en-1)/2 * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stn, chn[0].nst * 2 * chn[0].nwl * chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stn1, chn[0].nst * chn[0].nwl * chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].uni, chn[0].dim * chn[0].nst * chn[0].nwl * sizeof ( float ) );
@@ -396,6 +459,20 @@ __host__ int allocateChain ( Chain *chn ) {
 }
 
 __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
+  int tt = 0;
+  int gg = 1;
+  int ii = 0;
+  while ( ii < chn[0].enn ) {
+    chn[0].tindx[ii] = tt;
+    chn[0].gindx[ii] = gg;
+    if ( gg < chn[0].en-1 ) {
+      gg += 1;
+    } else {
+      tt += 1;
+      gg = tt + 1;
+    }
+    ii += 1;
+  }
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, 1., chn[0].wcnst );
   constantArray <<< grid1D ( chn[0].dim ), THRDSPERBLCK >>> ( chn[0].dim, 1., chn[0].dcnst );
   if ( chn[0].indx == 0 ) {
@@ -685,6 +762,8 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].cnd );
   cudaFree ( chn[0].ff );
   cudaFree ( chn[0].fconst );
+  cudaFree ( chn[0].gindx );
+  cudaFree ( chn[0].tindx );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
