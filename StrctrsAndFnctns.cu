@@ -181,6 +181,19 @@ __host__ __device__ double potentialEnergy ( const float x, const float b, const
   return b / ( 1 + exp ( g * ( x - a ) ) );
 }
 
+__global__ void periodicConditions ( const int m, const int n, const int ds, const int nwl, const float lbox, const float *bound, float *xx ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  float coord;
+  if ( i < m && j < n && k < nwl ) {
+    for ( int l = 0; l < ds; l++ ) {
+      coord = xx[l+i*ds+j*ds*m+k*ds*m*n];
+      xx[l+i*ds+j*ds*m+k*ds*m*n] = coord + ( coord < bound[0] ) * lbox - ( coord > bound[1] ) *lbox ;
+    }
+  }
+}
+
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *xx, float *cc ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;

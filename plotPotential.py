@@ -11,14 +11,14 @@ from pylab import *
 from cudakde import *
 
 def logistic(x,a,b,g):
-    return b/(1+exp(g*(x-a)))
+    return b/(1.+exp(g*(x-a)))
 
-a = 0.1
-b = 10.
-g = 10.
+a = 1.
+b = 1000.
+g = 20.
 n = 1000
 
-xx = np.linspace(1.,10.,n)
+xx = np.linspace(0.,2.,n)
 yy = np.empty([n])
 for i in range(n):
     yy[i] = logistic(xx[i],a,b,g)
