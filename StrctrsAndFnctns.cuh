@@ -47,6 +47,7 @@ struct Chain {
   float *ff;
   float *fconst;
   int *gindx, *tindx;
+  float *x0Cen, x0Rad, *x0Ang;
 };
 
 __host__ dim3 grid3D ( const int m, const int n, const int w );

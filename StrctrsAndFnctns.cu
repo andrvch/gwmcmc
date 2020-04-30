@@ -423,6 +423,8 @@ __host__ int initializeCuda ( Cupar *cdp ) {
 }
 
 __host__ int allocateChain ( Chain *chn ) {
+  cudaMallocManaged ( ( void ** ) &chn[0].x0Cen, chn[0].en * chn[0].ds * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].x0Ang, chn[0].em * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].gindx, chn[0].en*(chn[0].en-1)/2 * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].tindx, chn[0].en*(chn[0].en-1)/2 * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stn, chn[0].nst * 2 * chn[0].nwl * chn[0].dim * sizeof ( float ) );
@@ -783,6 +785,8 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].fconst );
   cudaFree ( chn[0].gindx );
   cudaFree ( chn[0].tindx );
+  cudaFree ( chn[0].x0Cen );
+  cudaFree ( chn[0].x0Ang );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {

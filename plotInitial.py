@@ -22,20 +22,30 @@ xx = np.empty([2,m,n])
 for i in range(m):
     xxAng[i] = pipi/10.*i
 #for j in range(n):
-ii = np.array([0, 0, 1, 1])
-jj = np.array([0, 1, 0, 1])
+#ii = np.array([0, 0, 1, 1])
+#jj = np.array([0, 1, 0, 1])
+ii = np.random.uniform(size=n)
+jj = np.random.uniform(size=n)
 for j in range(n):
-    xxCen[0,j] = 1./4. + 1./2.*ii[j]
-    xxCen[1,j] = 1./4. + 1./2.*jj[j]
+    xxCen[0,j] = ii[j] #1./(n-1.) + 1./(n-1.)*ii[j]
+    xxCen[1,j] = jj[j] #1./(n-1.) + 1./(n-1.)*jj[j]
 
 print xxCen
 
 for j in range(n):
     for i in range(m):
         xx[0,i,j] = xxCen[0,j] + xxRad * math.cos(xxAng[i])
+        if xx[0,i,j] > 1.:
+            xx[0,i,j] = xx[0,i,j] - 1.
+        elif xx[0,i,j] < 0.:
+            xx[0,i,j] = xx[0,i,j] + 1.
         xx[1,i,j] = xxCen[1,j] + xxRad * math.sin(xxAng[i])
+        if xx[1,i,j] > 1.:
+            xx[1,i,j] = xx[1,i,j] - 1.
+        elif xx[1,i,j] < 0.:
+            xx[1,i,j] = xx[1,i,j] + 1.
 
-nw = 2
+nw = 100
 scale = np.random.normal(size=2*m*n*nw)
 xxw = np.empty([2,m,n,nw])
 

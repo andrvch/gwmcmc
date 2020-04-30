@@ -41,7 +41,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].em = atoi ( argv[7] );
   chn[0].en = atoi ( argv[8] );
   chn[0].enn = chn[0].en * ( chn[0].en - 1 ) / 2;
-  chn[0].dim = chn[0].em * chn[0].en;
+  chn[0].dim = chn[0].ds * chn[0].em * chn[0].en;
   chn[0].dlt = 0.2E-1;
 
   allocateChain ( chn );
