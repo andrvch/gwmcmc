@@ -189,7 +189,7 @@ __global__ void periodicConditions ( const int m, const int n, const int ds, con
   if ( i < m && j < n && k < nwl ) {
     for ( int l = 0; l < ds; l++ ) {
       coord = xx[l+i*ds+j*ds*m+k*ds*m*n];
-      xx[l+i*ds+j*ds*m+k*ds*m*n] = coord + ( coord < bound[0] ) * lbox - ( coord > bound[1] ) *lbox ;
+      xx[l+i*ds+j*ds*m+k*ds*m*n] = coord + ( coord < bound[0] ) * lbox - ( coord > bound[1] ) * lbox;
     }
   }
 }
@@ -472,6 +472,12 @@ __host__ int allocateChain ( Chain *chn ) {
 }
 
 __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
+  for ( int j = 0; j < chn[0].en; j++ ) {
+    for ( int i = 0; i < chn[0].em; i++ ) {
+      chn[0].x0[0+i*ds+j*ds*m] = chn[0].x0Cen[0+j*ds]+chn[0].x0Rad*cos(chn[0].x0Ang[i]);
+      chn[0].x0[1+i*ds+j*ds*m] = chn[0].x0Cen[1+j*ds]+chn[0].x0Rad*sin(chn[0].x0Ang[i]);
+    }
+  }
   int tt = 0;
   int gg = 1;
   int ii = 0;
