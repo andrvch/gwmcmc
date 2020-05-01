@@ -12,8 +12,8 @@ from cudakde import *
 from matplotlib import animation
 
 smpls = read_data(sys.argv[1])
-
 nwlkrs = int(sys.argv[2])
+
 nprmtrs = shape(smpls)[0]
 nstps = int(shape(smpls)[1]/float(nwlkrs))
 
