@@ -48,6 +48,9 @@ struct Chain {
   float *fconst;
   int *gindx, *tindx;
   float *x0Cen, x0Rad, *x0Ang;
+  float lbox, *bound;
+  float *kk, *dd, *uu, *pot, *kin;
+  float *ennconst;
 };
 
 __host__ dim3 grid3D ( const int m, const int n, const int w );
@@ -66,7 +69,7 @@ __global__ void constantArray ( const int, const float, float* );
 __global__ void sliceArray ( const int, const int, const float*, float* );
 __global__ void sliceIntArray ( const int, const int, const int*, int* );
 __global__ void insertArray ( const int, const int, const float*, float* );
-__global__ void initializeAtRandom ( const int, const int, const float, const float*, const float*, float* );
+__global__ void initializeAtRandom ( const int m, const int n, const int ds, const int nwl, const float dlt, const float *stn, const float x0Rad, const float *x0Ang, const float *x0Cen, float *xx );
 __global__ void returnStatistic ( const int, const int, const float*, float* );
 __global__ void setWalkersAtLast ( const int, const int, const float*, float* );
 __global__ void setStatisticAtLast ( const int, const int, const float*, float* );
@@ -133,4 +136,5 @@ __global__ void distancesXXStatistic ( const int m, const int n, const int ds, c
 __global__ void potentialXXStatistic ( const int m, const int nn, const int nwl, const float *dd, float *uu );
 __host__ __device__ double potentialEnergy ( const float x, const float b, const float g, const float a );
 __global__ void periodicConditions ( const int m, const int n, const int ds, const int nwl, const float lbox, const float *bound, float *xx );
+__global__ void add1DArray ( const int nwl, const float *xx1, const float *xx2, float *xx );
 #endif // _STRCTRSANDFNCTNS_CUH_

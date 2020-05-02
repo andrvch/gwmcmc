@@ -42,14 +42,9 @@ int main ( int argc, char *argv[] ) {
   chn[0].en = atoi ( argv[8] );
   chn[0].enn = chn[0].en * ( chn[0].en - 1 ) / 2;
   chn[0].dim = chn[0].ds * chn[0].em * chn[0].en;
-  chn[0].dlt = 0.2E-1;
+  chn[0].dlt = 1.E-2;
 
   allocateChain ( chn );
-
-  for ( int i = 0; i < chn[0].dim; i++ ) {
-    chn[0].x0[i] = -1.;
-  }
-
   initializeChain ( cdp, chn );
 
   if ( vrb ) {
@@ -64,9 +59,11 @@ int main ( int argc, char *argv[] ) {
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
-    /*metropolisMove ( cdp, chn );
+    /*
+    metropolisMove ( cdp, chn );
     statisticMetropolis ( cdp, chn );
-    metropolisUpdate ( cdp, chn );*/
+    metropolisUpdate ( cdp, chn );
+    */
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
       //walkMove ( cdp, chn );

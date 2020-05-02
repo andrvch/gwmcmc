@@ -24,11 +24,24 @@ for i in range(m):
 #for j in range(n):
 #ii = np.array([0, 0, 1, 1])
 #jj = np.array([0, 1, 0, 1])
-ii = np.random.uniform(size=n)
-jj = np.random.uniform(size=n)
-for j in range(n):
-    xxCen[0,j] = ii[j] #1./(n-1.) + 1./(n-1.)*ii[j]
-    xxCen[1,j] = jj[j] #1./(n-1.) + 1./(n-1.)*jj[j]
+#ii = np.random.uniform(size=n)
+#jj = np.random.uniform(size=n)
+#for j in range(n):
+#    xxCen[0,j] = ii[j] #1./(n-1.) + 1./(n-1.)*ii[j]
+#    xxCen[1,j] = jj[j] #1./(n-1.) + 1./(n-1.)*jj[j]
+
+tt = 0
+gg = 0
+ii = 0
+while  ii < n :
+    xxCen[0,ii] = 1. / ( n - 1. ) * ( 1. + tt )
+    xxCen[1,ii] = 1. / ( n - 1. ) * ( 1. + gg )
+    if gg < n/2.-1.:
+        gg += 1
+    else:
+        tt += 1
+        gg = 0
+    ii += 1
 
 print xxCen
 
@@ -61,5 +74,7 @@ for w in range(nw):
     for j in range(n):
         plt.plot(xxw[0,:,j,w],xxw[1,:,j,w],'o')
 
+plt.xlim(0.,1.)
+plt.ylim(0.,1.)
 #plt.show()
 plt.savefig("initial"+".png")

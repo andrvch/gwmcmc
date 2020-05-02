@@ -6,9 +6,9 @@ NWALK=128
 LSTEP=$1
 DS=2
 EM=20
-EN=4
+EN=2
 i=$2
-NCHAINS=$3
+NCHAINS=1
 let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do

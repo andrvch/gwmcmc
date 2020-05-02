@@ -14,60 +14,56 @@ from matplotlib import animation
 smpls = read_data(sys.argv[1])
 nwlkrs = int(sys.argv[2])
 
+ns = 2
+nd = 2
+nt = 20
+
 nprmtrs = shape(smpls)[0]
 nstps = int(shape(smpls)[1]/float(nwlkrs))
 
 print nstps, nprmtrs
 
-wlkrs = np.empty([nprmtrs,nwlkrs,nstps])
+wlkrs = np.empty([nd,nt,ns,nwlkrs,nstps])
 
 for i in range(nstps):
     for j in range(nwlkrs):
-        for k in range(nprmtrs):
-            wlkrs[k,j,i] = smpls[k,j+nwlkrs*i]
+        for s in range(ns):
+            for t in range(nt):
+                for l in range(nd):
+                    wlkrs[l,t,s,j,i] = smpls[l+t*nd+s*nd*nt,j+nwlkrs*i]
 
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure()
-ax = plt.axes(xlim=(-2., 2.), ylim=(-2., 2.))
-line1, = ax.plot([], [], 'o')
-line2, = ax.plot([], [], 'o')
-pi_text = ax.text(0.70, 0.90, '', transform=ax.transAxes, fontsize=16)
+ax = plt.axes(xlim=(0., 1.), ylim=(0., 1.))
+line1, = ax.plot([], [], '-')
+line2, = ax.plot([], [], '-')
+line3, = ax.plot([], [], 'o')
+line4, = ax.plot([], [], 'o')
 n_text = ax.text(0.70, 0.80, '', transform=ax.transAxes, fontsize=16)
 plt.tick_params(labelsize=14)
 plt.legend(fontsize=16)
 plt.xlabel("x",fontsize=16)
 plt.ylabel("y",fontsize=16)
 
-xx = []
-yy = []
-xx1 = []
-yy1 = []
-
-m = 0
-n = 0
-pp = 0
-
-#x = np.random.rand(200000)
-#y = np.random.rand(200000)
-
 # initialization function: plot the background of each frame
 def init():
     line1.set_data([], [])
-    #pi_text.set_text(r'$\pi = $')
-    #n_text.set_text(r'$n = $')
-    #line2.set_data([], [])
-    return line1, #line2,
+    line2.set_data([], [])
+    line3.set_data([], [])
+    line4.set_data([], [])
+    n_text.set_text(r'$n = $')
+    return line1, line2, line3, line4,
 
 # animation function.  This is called sequentially
 def animate(i):
-    line1.set_data(wlkrs[0,:,i],wlkrs[1,:,i])
-    #pi_text.set_text(r'$\pi = %1.4f$' % (pp*4))
+    line1.set_data(wlkrs[0,:,0,10,i],wlkrs[1,:,0,10,i])
+    line2.set_data(wlkrs[0,:,1,10,i],wlkrs[1,:,1,10,i])
+    line3.set_data(wlkrs[0,0,0,10,i],wlkrs[1,0,0,10,i])
+    line4.set_data(wlkrs[0,0,1,10,i],wlkrs[1,0,1,10,i])
     n_text.set_text(r'$t = %i$' % i )
-    #line2.set_data(x2,y2)
-    return line1, #line2,
+    return line1, line2, # line3, line4,
 
-
-anim = animation.FuncAnimation(fig, animate, init_func=init, frames=512, interval=32, blit=True)
+anim = animation.FuncAnimation(fig, animate, init_func=init, frames=512, interval=1, blit=True)
 #anim.save('basic_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 anim.save('gauss2D.gif', dpi=80, writer='imagemagick')
 
