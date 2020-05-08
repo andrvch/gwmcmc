@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os, sys
+import time
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -11,7 +12,9 @@ from astropy.io import ascii
 import numpy as np
 import emcee
 import scipy.optimize as op
-from StringIO import StringIO
+from multiprocessing import Pool
+
+os.environ["OMP_NUM_THREADS"] = "1"
 
 pi = 3.14159265358979323846
 
@@ -25,8 +28,8 @@ LastPos = NameChain+"_"+"LastPos"+".dat"
 
 nsteps = 5000
 nwalkers = 256
-print "Number of walkers -- %i"%nwalkers
-print "Number of steps -- %i"%nsteps
+print("Number of walkers -- %i"%nwalkers)
+print("Number of steps -- %i"%nsteps)
 
 def parse_input(in_file):
     f = open(in_file)
@@ -44,8 +47,8 @@ coords = parse_input(Crds_file)
 coords_1 = np.array([coords[:4],coords[4:8],coords[8:12]])
 N_im = len(coords_1)
 N_stars = len(coords_1[0])
-print "Number of stars -- %i"%N_stars
-print "Number of images -- %i"%N_im
+print("Number of stars -- %i"%N_stars)
+print("Number of images -- %i"%N_im)
 
 cosdelta = cos(pi/180.*coords_1[0,3,2])
 raOff = (coords_1[:,:,1]-coords_1[0,3,1])*3600*cosdelta
@@ -57,12 +60,12 @@ errraOff = np.sqrt(errraOff**2 + motchErr**2)
 errdecOff = np.sqrt(errdecOff**2 + motchErr**2)
 xref = raOff+1j*decOff
 
-print "Offsets, ra:"
-print raOff
-print decOff
-print "Offset errors, ra:"
-print errraOff
-print errdecOff
+print("Offsets, ra:")
+print(raOff)
+print(decOff)
+print("Offset errors, ra:")
+print(errraOff)
+print(errdecOff)
 
 def lnprior(th):
     if th[-2] >= 0. and th[-1] <= 2*pi and th[-1] >= 0.:
@@ -106,11 +109,11 @@ for j in range(N_stars):
     p0.append(decOff[0,j])
 p0.append(0.1)
 p0.append(0.1)
-print "Starting parameters vector --"
-print p0
+print("Starting parameters vector --")
+print(p0)
 
 ndim = 3*(N_im-1) + 2*N_stars + 2
-print "Number of parameters -- %i"%ndim
+print("Number of parameters -- %i"%ndim)
 pos = [p0 + 1e-7*np.random.randn(ndim) for i in range(nwalkers)]
 
 if firstrun == "N":
@@ -120,16 +123,23 @@ if firstrun == "N":
     prepos = []
     for i in range(nsmpl):
         prepos.append([float(x) for x in lines[i].split()])
+    initial = prepos
     inf.close()
-
-sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(), threads=10)
-
-if firstrun == "N":
-    sampler.run_mcmc(prepos, nsteps, progress=True)
 elif firstrun == "Y":
-    sampler.run_mcmc(pos, nsteps, progress=True)
+    initial = pos
 
-lastpos = sampler.get_chain[:,-1,:]
+with Pool() as pool:
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
+    start = time.time()
+    sampler.run_mcmc(initial, nsteps, progress=True)
+    end = time.time()
+    multi_time = end - start
+    print("Multiprocessing took {0:.1f} seconds".format(multi_time))
+    #print("{0:.1f} times faster than serial".format(serial_time / multi_time))
+
+samples = sampler.get_chain()
+
+lastpos = samples[-1,:,:]
 f = open(LastPos, "w")
 n1, n2 = shape(lastpos)
 for i in range(n1):
@@ -139,25 +149,33 @@ for i in range(n1):
 f.close()
 
 nPlot = ndim
+
 steps = linspace(1,nsteps,num=nsteps)
 fig, ax = plt.subplots(nrows=nPlot)
 plt.subplots_adjust(hspace=0.1)
+
 for i in range(nPlot):
     for j in range(nwalkers):
-        ax[i].errorbar(steps,sampler.get_chain[j,:,i])
-setp([a.get_xticklabels() for a in ax[:nPlot-1]], visible=False)
+        #print(np.reshape(samples[:,j,i],(nsteps)))
+        ax[i].errorbar(steps,samples[:,j,i])
+
+#setp([a.get_xticklabels() for a in ax[:nPlot-1]], visible=False)
+#for a in ax[:nPlot-1]:
+#    for tick in a.get_xticklabels():
+#        tick
+
 #plt.show()
 plt.savefig(sys.argv[2]+"chain"+".png")
 burn = 0 #int(raw_input("How many steps to discard: "))
 
-samples = sampler.get_chain[:,burn:,:].reshape((-1,ndim))
-likely = sampler.lnprobability[:,burn:].reshape((-1))
+outwalk = samples[burn:,:,:].reshape((-1,ndim))
+outlike = sampler.get_log_prob()[burn:,:].reshape((-1))
 
 f = open(SampleName,"w")
-n1, n2 = shape(samples)
+n1, n2 = shape(outwalk)
 for i in range(n1):
     for j in range(n2):
-        f.write(" %.15E "%(samples[i,j]))
-    f.write(" %.15E "%(likely[i] ))
+        f.write(" %.15E "%(outwalk[i,j]))
+    f.write(" %.15E "%(outlike[i] ))
     f.write("\n")
 f.close()
