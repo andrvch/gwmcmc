@@ -174,7 +174,7 @@ for i in range(nPlot):
         ax[i].errorbar(steps,sampler.chain[j,:,i])
 setp([a.get_xticklabels() for a in ax[:nPlot-1]], visible=False)
 #plt.show()
-plt.savefig(sys.argv[2]+"chain"+".jpg")
+plt.savefig(sys.argv[2]+"chain"+".png")
 burn = 0 #int(raw_input("How many steps to discard: "))
 
 samples = sampler.chain[:,burn:,:].reshape((-1,ndim))
