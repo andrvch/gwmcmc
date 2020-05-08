@@ -176,7 +176,7 @@ __global__ void potentialXXStatistic ( const int m, const int nn, const int nwl,
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
   if ( i < m && j < nn && k < nwl ) {
-    uu[i+j*m+k*m*nn] = potentialEnergy ( dd[i+j*m+k*m*nn], 1000., 10., 0.1 );
+    uu[i+j*m+k*m*nn] = potentialEnergy ( dd[i+j*m+k*m*nn], 1000., 10., 0.01 );
   }
 }
 
@@ -298,7 +298,7 @@ __global__ void addWalkers ( const int dim, const int nwl, const float *xx0, con
 __global__ void add1DArray ( const int nwl, const float *xx1, const float *xx2, float *xx ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   if ( i < nwl ) {
-    xx[i] = 1000. * xx1[i] + xx2[i];
+    xx[i] = 100. * xx1[i] - xx2[i];
   }
 }
 
