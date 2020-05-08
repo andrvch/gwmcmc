@@ -125,9 +125,9 @@ if firstrun == "N":
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(), threads=10)
 
 if firstrun == "N":
-    sampler.run_mcmc(prepos, iterations=nsteps, progress=True)
+    sampler.run_mcmc(prepos, nsteps, progress=True)
 elif firstrun == "Y":
-    sampler.run_mcmc(pos, iterations=nsteps, progress=True)
+    sampler.run_mcmc(pos, nsteps, progress=True)
 
 lastpos = sampler.get_chain[:,-1,:]
 f = open(LastPos, "w")
