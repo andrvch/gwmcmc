@@ -35,10 +35,10 @@ for i in range(nstps):
 # First set up the figure, the axis, and the plot element we want to animate
 fig = plt.figure()
 ax = plt.axes(xlim=(0., 1.), ylim=(0., 1.))
-line1, = ax.plot([], [], '-')
-line2, = ax.plot([], [], '-')
-line3, = ax.plot([], [], 'o')
-line4, = ax.plot([], [], 'o')
+line1, = ax.plot([], [], 'o')
+line2, = ax.plot([], [], 'o')
+line3, = ax.plot([], [], '*')
+line4, = ax.plot([], [], '*')
 n_text = ax.text(0.70, 0.80, '', transform=ax.transAxes, fontsize=16)
 plt.tick_params(labelsize=14)
 plt.legend(fontsize=16)
@@ -52,18 +52,18 @@ def init():
     line3.set_data([], [])
     line4.set_data([], [])
     n_text.set_text(r'$n = $')
-    return line1, line2, line3, line4,
+    return line1, line2,  line3, line4,
 
 # animation function.  This is called sequentially
 def animate(i):
-    line1.set_data(wlkrs[0,:,0,10,i],wlkrs[1,:,0,10,i])
-    line2.set_data(wlkrs[0,:,1,10,i],wlkrs[1,:,1,10,i])
-    line3.set_data(wlkrs[0,0,0,10,i],wlkrs[1,0,0,10,i])
-    line4.set_data(wlkrs[0,0,1,10,i],wlkrs[1,0,1,10,i])
+    line1.set_data(wlkrs[0,:,0,:5,i],wlkrs[1,:,0,:5,i])
+    line2.set_data(wlkrs[0,:,1,:5,i],wlkrs[1,:,1,:5,i])
+    line3.set_data(wlkrs[0,0,0,:5,i],wlkrs[1,0,0,:5,i])
+    line4.set_data(wlkrs[0,0,1,:5,i],wlkrs[1,0,1,:5,i])
     n_text.set_text(r'$t = %i$' % i )
-    return line1, line2, # line3, line4,
+    return line1, line2, line3, line4,
 
-anim = animation.FuncAnimation(fig, animate, init_func=init, frames=512, interval=1, blit=True)
+anim = animation.FuncAnimation(fig, animate, init_func=init, frames=128, interval=1, blit=True)
 #anim.save('basic_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 anim.save('gauss2D.gif', dpi=80, writer='imagemagick')
 

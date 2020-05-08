@@ -42,7 +42,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].en = atoi ( argv[8] );
   chn[0].enn = chn[0].en * ( chn[0].en - 1 ) / 2;
   chn[0].dim = chn[0].ds * chn[0].em * chn[0].en;
-  chn[0].dlt = 1.E-2;
+  chn[0].dlt = 1.E-3;
 
   allocateChain ( chn );
   initializeChain ( cdp, chn );
@@ -74,7 +74,6 @@ int main ( int argc, char *argv[] ) {
       statistic ( cdp, chn );
       //statisticMetropolis ( cdp, chn );
       //cudaDeviceSynchronize ();
-      //printMetropolisMove ( chn );
       //printMove ( chn );
       //walkUpdate ( cdp, chn );
       streachUpdate ( cdp, chn );

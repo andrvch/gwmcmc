@@ -51,6 +51,7 @@ struct Chain {
   float lbox, *bound;
   float *kk, *dd, *uu, *pot, *kin;
   float *ennconst;
+  float *pp, *pp1, *pp0;
 };
 
 __host__ dim3 grid3D ( const int m, const int n, const int w );
@@ -77,7 +78,7 @@ __global__ void shiftWalkers ( const int, const int, const float*, const float*,
 __global__ void addWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void returnQ ( const int, const int, const float*, const float*, const float*, const float*, float* );
 __global__ void returnQM ( const int, const int, const float*, const float*, float* );
-__global__ void updateWalkers ( const int, const int, const float*, const float*, const float*, float* );
+__global__ void updateWalkers ( const int dim, const int nwl, const float *pp1, const float *xx1, const float *q, const float *r, float *pp0, float *xx0 );
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );
 __global__ void saveStatistic ( const int, const int, const float*, float* );
@@ -130,11 +131,11 @@ __global__ void returnXXStatistic ( const int, const int, const float*, float* )
 __global__ void arrayOf2DConditions ( const int, const int, const float*, float* );
 __global__ void chainFunctionU ( const int, const int, const int, const float*, float* );
 
-__global__ void kineticXXStatistic ( const int m, const int n, const int ds, const int nwl, const float *xx, float *ss );
+__global__ void kineticXXStatistic ( const int m, const int n, const int ds, const int nwl, const float *pp, const float *xx, float *ss );
 __global__ void distancesXXStatistic ( const int m, const int n, const int ds, const int nwl, const int *t, const int *g, const float *xx, float *ss );
 
 __global__ void potentialXXStatistic ( const int m, const int nn, const int nwl, const float *dd, float *uu );
 __host__ __device__ double potentialEnergy ( const float x, const float b, const float g, const float a );
-__global__ void periodicConditions ( const int m, const int n, const int ds, const int nwl, const float lbox, const float *bound, float *xx );
+__global__ void periodicConditions ( const int m, const int n, const int ds, const int nwl, const float lbox, const float *bound, float *pp, float *xx );
 __global__ void add1DArray ( const int nwl, const float *xx1, const float *xx2, float *xx );
 #endif // _STRCTRSANDFNCTNS_CUH_
