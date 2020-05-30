@@ -73,9 +73,9 @@ def lnprior(th):
     return -np.inf
 
 def lnprob(th):
-    lp = lnprior(th)
-    if not np.isfinite(lp):
-        return -np.inf
+    #lp = lnprior(th)
+    #if not np.isfinite(lp):
+    #    return -np.inf
     trsf = np.empty([N_im,3])
     trsf[0,:] = np.array([(0.,0.,0.)])
     for i in range(1,N_im):
@@ -88,7 +88,7 @@ def lnprob(th):
     pm = np.empty([N_im,2])
     pm[0,:] = np.array([(0.,0.)])
     for i in range(1,N_im):
-        pm[i,:] = np.array([(th[-2],th[-1])])
+        pm[i,:] = np.array([(0.,0.)]) #np.array([(th[-2],th[-1])])
     prob = np.empty([N_im,N_stars])
     for i in range(N_im):
         for k in range(N_stars):
@@ -107,12 +107,12 @@ for i in range(N_im-1):
 for j in range(N_stars):
     p0.append(raOff[0,j])
     p0.append(decOff[0,j])
-p0.append(0.1)
-p0.append(0.1)
+#p0.append(0.1)
+#p0.append(0.1)
 print("Starting parameters vector --")
 print(p0)
 
-ndim = 3*(N_im-1) + 2*N_stars + 2
+ndim = 3*(N_im-1) + 2*N_stars # + 2
 print("Number of parameters -- %i"%ndim)
 pos = [p0 + 1e-7*np.random.randn(ndim) for i in range(nwalkers)]
 
