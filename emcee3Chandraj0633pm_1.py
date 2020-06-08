@@ -114,6 +114,7 @@ print(p0)
 
 ndim = 3*(N_im-1) + 2*N_stars + 2
 print("Number of parameters -- %i"%ndim)
+print("Number of degrees of freedom -- %i"%(2*N_stars*N_im-ndim))
 pos = [p0 + 1e-7*np.random.randn(ndim) for i in range(nwalkers)]
 
 if firstrun == "N":
