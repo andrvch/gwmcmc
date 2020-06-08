@@ -73,9 +73,9 @@ def lnprior(th):
     return -np.inf
 
 def lnprob(th):
-    lp = lnprior(th)
-    if not np.isfinite(lp):
-        return -np.inf
+    #lp = lnprior(th)
+    #if not np.isfinite(lp):
+    #    return -np.inf
     trsf = np.empty([N_im,3])
     trsf[0,:] = np.array([(0.,0.,0.)])
     for i in range(1,N_im):
@@ -93,7 +93,7 @@ def lnprob(th):
     for i in range(N_im):
         for k in range(N_stars):
             if k == 3:
-                delx = pm[i,0]*exp(1j*pm[i,1]) + trsf[i,0]+1j*trsf[i,1] + exp(1j*trsf[i,2])*xs[k] - xref[i,k]
+                delx = pm[i,0]+1j*pm[i,1] + trsf[i,0]+1j*trsf[i,1] + exp(1j*trsf[i,2])*xs[k] - xref[i,k]
             else:
                 delx = trsf[i,0]+1j*trsf[i,1] + exp(1j*trsf[i,2])*xs[k] - xref[i,k]
             prob[i,k] = (delx.real/errraOff[i,k])**2 + (delx.imag/errdecOff[i,k])**2
@@ -107,8 +107,8 @@ for i in range(N_im-1):
 for j in range(N_stars):
     p0.append(raOff[0,j])
     p0.append(decOff[0,j])
-p0.append(0.1)
-p0.append(0.1)
+p0.append(0.0)
+p0.append(0.0)
 print("Starting parameters vector --")
 print(p0)
 
