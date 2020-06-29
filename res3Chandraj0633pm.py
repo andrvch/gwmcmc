@@ -59,6 +59,11 @@ print(errdecOff)
 samples = read_data(NameChain)
 print samples.shape
 
+npars = np.shape(samples)[0]
+N_samples = np.shape(samples)[1]
+
+delx = np.empty([N_im,N_stars,])
+
 def residuals(th):
     trsf = np.empty([N_im,3])
     trsf[0,:] = np.array([(0.,0.,0.)])
