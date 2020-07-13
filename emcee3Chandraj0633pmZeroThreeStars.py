@@ -46,7 +46,7 @@ def parse_input(in_file):
 coords = parse_input(Crds_file)
 coords_1 = np.array([coords[:4],coords[4:8],coords[8:12]])
 N_im = len(coords_1)
-N_stars = len(coords_1[0])
+N_stars = len(coords_1[0]) - 1
 print("Number of stars -- %i"%N_stars)
 print("Number of images -- %i"%N_im)
 
@@ -92,10 +92,10 @@ def lnprob(th):
     prob = np.empty([N_im,N_stars])
     for i in range(N_im):
         for k in range(N_stars):
-            if k == 3:
-                delx = pm[i,0]*exp(1j*pm[i,1]) + trsf[i,0]+1j*trsf[i,1] + exp(1j*trsf[i,2])*xs[k] - xref[i,k]
-            else:
-                delx = trsf[i,0]+1j*trsf[i,1] + exp(1j*trsf[i,2])*xs[k] - xref[i,k]
+            #if k == 3:
+            #    delx = pm[i,0]*exp(1j*pm[i,1]) + trsf[i,0]+1j*trsf[i,1] + exp(1j*trsf[i,2])*xs[k] - xref[i,k]
+            #else:
+            delx = trsf[i,0]+1j*trsf[i,1] + exp(1j*trsf[i,2])*xs[k] - xref[i,k]
             prob[i,k] = (delx.real/errraOff[i,k])**2 + (delx.imag/errdecOff[i,k])**2
     return -0.5*prob.sum()
 
