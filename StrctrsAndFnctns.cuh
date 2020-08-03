@@ -138,4 +138,7 @@ __global__ void potentialXXStatistic ( const int m, const int nn, const int nwl,
 __host__ __device__ double potentialEnergy ( const float x, const float b, const float g, const float a );
 __global__ void periodicConditions ( const int m, const int n, const int ds, const int nwl, const float lbox, const float *bound, float *pp, float *xx );
 __global__ void add1DArray ( const int nwl, const float *xx1, const float *xx2, float *xx );
+__host__ int allocateChainForAutoCorr ( Chain *chn );
+__host__ void freeChainForAutoCorr ( const Chain *chn );
+__host__ int atcrrltnfnctn ( Cupar *cdp, Chain *chn );
 #endif // _STRCTRSANDFNCTNS_CUH_
