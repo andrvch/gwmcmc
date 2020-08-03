@@ -39,7 +39,7 @@ int main ( int argc, char *argv[] ) {
 
   allocateChainForAutoCorr ( chn );
 
-  simpleReadDataFloat ( chn[0].name, chn[0].chnFnctn )
+  simpleReadDataFloat ( chn[0].name, chn[0].chnFnctn );
 
   cudaEventRecord ( cdp[0].start, 0 );
 
@@ -60,8 +60,8 @@ int main ( int argc, char *argv[] ) {
 
   /* Write results to a file */
   printf ( " Write results to the host memory and clean up ... \n" );
-  simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
-  simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
+  simpleWriteDataFloat ( "acrr.out", chn[0].nst, chn[0].atcrrFnctn );
+  simpleWriteDataFloat ( "acrrcm.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
 
   destroyCuda ( cdp );
   freeChainForAutoCorr ( chn );

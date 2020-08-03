@@ -692,51 +692,6 @@ __host__ int saveCurrent ( Chain *chn ) {
 }
 
 __host__ int allocateChainForAutoCorr ( Chain *chn ) {
-  cudaMallocManaged ( ( void ** ) &chn[0].ennconst, chn[0].ds * chn[0].em * chn[0].enn * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].kk, chn[0].em * chn[0].en * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].dd, chn[0].em * chn[0].enn * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].uu, chn[0].em * chn[0].enn * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].pot, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].kin, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].bound, 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].x0Cen, chn[0].nwl * chn[0].en * chn[0].ds * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].x0Ang, chn[0].em * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].gindx, chn[0].en * ( chn[0].en - 1 ) / 2 * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].tindx, chn[0].en * ( chn[0].en - 1 ) / 2 * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stn, chn[0].nst * 2 * chn[0].nwl * chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stn1, chn[0].nst * chn[0].nwl * chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].uni, chn[0].dim * chn[0].nst * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].lst, ( chn[0].dim + 1 ) * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].x0, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].zz, chn[0].nwl * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].ru, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].rr, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stt, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stt1, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sstt1, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sstt, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stt0, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].q, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].pp, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].pp1, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].pp0, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xx, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xx0, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxC, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xx1, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxCM, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xCM, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxW, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].wcnst, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].dcnst, chn[0].dim * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].smpls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].stat, chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].xxCP, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].zr, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].zuni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].kr, chn[0].nwl / 2 * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].kuni, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].runi, chn[0].nst * 2 * chn[0].nwl / 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stps, chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].smOfChn, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cntrlChnFnctn, chn[0].nst * chn[0].nwl * sizeof ( float ) );
@@ -745,41 +700,10 @@ __host__ int allocateChainForAutoCorr ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmMtrx, chn[0].nst * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atcrrFnctn, chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].cnd, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].ff, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].fconst, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   return 0;
 }
 
-__host__ void freeChainForAutoCorr ( const Chain *chn ) {
-  cudaFree ( chn[0].stn );
-  cudaFree ( chn[0].uni );
-  cudaFree ( chn[0].zz );
-  cudaFree ( chn[0].stt );
-  cudaFree ( chn[0].xx );
-  cudaFree ( chn[0].xx0 );
-  cudaFree ( chn[0].xxC );
-  cudaFree ( chn[0].xx1 );
-  cudaFree ( chn[0].xxCM );
-  cudaFree ( chn[0].xCM );
-  cudaFree ( chn[0].xxW );
-  cudaFree ( chn[0].wcnst );
-  cudaFree ( chn[0].dcnst );
-  cudaFree ( chn[0].x0 );
-  cudaFree ( chn[0].smpls );
-  cudaFree ( chn[0].stat );
-  cudaFree ( chn[0].stt1 );
-  cudaFree ( chn[0].sstt1 );
-  cudaFree ( chn[0].ru );
-  cudaFree ( chn[0].q );
-  cudaFree ( chn[0].stt0 );
-  cudaFree ( chn[0].zr );
-  cudaFree ( chn[0].kr );
-  cudaFree ( chn[0].xxCP );
-  cudaFree ( chn[0].zuni );
-  cudaFree ( chn[0].kuni );
-  cudaFree ( chn[0].runi );
+__host__ int freeChainForAutoCorr ( const Chain *chn ) {
   cudaFree ( chn[0].stps );
   cudaFree ( chn[0].smOfChn );
   cudaFree ( chn[0].cntrlChnFnctn );
@@ -788,27 +712,31 @@ __host__ void freeChainForAutoCorr ( const Chain *chn ) {
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atcrrFnctn );
   cudaFree ( chn[0].cmSmAtCrrFnctn );
-  cudaFree ( chn[0].stn1 );
-  cudaFree ( chn[0].rr );
-  cudaFree ( chn[0].sstt );
-  cudaFree ( chn[0].ccnd );
-  cudaFree ( chn[0].cnd );
-  cudaFree ( chn[0].ff );
-  cudaFree ( chn[0].fconst );
-  cudaFree ( chn[0].gindx );
-  cudaFree ( chn[0].tindx );
-  cudaFree ( chn[0].x0Cen );
-  cudaFree ( chn[0].x0Ang );
-  cudaFree ( chn[0].bound );
-  cudaFree ( chn[0].kk );
-  cudaFree ( chn[0].dd );
-  cudaFree ( chn[0].uu );
-  cudaFree ( chn[0].kin );
-  cudaFree ( chn[0].pot );
-  cudaFree ( chn[0].ennconst );
-  cudaFree ( chn[0].pp );
-  cudaFree ( chn[0].pp1 );
-  cudaFree ( chn[0].pp0 );
+  return 0;
+}
+
+__host__ int atcrrltnfnctn ( Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  int NN[RANK] = { chn[0].nst };
+  cufftPlanMany ( &cdp[0].cufftPlan, RANK, NN, NULL, 1, chn[0].nst, NULL, 1, chn[0].nst, CUFFT_C2C, chn[0].nwl );
+  constantArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, alpha / chn[0].nst, chn[0].stps );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nwl, chn[0].nst, &alpha, chn[0].chnFnctn, chn[0].nwl, chn[0].stps, incxx, &beta, chn[0].smOfChn, incyy );
+  shiftWalkers <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, chn[0].chnFnctn, chn[0].smOfChn, chn[0].cntrlChnFnctn );
+  testChainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, 0, chn[0].cntrlChnFnctn, chn[0].ftOfChn );
+  cufftExecC2C ( cdp[0].cufftPlan, ( cufftComplex * ) chn[0].ftOfChn, ( cufftComplex * ) chn[0].ftOfChn, CUFFT_FORWARD );
+  complexPointwiseMultiplyByConjugateAndScale <<< grid2D ( chn[0].nst, chn[0].nwl ), block2D () >>> ( chn[0].nst, chn[0].nwl, alpha / chn[0].nst, chn[0].ftOfChn );
+  cufftExecC2C ( cdp[0].cufftPlan, ( cufftComplex * ) chn[0].ftOfChn, ( cufftComplex * ) chn[0].ftOfChn, CUFFT_INVERSE );
+  testChainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, 1, chn[0].cntrlChnFnctn, chn[0].ftOfChn );
+  constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, alpha / chn[0].nwl, chn[0].wcnst );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nwl, chn[0].nst, &alpha, chn[0].cntrlChnFnctn, chn[0].nwl, chn[0].wcnst, incxx, &beta, chn[0].atcrrFnctn, incyy );
+  normArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, chn[0].atcrrFnctn );
+  cudaDeviceSynchronize ();
+  cumulativeSumOfAutocorrelationFunction ( chn[0].nst, chn[0].atcrrFnctn, chn[0].cmSmAtCrrFnctn );
+  int MM = chooseWindow ( chn[0].nst, 5e0f, chn[0].cmSmAtCrrFnctn );
+  chn[0].mmm = MM;
+  chn[0].atcTime = 2 * chn[0].cmSmAtCrrFnctn[MM] - 1e0f;
+  return 0;
 }
 
 __host__ int averagedAutocorrelationFunction ( Cupar *cdp, Chain *chn ) {
