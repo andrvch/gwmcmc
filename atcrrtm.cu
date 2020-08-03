@@ -43,7 +43,7 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  atcrrltnfnctn ( cdp, chn )
+  atcrrltnfnctn ( cdp, chn );
 
   cudaEventRecord ( cdp[0].stop, 0 );
   cudaEventSynchronize ( cdp[0].stop );
