@@ -59,7 +59,7 @@ int main ( int argc, char *argv[] ) {
   if ( vrb ) {
     printf ( " Autocorrelation time window: %i\n", chn[0].mmm );
     printf ( " Autocorrelation time: %.8E\n", chn[0].atcTime );
-    printf ( " Autocorrelation time threshold: %.8E\n", chn[0].nst / 5e1f );
+    printf ( " Autocorrelation time threshold: %.8E\n", chn[0].nwl * chn[0].nst / 5e1f );
     printf ( " Effective number of independent samples: %.8E\n", chn[0].nwl * chn[0].nst / chn[0].atcTime );
     printf ( " Time to compute acor time: %3.1f ms\n", chn[0].time );
     printf ( "\n" );
