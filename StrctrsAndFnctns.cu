@@ -700,6 +700,7 @@ __host__ int allocateChainForAutoCorr ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmMtrx, chn[0].nst * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].atcrrFnctn, chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cmSmAtCrrFnctn, chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].wcnst, chn[0].nst * sizeof ( float ) );
   return 0;
 }
 
@@ -712,6 +713,7 @@ __host__ int freeChainForAutoCorr ( const Chain *chn ) {
   cudaFree ( chn[0].chnFnctn );
   cudaFree ( chn[0].atcrrFnctn );
   cudaFree ( chn[0].cmSmAtCrrFnctn );
+  cudaFree ( chn[0].wcnst );
   return 0;
 }
 
@@ -723,13 +725,46 @@ __host__ int atcrrltnfnctn ( Cupar *cdp, Chain *chn ) {
   constantArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, alpha / chn[0].nst, chn[0].stps );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_N, chn[0].nwl, chn[0].nst, &alpha, chn[0].chnFnctn, chn[0].nwl, chn[0].stps, incxx, &beta, chn[0].smOfChn, incyy );
   shiftWalkers <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, chn[0].chnFnctn, chn[0].smOfChn, chn[0].cntrlChnFnctn );
+  /*
+  cudaDeviceSynchronize ();
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    printf ( " %i ", i );
+    printf ( " %2.4f ", chn[0].smOfChn[i] );
+    //printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nwl*chn[0].nst; i++ ) {
+    printf ( " %i ", i );
+    printf ( " %2.4f ", chn[0].cntrlChnFnctn[i] );
+    //printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( "\n" );
+  */
   testChainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, 0, chn[0].cntrlChnFnctn, chn[0].ftOfChn );
   cufftExecC2C ( cdp[0].cufftPlan, ( cufftComplex * ) chn[0].ftOfChn, ( cufftComplex * ) chn[0].ftOfChn, CUFFT_FORWARD );
   complexPointwiseMultiplyByConjugateAndScale <<< grid2D ( chn[0].nst, chn[0].nwl ), block2D () >>> ( chn[0].nst, chn[0].nwl, alpha / chn[0].nst, chn[0].ftOfChn );
   cufftExecC2C ( cdp[0].cufftPlan, ( cufftComplex * ) chn[0].ftOfChn, ( cufftComplex * ) chn[0].ftOfChn, CUFFT_INVERSE );
   testChainFunction <<< grid2D ( chn[0].nwl, chn[0].nst ), block2D () >>> ( chn[0].nwl, chn[0].nst, 1, chn[0].cntrlChnFnctn, chn[0].ftOfChn );
+  /* cudaDeviceSynchronize ();
+  for ( int i = 0; i < chn[0].nwl*chn[0].nst; i++ ) {
+    printf ( " %i ", i );
+    printf ( " %2.4f ", chn[0].cntrlChnFnctn[i] );
+    //printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( "\n" );*/
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, alpha / chn[0].nwl, chn[0].wcnst );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nwl, chn[0].nst, &alpha, chn[0].cntrlChnFnctn, chn[0].nwl, chn[0].wcnst, incxx, &beta, chn[0].atcrrFnctn, incyy );
+  /* cudaDeviceSynchronize ();
+  for ( int i = 0; i < chn[0].nwl*chn[0].nst; i++ ) {
+    printf ( " %i ", i );
+    printf ( " %2.4f ", chn[0].atcrrFnctn[i] );
+    //printf ( "\n" );
+  }
+  printf ( "\n" );
+  printf ( "\n" );*/
   normArray <<< grid1D ( chn[0].nst ), THRDSPERBLCK >>> ( chn[0].nst, chn[0].atcrrFnctn );
   cudaDeviceSynchronize ();
   cumulativeSumOfAutocorrelationFunction ( chn[0].nst, chn[0].atcrrFnctn, chn[0].cmSmAtCrrFnctn );

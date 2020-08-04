@@ -41,6 +41,13 @@ int main ( int argc, char *argv[] ) {
 
   simpleReadDataFloat ( chn[0].name, chn[0].chnFnctn );
 
+  /*
+  for ( int i = 0; i < chn[0].nwl*chn[0].nst; i++ ) {
+    printf ( " %i ", i );
+    printf ( " %2.4f ", chn[0].chnFnctn[i] );
+    printf ( "\n" );
+  }*/
+
   cudaEventRecord ( cdp[0].start, 0 );
 
   atcrrltnfnctn ( cdp, chn );

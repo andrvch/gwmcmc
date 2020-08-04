@@ -19,6 +19,7 @@ samples = read_data(sys.argv[1])
 f = open(otfl, "w")
 
 n = shape(samples)[1]
+print n
 for i in range(n):
     f.write("%.15E "%(samples[indx,i]))
     f.write("\n")
