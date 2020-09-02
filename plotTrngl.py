@@ -27,8 +27,8 @@ nbins2D = 200
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print samples.shape
-samples = samples[:samples.shape[0]-1,:]
-print samples.shape
+#samples = samples[:samples.shape[0]-1,:]
+#print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
 
@@ -43,11 +43,13 @@ eqh_inter = np.empty([npars,3])
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
 zizi = []
 
+"""
 xii,yii = np.mgrid[-5.:5.:nbins2D*1j,-5.:5.:nbins2D*1j]
 def gauss(x,y):
     return np.exp(-0.5*(x**2+y**2))
 zii = gauss(xii,yii)
 levi,ziin = comp_lev(zii.flatten(),quont)
+"""
 
 sttime = time.time()
 for j in range(npars):
@@ -103,4 +105,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+"trngl"+".jpg")
+plt.savefig(sys.argv[1]+"trngl"+".png")
