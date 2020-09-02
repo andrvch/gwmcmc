@@ -105,7 +105,7 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 eqh_inter = np.empty([N_im,N_stars,2,len(quantiles)])
 
 print("delta x:")
-for i in range(N_im):
+for i in range(1,N_im):
     for j in range(N_stars):
         print("image number -- %i"%i)
         print("star number -- %i"%j)
@@ -114,7 +114,7 @@ for i in range(N_im):
         print(eqh_inter[i,j,0,:])
 
 print("delta y:")
-for i in range(N_im):
+for i in range(1,N_im):
     for j in range(N_stars):
         print("image number -- %i"%i)
         print("star number -- %i"%j)
@@ -130,7 +130,7 @@ plt.subplots_adjust(hspace=0.1)
 colors = ['g','y','b']
 labels = ['11123','19165','20876']
 
-for i in range(0,N_im):
+for i in range(1,N_im):
     ax[0].errorbar(starnumber,eqh_inter[i,:,0,1], yerr=[eqh_inter[i,:,0,1]-eqh_inter[i,:,0,0],eqh_inter[i,:,0,2]-eqh_inter[i,:,0,1]],color=colors[i],fmt='*',capsize=10,label=labels[i])
     ax[1].errorbar(starnumber,eqh_inter[i,:,1,1], yerr=[eqh_inter[i,:,1,1]-eqh_inter[i,:,1,0],eqh_inter[i,:,1,2]-eqh_inter[i,:,1,1]],color=colors[i],fmt='*',capsize=10,label=labels[i])
 
