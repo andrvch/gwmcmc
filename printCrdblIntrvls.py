@@ -16,6 +16,8 @@ gr = math.sqrt(1 - 2.952 * Mns / Rns)
 
 nbins = 100
 
+print('Huis')
+
 samples = read_data(sys.argv[1])
 samples = samples[:,:]
 print samples.shape
