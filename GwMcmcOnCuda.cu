@@ -51,7 +51,6 @@ int main ( int argc, char *argv[] ) {
 
   allocatePsf ( stim );
 
-
   chn[0].x0[0] = 592.42; //1.68799e-3; //3.362332;
   chn[0].x0[1] = 1./chn[0].nbm/2.;
   //}
@@ -74,7 +73,7 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
-  /initializeRandomForStreach ( cdp, chn );
+  initializeRandomForStreach ( cdp, chn );
   //initializeRandomForWalk ( cdp, chn );
   //initializeRandomForMetropolis ( cdp, chn );
 
@@ -86,8 +85,8 @@ int main ( int argc, char *argv[] ) {
     chn[0].isb = 0;
     while ( chn[0].isb < chn[0].dim ) {
       //walkMove ( cdp, chn );
-      //streachMove ( cdp, chn );
-      metropolisMove ( cdp, chn );
+      streachMove ( cdp, chn );
+      //metropolisMove ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisMove ( chn );
       //statistic ( cdp, chn );
@@ -97,8 +96,8 @@ int main ( int argc, char *argv[] ) {
       //printMetropolisMove ( chn );
       //printMove ( chn );
       //walkUpdate ( cdp, chn );
-      //streachUpdate ( cdp, chn );
-      metropolisUpdate ( cdp, chn );
+      streachUpdate ( cdp, chn );
+      //metropolisUpdate ( cdp, chn );
       //cudaDeviceSynchronize ();
       //printMetropolisUpdate ( chn );
       //printUpdate ( chn );
