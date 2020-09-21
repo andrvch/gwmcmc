@@ -50,6 +50,12 @@ struct Chain {
   int *bnn;
 };
 
+struct Psf {
+  float *refpoint;
+  float *bounds;
+  float *values;
+};
+
 
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
