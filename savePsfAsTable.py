@@ -26,16 +26,14 @@ data = hdul[0].data
 for i in range(len(data)):
     print(data[i])
 
-for i in range(len(hdul[1].data)):
-    print(hdul[1].data[i])
-clms = hdul[1].columns
-cnms = clms.names
+#clms = hdul[1].columns
+#cnms = clms.names
 
-n1 = len(cnms)
-n2 = len(data)
+#n1 = len(cnms)
+#n2 = len(data)
 
-print(n1,n2)
-print(clms.names)
+#print(n1,n2)
+#print(clms.names)
 
 exit()
 
