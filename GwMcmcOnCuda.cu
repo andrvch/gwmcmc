@@ -19,6 +19,7 @@ int main ( int argc, char *argv[] ) {
   const int vrb = 1;
 
   Cupar cdp[1];
+
   cdp[0].dev = atoi ( argv[1] );
 
   initializeCuda ( cdp );
@@ -33,35 +34,24 @@ int main ( int argc, char *argv[] ) {
   }
 
   Chain chn[1];
+
   chn[0].dfl = argv[2];
   chn[0].name = argv[3];
   chn[0].nwl = atoi ( argv[4] );
   chn[0].nst = atoi ( argv[5] );
   chn[0].indx = atoi ( argv[6] );
-  chn[0].dim = 2;
+  chn[0].nstrs = atoi ( argv[7] );
+  chn[0].nimgs = atoi ( argv[8] );
+  chn[0].dim = 3 * ( chn[0].nimgs - 1 ) + 2 * chn[0].nstrs;
   chn[0].dlt = 1.E-6;
-  chn[0].nbm = atoi ( argv[7] );
-
-  //readTimesInfo ( chn[0].dfl, &chn[0].nph, &chn[0].exptm );
-  chn[0].nph = 372383;
-  //chn[0].nph = 272217;
 
   allocateChain ( chn );
-  allocateTimes ( chn );
 
-  //readTimesData ( chn[0].dfl, chn[0].nph, chn[0].atms );
+  Psf stim[chn[0].nimgs*chn[0].nstrs];
 
-  simpleReadDataFloat ( chn[0].dfl, chn[0].atms );
+  allocatePsf ( stim );
 
-  chn[0].scale = chn[0].nph * logf ( chn[0].nbm ) + chn[0].nph * logf ( chn[0].nph * 1. ) - logf ( chn[0].nph * 1. ) - ( chn[0].nph + chn[0].nbm - 1. ) * logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. ) + logf ( ( chn[0].nph + chn[0].nbm - 1. ) * 1. );
 
-  int sumsum = 0;
-  for ( int i = 0; i < chn[0].nbm-2; i++ ) {
-    sumsum += logf ( i + 2 );
-  }
-  chn[0].scale = chn[0].scale + sumsum;
-
-  //for ( int i = 0; i < chn[0].dim; i++ ) {
   chn[0].x0[0] = 592.42; //1.68799e-3; //3.362332;
   chn[0].x0[1] = 1./chn[0].nbm/2.;
   //}
@@ -75,22 +65,18 @@ int main ( int argc, char *argv[] ) {
 
   initializeChain ( cdp, chn );
 
+  initializePsf ( cdp, psf );
+
   if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
   }
 
-  chn[0].sigma[0] = 0.5E-3;
-  chn[0].sigma[1] = 1. / chn[0].nbm / 10.;
-
-  //cudaDeviceSynchronize ();
-  //printMetropolisMove ( chn );
-
   cudaEventRecord ( cdp[0].start, 0 );
 
-  //initializeRandomForStreach ( cdp, chn );
+  /initializeRandomForStreach ( cdp, chn );
   //initializeRandomForWalk ( cdp, chn );
-  initializeRandomForMetropolis ( cdp, chn );
+  //initializeRandomForMetropolis ( cdp, chn );
 
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
