@@ -26,23 +26,23 @@ __global__ void arrayOfBinTimes ( const int nph, const int nbm, const int nwl, c
   }
 }
 
-__global__ void interpolatePsf ( const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
+__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
-  float x, y, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  float x0, y0, x, y, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
   if ( i < ns && j < ni && k < nw ) {
     dx = 0.;
     dy = 0.;
     phi = 0.;
     if ( j > 0 ) {
-      dx = xx[3*(j-1)];
-      dy = xx[3*(j-1)+1];
-      phi = xx[3*(j-1)+2];
+      dx = xx[3*(j-1)+k*dim];
+      dy = xx[3*(j-1)+1+k*dim];
+      phi = xx[3*(j-1)+2+k*dim];
     }
-    x0 = xx[3*(ns-1)+2*i];
-    y0 = xx[3*(ns-1)+2*i+1];
+    x0 = xx[3*(ns-1)+2*i+k*dim] + refpnt[2*i];
+    y0 = xx[3*(ns-1)+2*i+1+k*dim] + refpnt[2*i+1];
     v = FindElementIndex ( xi, nx, x );
     w = FindElementIndex ( yi, ny, y );
     a = ( x - xi[v] ) / ( xi[v+1] - xi[v] );
@@ -54,7 +54,7 @@ __global__ void interpolatePsf ( const int nw, const int ns, const int ni, const
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    ss[i+j*ns] = tmp3;
+    ss[i+j*ns+k*ns*ni] = tmp3;
   }
 }
 
