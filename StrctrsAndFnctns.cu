@@ -16,31 +16,47 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__global__ void getProbabilityFromPsf ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs ) {
+__global__ void arrayOfBinTimes ( const int nph, const int nbm, const int nwl, const float *xx, const float *at, float *nn ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
-  int v, w;
-  if ( i < nmbrOfEnrgChnnls && j < nmbrOfWlkrs ) {
-    gr = sqrtf ( 1. - 2.952 * MNS / RNS );
-    sa = powf ( RNS, 2. );
-    xxout = log10f ( enrgChnnls[i] / gr );
-    yyout = wlkrs[tIndx+j*NPRS];
-    v = FindElementIndex ( xin, M1, xxout );
-    w = FindElementIndex ( yin, M2, yyout );
-    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
-    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
-    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
-    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
-    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
-    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
-    tmp1 = a * d10 + ( -d00 * a + d00 );
-    tmp2 = a * d11 + ( -d01 * a + d01 );
-    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 ) * sa;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  int t = i + (j+k*nbm) * nph;
+  if ( i < nph && j < nbm && k < nwl ) {
+    nn[t] = ( j + 1 == binNumber ( nbm, at[i], xx[0], xx[1] ) );
   }
 }
 
+__global__ void interpolatePsf ( const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  float x, y, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  int v, w;
+  if ( i < ns && j < ni && k < nw ) {
+    dx = 0.;
+    dy = 0.;
+    phi = 0.;
+    if ( j > 0 ) {
+      dx = xx[3*(j-1)];
+      dy = xx[3*(j-1)+1];
+      phi = xx[3*(j-1)+2];
+    }
+    x0 = xx[3*(ns-1)+2*i];
+    y0 = xx[3*(ns-1)+2*i+1];
+    v = FindElementIndex ( xi, nx, x );
+    w = FindElementIndex ( yi, ny, y );
+    a = ( x - xi[v] ) / ( xi[v+1] - xi[v] );
+    b = ( y - yi[w] ) / ( yi[w+1] - yi[w] );
+    if ( v < nx && w < ny ) d00 = vls[v+w*nx+i*nx*ny+j*nx*ny*ns]; else d00 = 0.;
+    if ( v+1 < nx && w < ny ) d10 = vls[v+1+w*nx+i*nx*ny+j*nx*ny*ns]; else d10 = 0;
+    if ( v < nx && w+1 < ny ) d01 = vls[v+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d01 = 0;
+    if ( v+1 < nx && w+1 < ny ) d11 = vls[v+1+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d11 = 0;
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    ss[i+j*ns] = tmp3;
+  }
+}
 
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *bn, const float *xx, float *cc ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -67,16 +83,6 @@ __host__ __device__ int binNumber ( const int nbn, const float tms, const float 
   jtJt = jt - jtFr;
   jIndx = llroundf ( jtJt );
   return jIndx;
-}
-
-__global__ void arrayOfBinTimes ( const int nph, const int nbm, const int nwl, const float *xx, const float *at, float *nn ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int k = threadIdx.z + blockDim.z * blockIdx.z;
-  int t = i + (j+k*nbm) * nph;
-  if ( i < nph && j < nbm && k < nwl ) {
-    nn[t] = ( j + 1 == binNumber ( nbm, at[i], xx[0], xx[1] ) );
-  }
 }
 
 __global__ void arrayOfMultiplicity ( const int nph, const int nbm, const int nwl, const float scale, const float *nTms, float *stt ) {

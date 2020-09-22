@@ -23,8 +23,8 @@ hdr = hdul[0].header
 
 data = hdul[0].data
 #data.field(0)
-for i in range(len(data)):
-    print(data[i])
+#for i in range(len(data)):
+#    print(data[i])
 
 #clms = hdul[1].columns
 #cnms = clms.names
@@ -32,7 +32,7 @@ for i in range(len(data)):
 #n1 = len(cnms)
 #n2 = len(data)
 
-#print(n1,n2)
+print(shape(data)[0],shape(data)[1])
 #print(clms.names)
 
 exit()
