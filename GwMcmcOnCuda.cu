@@ -45,12 +45,35 @@ int main ( int argc, char *argv[] ) {
 
   allocateChain ( chn );
 
+  float *dt;
+  cudaMallocManaged ( ( void ** ) &dt, ( 4 + chn[0].nx * chn[0].ny ) * sizeof ( float ) );
+
   for ( int i = 0; i < chn[0].nimgs; i++ ) {
     for (int j = 0; j < chn[0].nstrs; j++ ) {
       chn[0].stindx = j;
       chn[0].imindx = i;
       chn[0].flnm = argv[10+j+i*chn[0].nstrs];
-      readPsf ( chn[0].flnm, chn[0].stindx, chn[0].imindx, chn[0].nstrs, chn[0].nx, chn[0].ny, chn[0].rfpnt, chn[0].phscl, chn[0].psf );
+      readPsf ( chn[0].flnm, chn[0].stindx, chn[0].imindx, chn[0].nstrs, chn[0].nx, chn[0].ny, dt, chn[0].rfpnt, chn[0].phscl, chn[0].psf );
+    }
+  }
+
+  for ( int i = 0; i < chn[0].nimgs; i++ ) {
+    for (int j = 0; j < chn[0].nstrs; j++ ) {
+      printf ( " Star - %i " , j );
+      printf ( " Image - %i " , i );
+      printf ( " %.8E ", chn[0].rfpnt[2*i+2*j+2*chn[0].nstrs] );
+      printf ( " %.8E ", chn[0].rfpnt[2*i+1+2*j+2*chn[0].nstrs] );
+      printf ( " %.8E ", chn[0].phscl[2*i+2*j+2*chn[0].nstrs] );
+      printf ( " %.8E ", chn[0].phscl[2*i+1+2*j+2*chn[0].nstrs] );
+      printf ( "\n" );
+      for ( int l = 0; l < chn[0].ny; l++ ) {
+        for (int k = 0; k < chn[0].nx; k++ ) {
+          printf ( " %.8E ", chn[0].psf[k+l*chn[0].nx+j*chn[0].nx*chn[0].ny+i*chn[0].nx*chn[0].ny*chn[0].nstrs] );
+        }
+        printf ( "\n" );
+      }
+      printf ( "\n" );
+      printf ( "\n" );
     }
   }
 
@@ -118,6 +141,7 @@ int main ( int argc, char *argv[] ) {
 
   destroyCuda ( cdp );
   freeChain ( chn );
+  cudaFree ( dt );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While

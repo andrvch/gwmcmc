@@ -16,15 +16,29 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int ns, const int nx, const int ny, float *rfpnt, float *scl, float *psf ) {
+__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x ) {
+  int ju, jm, jl, jres;
+  jl = 0;
+  ju = n;
+  while ( ju - jl > 1 ) {
+    jm = floorf ( 0.5 * ( ju + jl ) );
+    if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
+  }
+  jres = jl;
+  if ( x == xx[0] ) jres = 0;
+  if ( x >= xx[n-1] ) jres = n - 1;
+  return jres;
+}
+
+__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int ns, const int nx, const int ny, float *dt, float *rfpnt, float *scl, float *psf ) {
   FILE *pntr;
   pntr = fopen ( flnm, "r" );
-  float *dt;
-  cudaMallocManaged ( ( void ** ) &dt, ( 4 + nx * ny ) * sizeof ( float ) );
   float v;
   int i = 0;
+  //printf ( " %i ", fscanf ( pntr, "%e", &v ));
   while ( fscanf ( pntr, "%e", &v ) == 1 ) {
     dt[i] = v;
+    //printf ( " %.8E ", v );
     i += 1;
   }
   rfpnt[0+stindx*2+imindx*2*ns] = dt[0];
@@ -37,7 +51,6 @@ __host__ void readPsf ( const char *flnm, const int stindx, const int imindx, co
     }
   }
   fclose ( pntr );
-  cudaFree ( dt );
 }
 
 __global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *rfpnt, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
@@ -140,7 +153,7 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 1024, 1, 1 );
   dim3 grid3 = grid3D ( chn[0].nph, chn[0].nbm, chn[0].nwl, block3 );
-  arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx, chn[0].atms, chn[0].nnt );
+  //arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx, chn[0].atms, chn[0].nnt );
   //cudaDeviceSynchronize ();
   //for ( int i = 0; i < chn[0].nph; i++ ) {
   //  printf ( " %.8E ", chn[0].nnt[i] );

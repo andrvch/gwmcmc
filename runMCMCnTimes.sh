@@ -1,28 +1,31 @@
 #!/bin/bash
 CUDAID=0
-#DATAFILE="pn_barycen_0.3-10.0_cl.fits"
-#SPECFILE1="pn_barycen_0.3-2.0.fits"
-#SPECFILE1="PNclean_bary1.fits"
-#SPECFILE1="pn_barycen_0.3-10.0_cl.fits"
-#DATAFILE="pn_barycen_0.3-10.0_cl.fits"
-#DATAFILE="pn_barycen_2.0-10.0_cl.fits"
-#SPECFILE1="pn_barycen.fits"
-DATAFILE="J1023_ToAs_on.dat"
-#DATAFILE="J1023_ToAs_off.dat"
-CHAINFILE=$1
-LOGFILE="LogMetro"
-NWALK=1
-LSTEP=8192 #65536 # 16384 65536 131072
-i=$2
+CHAINFILE="psf_test"
+LOGFILE="psf_log"
+NWALK=128
+LSTEP=2048 #65536 # 16384 65536 131072
+i=$1
+NSTRS=3
+NIMGS=3
+NX=40
+NY=40
+DT1="11123_src1_smooth.fits.psf"
+DT2="11123_src2_smooth.fits.psf"
+DT3="11123_src3_smooth.fits.psf"
+DT4="19165_src1_smooth.fits.psf"
+DT5="19165_src2_smooth.fits.psf"
+DT6="19165_src3_smooth.fits.psf"
+DT7="20876_src1_smooth.fits.psf"
+DT8="20876_src2_smooth.fits.psf"
+DT9="20876_src3_smooth.fits.psf"
 NCHAINS=1
-NBNS=$3
 let NCHAINS=NCHAINS+i
 printf "ID=$CUDAID"
 printf "\n"
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
-  ./runSFH $CUDAID $DATAFILE $CHAINFILE $NWALK $LSTEP $i $NBNS > $LOGFILE
-  ./plotChain.py $CHAINFILE $i $NWALK
+  ./runSFH $CUDAID $CHAINFILE $NWALK $LSTEP $i $NSTRS $NIMGS $NX $NY $DATAFILE1 $DT1 $DT2 $DT3 $DT4 $DT5 $DT6 $DT7 $DT8 $DT9  > $LOGFILE
+  #./plotChain.py $CHAINFILE $i $NWALK
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"
