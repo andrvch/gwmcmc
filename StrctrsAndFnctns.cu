@@ -16,14 +16,25 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__global__ void arrayOfBinTimes ( const int nph, const int nbm, const int nwl, const float *xx, const float *at, float *nn ) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
-  int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int k = threadIdx.z + blockDim.z * blockIdx.z;
-  int t = i + (j+k*nbm) * nph;
-  if ( i < nph && j < nbm && k < nwl ) {
-    nn[t] = ( j + 1 == binNumber ( nbm, at[i], xx[0], xx[1] ) );
+__host__ void readPsf ( const char *flnm, const int nx, const int ny, float *dt, float *rfpnt, float *scl, float *psf ) {
+  FILE *pntr;
+  float v;
+  int i = 0;
+  pntr = fopen ( flnm, "r" );
+  while ( fscanf ( pntr, "%e", &v ) == 1 ) {
+    dt[i] = v;
+    i += 1;
   }
+  rfpnt[0] = dt[0];
+  rfpnt[1] = dt[1];
+  scl[0] = dt[2];
+  scl[1] = dt[3];
+  for ( int i = 0; i < nx; i++ ) {
+    for ( int j = 0; j < ny; j++ ) {
+      psf[i+j*nx] = dt[(i+4+j*nx];
+    }
+  }
+  fclose ( pntr );
 }
 
 __global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
@@ -48,9 +59,9 @@ __global__ void interpolatePsf ( const int dim, const int nw, const int ns, cons
     a = ( x - xi[v] ) / ( xi[v+1] - xi[v] );
     b = ( y - yi[w] ) / ( yi[w+1] - yi[w] );
     if ( v < nx && w < ny ) d00 = vls[v+w*nx+i*nx*ny+j*nx*ny*ns]; else d00 = 0.;
-    if ( v+1 < nx && w < ny ) d10 = vls[v+1+w*nx+i*nx*ny+j*nx*ny*ns]; else d10 = 0;
-    if ( v < nx && w+1 < ny ) d01 = vls[v+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d01 = 0;
-    if ( v+1 < nx && w+1 < ny ) d11 = vls[v+1+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d11 = 0;
+    if ( v+1 < nx && w < ny ) d10 = vls[v+1+w*nx+i*nx*ny+j*nx*ny*ns]; else d10 = 0.;
+    if ( v < nx && w+1 < ny ) d01 = vls[v+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d01 = 0.;
+    if ( v+1 < nx && w+1 < ny ) d11 = vls[v+1+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d11 = 0.;
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
