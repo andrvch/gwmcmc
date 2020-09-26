@@ -153,14 +153,6 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 1024, 1, 1 );
   dim3 grid3 = grid3D ( chn[0].nph, chn[0].nbm, chn[0].nwl, block3 );
-  //arrayOfBinTimes <<< grid3, block3 >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].xx, chn[0].atms, chn[0].nnt );
-  //cudaDeviceSynchronize ();
-  //for ( int i = 0; i < chn[0].nph; i++ ) {
-  //  printf ( " %.8E ", chn[0].nnt[i] );
-  //}
-  //printf ( "\n" );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nph, chn[0].nbm * chn[0].nwl, &alpha, chn[0].nnt, chn[0].nph, chn[0].pcnst, INCXX, &beta, chn[0].nt, INCYY );
-  arrayOfMultiplicity <<< grid2D ( chn[0].nbm, chn[0].nwl ), block2D () >>> ( chn[0].nph, chn[0].nbm, chn[0].nwl, chn[0].scale, chn[0].nt, chn[0].mmt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nwl, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt, incyy );
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
@@ -171,7 +163,7 @@ __host__ int modelStatistic ( const Cupar *cdp, Chain *chn ) {
 __host__ int modelStatistic1 ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nbm, chn[0].nwl, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt1, incyy );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].mmt, chn[0].nbm, chn[0].bcnst, incxx, &beta, chn[0].stt1, incyy );
   return 0;
 }
 
@@ -614,12 +606,12 @@ __host__ int allocateChain ( Chain *chn ) {
 __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
   constantArray <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, 1., chn[0].wcnst );
   constantArray <<< grid1D ( chn[0].dim ), THRDS >>> ( chn[0].dim, 1., chn[0].dcnst );
-  constantArray <<< grid1D ( chn[0].nbm ), THRDS >>> ( chn[0].nbm, 1., chn[0].bcnst );
-  constantArray <<< grid1D ( chn[0].nph ), THRDS >>> ( chn[0].nph, 1., chn[0].pcnst );
+  for ( int i = 0; i < chn[0].dim; i++ ) {
+    chn[0].x0[i] = 0;
+  }
   if ( chn[0].indx == 0 ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
-    //statistic0 ( cdp, chn );
     modelStatistic ( cdp, chn );
   } else {
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].nbm, chn[0].lst );
