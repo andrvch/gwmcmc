@@ -32,17 +32,16 @@ int main ( int argc, char *argv[] ) {
   }
 
   Chain chn[1];
-  chn[0].dfl = argv[2];
-  chn[0].name = argv[3];
-  chn[0].nwl = atoi ( argv[4] );
-  chn[0].nst = atoi ( argv[5] );
-  chn[0].indx = atoi ( argv[6] );
-  chn[0].nstrs = atoi ( argv[7] );
-  chn[0].nimgs = atoi ( argv[8] );
+  chn[0].name = argv[2];
+  chn[0].nwl = atoi ( argv[3] );
+  chn[0].nst = atoi ( argv[4] );
+  chn[0].indx = atoi ( argv[5] );
+  chn[0].nstrs = atoi ( argv[6] );
+  chn[0].nimgs = atoi ( argv[7] );
   chn[0].dim = 3 * ( chn[0].nimgs - 1 ) + 2 * chn[0].nstrs;
   chn[0].dlt = 1.E-6;
-  chn[0].nx = atoi ( argv[9] );
-  chn[0].ny = atoi ( argv[10] );
+  chn[0].nx = atoi ( argv[8] );
+  chn[0].ny = atoi ( argv[9] );
 
   allocateChain ( chn );
 
@@ -50,8 +49,8 @@ int main ( int argc, char *argv[] ) {
     for (int j = 0; j < chn[0].nstrs; j++ ) {
       chn[0].stindx = j;
       chn[0].imindx = i;
-      chn[0].flnm = argv[11+j+i*chn[0].nstrs];
-      readPsf ( chn[0].flnm, chn[0].stindx, chn[0].imindx, chn[0].nx, chn[0].ny, chn[0].rfpnt, chn[0].phscl, chn[0].psf );
+      chn[0].flnm = argv[10+j+i*chn[0].nstrs];
+      readPsf ( chn[0].flnm, chn[0].stindx, chn[0].imindx, chn[0].nstrs, chn[0].nx, chn[0].ny, chn[0].rfpnt, chn[0].phscl, chn[0].psf );
     }
   }
 

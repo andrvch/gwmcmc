@@ -51,6 +51,7 @@ struct Chain {
   float *refpoint;
   float *bounds;
   float *values;
+  int nstrs, nimgs;
   int nx, ny, stindx, imindx;
   float *rfpnt, *phscl, *psf;
   char *flnm;
@@ -143,7 +144,7 @@ __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
 __global__ void setPriorAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *prr );
 
-__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int nx, const int ny, float *rfpnt, float *scl, float *psf );
-__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss );
+__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int ns, const int nx, const int ny, float *rfpnt, float *scl, float *psf );
+__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *rfpnt, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

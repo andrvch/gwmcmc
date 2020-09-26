@@ -16,9 +16,10 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int nx, const int ny, float *rfpnt, float *scl, float *psf ) {
+__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int ns, const int nx, const int ny, float *rfpnt, float *scl, float *psf ) {
   FILE *pntr;
   pntr = fopen ( flnm, "r" );
+  float *dt;
   cudaMallocManaged ( ( void ** ) &dt, ( 4 + nx * ny ) * sizeof ( float ) );
   float v;
   int i = 0;
@@ -30,20 +31,20 @@ __host__ void readPsf ( const char *flnm, const int stindx, const int imindx, co
   rfpnt[1+stindx*2+imindx*2*ns] = dt[1];
   scl[0+stindx*2+imindx*2*ns] = dt[2];
   scl[1+stindx*2+imindx*2*ns] = dt[3];
-  for ( int i = 0; i < nx; i++ ) {
-    for ( int j = 0; j < ny; j++ ) {
-      psf[i+j*nx+stindx*nx*ny+imindx*nx*ny*ns] = dt[4+i+j*nx];
+  for ( int j = 0; j < ny; j++ ) {
+     for ( int i = 0; i < nx; i++ ) {
+       psf[i+j*nx+stindx*nx*ny+imindx*nx*ny*ns] = dt[4+i+j*nx];
     }
   }
   fclose ( pntr );
   cudaFree ( dt );
 }
 
-__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
+__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *rfpnt, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
-  float x0, y0, x, y, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  float dx, dy, phi, x0, y0, x, y, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
   if ( i < ns && j < ni && k < nw ) {
     dx = 0.;
@@ -54,8 +55,8 @@ __global__ void interpolatePsf ( const int dim, const int nw, const int ns, cons
       dy = xx[3*(j-1)+1+k*dim];
       phi = xx[3*(j-1)+2+k*dim];
     }
-    x0 = xx[3*(ns-1)+2*i+k*dim] + refpnt[2*i];
-    y0 = xx[3*(ns-1)+2*i+1+k*dim] + refpnt[2*i+1];
+    x0 = xx[3*(ns-1)+2*i+k*dim] + rfpnt[2*i];
+    y0 = xx[3*(ns-1)+2*i+1+k*dim] + rfpnt[2*i+1];
     v = FindElementIndex ( xi, nx, x );
     w = FindElementIndex ( yi, ny, y );
     a = ( x - xi[v] ) / ( xi[v+1] - xi[v] );
