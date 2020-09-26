@@ -16,25 +16,27 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__host__ void readPsf ( const char *flnm, const int nx, const int ny, float *dt, float *rfpnt, float *scl, float *psf ) {
+__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int nx, const int ny, float *rfpnt, float *scl, float *psf ) {
   FILE *pntr;
+  pntr = fopen ( flnm, "r" );
+  cudaMallocManaged ( ( void ** ) &dt, ( 4 + nx * ny ) * sizeof ( float ) );
   float v;
   int i = 0;
-  pntr = fopen ( flnm, "r" );
   while ( fscanf ( pntr, "%e", &v ) == 1 ) {
     dt[i] = v;
     i += 1;
   }
-  rfpnt[0] = dt[0];
-  rfpnt[1] = dt[1];
-  scl[0] = dt[2];
-  scl[1] = dt[3];
+  rfpnt[0+stindx*2+imindx*2*ns] = dt[0];
+  rfpnt[1+stindx*2+imindx*2*ns] = dt[1];
+  scl[0+stindx*2+imindx*2*ns] = dt[2];
+  scl[1+stindx*2+imindx*2*ns] = dt[3];
   for ( int i = 0; i < nx; i++ ) {
     for ( int j = 0; j < ny; j++ ) {
-      psf[i+j*nx] = dt[(i+4+j*nx];
+      psf[i+j*nx+stindx*nx*ny+imindx*nx*ny*ns] = dt[4+i+j*nx];
     }
   }
   fclose ( pntr );
+  cudaFree ( dt );
 }
 
 __global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
@@ -523,7 +525,6 @@ __global__ void metropolisPoposal3 ( const int dim, const int nwl, const int nbm
   }
 }
 
-
 __host__ int initializeCuda ( Cupar *cdp ) {
   cudaRuntimeGetVersion ( cdp[0].runtimeVersion );
   cudaDriverGetVersion ( cdp[0].driverVersion );
@@ -590,25 +591,11 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].xbnd, chn[0].dim * 2 * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].cnd, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].rfpnt, 2 * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].phscl, 2 * chn[0].nwl * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].psf, chn[0].nx * chn[0].ny * chn[0].nstrs * chn[0].nimgs * sizeof ( float ) );
   return 0;
 }
-
-__host__ int allocateTimes ( Chain *chn ) {
-  cudaMallocManaged ( ( void ** ) &chn[0].atms, chn[0].nph * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].nnt, chn[0].nph * chn[0].nbm * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].bnn, chn[0].nph * chn[0].nwl * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].nt, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].nt1, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].numbers, chn[0].nbm * chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].mmt, chn[0].nbm * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].mt, chn[0].nbm * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].mstt, chn[0].nbm * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].bcnst, chn[0].nbm * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].pcnst, chn[0].nph * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sigma, chn[0].dim * sizeof ( float ) );
-  return 0;
-}
-
 
 __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
   constantArray <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, 1., chn[0].wcnst );
@@ -911,21 +898,9 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].cnd );
   cudaFree ( chn[0].ccnd );
   cudaFree ( chn[0].xbnd );
-}
-
-__host__ void freeTimes ( const Chain *chn ) {
-  cudaFree ( chn[0].atms );
-  cudaFree ( chn[0].nnt );
-  cudaFree ( chn[0].nt );
-  cudaFree ( chn[0].nt1 );
-  cudaFree ( chn[0].numbers );
-  cudaFree ( chn[0].mmt );
-  cudaFree ( chn[0].mt );
-  cudaFree ( chn[0].mstt );
-  cudaFree ( chn[0].pcnst );
-  cudaFree ( chn[0].bcnst );
-  cudaFree ( chn[0].sigma );
-  cudaFree ( chn[0].bnn );
+  cudaFree ( chn[0].rfpnt );
+  cudaFree ( chn[0].phscl );
+  cudaFree ( chn[0].psf );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {

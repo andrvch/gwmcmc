@@ -48,14 +48,13 @@ struct Chain {
   float *atms, *nnt, *nt, *nt1, *numbers, *mmt, *mt, *mstt, *prr, *prr1, *xbnd, *ccnd, *cnd, *bcnst, *pcnst, *prior;
   float *sigma;
   int *bnn;
-};
-
-struct Psf {
   float *refpoint;
   float *bounds;
   float *values;
+  int nx, ny, stindx, imindx;
+  float *rfpnt, *phscl, *psf;
+  char *flnm;
 };
-
 
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
@@ -107,7 +106,6 @@ __host__ dim3 grid3D ( const int, const int, const int, const dim3 );
 __host__ int readTimesInfo ( const char*, int*, float* );
 __host__ int readTimesData ( const char*, const int, float* );
 __host__ int modelStatistic1 ( const Cupar*, Chain* );
-__host__ int allocateTimes ( Chain* );
 __global__ void saveNumbers ( const int, const int, const int, const float*, float* );
 __global__ void updateNumbers ( const int, const int, const float*, const float*, const float*, float* );
 
@@ -144,5 +142,8 @@ __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
 __host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
 __global__ void setPriorAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *prr );
+
+__host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int nx, const int ny, float *rfpnt, float *scl, float *psf );
+__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
