@@ -14,7 +14,14 @@ import numpy as np
 import pyregion
 import re
 
-fitsfls = [sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]] # (files position_input or position_input_11)
+fitsfl = "spC.fits" # (files position_input or position_input_11)
+
+hdul = fits.open(fitsfl)
+#hdul.info()
+hdr = hdul[0].header
+
+
+exit()
 
 for fl in fitsfls:
     hdul = fits.open(fl)
