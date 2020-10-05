@@ -18,8 +18,30 @@ fitsfl = "spC.fits" # (files position_input or position_input_11)
 
 hdul = fits.open(fitsfl)
 #hdul.info()
-hdr = hdul[0].header
+hdr = hdul['ENERGIES'].header
+#print(repr(hdr))
 
+en = hdul['ENERGIES'].data
+print(len(en['ELOW']))
+print(en['ELOW'])
+
+te = hdul['TEMPVALS'].data
+print(len(te['TEMP']))
+print(te['TEMP'])
+
+lg = hdul['LOGGVALS'].data
+print(len(lg['LOGG']))
+print(lg['LOGG'])
+print(lg['LOGGNAME'])
+
+flx1 = hdul['G1370'].data
+print(shape(flx1['FLUX'])[0],shape(flx1['FLUX'])[1])
+print(flx1['FLUX'])
+
+for j in range(shape(flx1['FLUX'])[1]):
+    #for i in range(shape(flx1['FLUX'])[0]):
+    print(flx1['FLUX'][:,j])
+    print('\n')
 
 exit()
 
