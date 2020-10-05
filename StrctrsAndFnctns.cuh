@@ -145,7 +145,7 @@ __host__ int metropolisUpdate ( const Cupar*, Chain* );
 __global__ void setPriorAtLast ( const int dim, const int nwl, const int nbm, const float *lst, float *prr );
 
 __host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int ns, const int nx, const int ny, float *dt, float *rfpnt, float *scl, float *psf );
-__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *rfpnt, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss );
+__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *rfpnt, const float *psf, const int nx, const int ny, const float *xx, float *ss );
 __host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

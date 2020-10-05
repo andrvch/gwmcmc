@@ -57,6 +57,9 @@ int main ( int argc, char *argv[] ) {
     }
   }
 
+  initializeChain ( cdp, chn );
+
+  /*
   for ( int i = 0; i < chn[0].nimgs; i++ ) {
     for (int j = 0; j < chn[0].nstrs; j++ ) {
       printf ( " Star - %i " , j );
@@ -76,11 +79,8 @@ int main ( int argc, char *argv[] ) {
       printf ( "\n" );
     }
   }
-
-  /*
-  initializeChain ( cdp, chn );
-
-
+  */
+  
   if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Start ...                                                  \n" );
@@ -90,6 +90,7 @@ int main ( int argc, char *argv[] ) {
 
   initializeRandomForStreach ( cdp, chn );
 
+  /*
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
     chn[0].isb = 0;
@@ -102,15 +103,19 @@ int main ( int argc, char *argv[] ) {
     saveCurrent ( chn );
     chn[0].ist += 1;
   }
+  */
 
   if ( vrb ) {
     printf ( "      ... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Done!\n" );
   }
 
   cudaEventRecord ( cdp[0].stop, 0 );
+
+
   cudaEventSynchronize ( cdp[0].stop );
   cudaEventElapsedTime ( &chn[0].time, cdp[0].start, cdp[0].stop );
 
+  /*
   if ( vrb ) {
     printf ( ".................................................................\n" );
     printf ( " Time to generate: %3.1f ms\n", chn[0].time );
@@ -137,7 +142,8 @@ int main ( int argc, char *argv[] ) {
 
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].nbm, chn[0].smpls, chn[0].stat, chn[0].numbers, chn[0].prior );*/
+  writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].nbm, chn[0].smpls, chn[0].stat, chn[0].numbers, chn[0].prior );
+  */
 
   destroyCuda ( cdp );
   freeChain ( chn );

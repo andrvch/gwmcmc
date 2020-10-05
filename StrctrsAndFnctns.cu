@@ -16,18 +16,24 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x ) {
-  int ju, jm, jl, jres;
-  jl = 0;
-  ju = n;
-  while ( ju - jl > 1 ) {
-    jm = floorf ( 0.5 * ( ju + jl ) );
-    if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
-  }
-  jres = jl;
-  if ( x == xx[0] ) jres = 0;
-  if ( x >= xx[n-1] ) jres = n - 1;
-  return jres;
+__host__ int statistic ( const Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  dim3 block3 ( 1, 1, 1024 );
+  dim3 grid3 = grid3D ( chn[0].nstrs, chn[0].nimgs, chn[0].nwl/2, block3 );
+  interpolatePsf <<< grid3D, block3 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].nstrs, chn[0].nimgs, chn[0].rfpnt, chn[0].psf, ch[0].nx, chn[0].ny, chn[0].xx1, chn[0].sstt1 );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nstrs*chn[0].nimgs, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].nstrs*chn[0].nimgs, chn[0].sicnst, incxx, &beta, chn[0].stt1, incyy );
+  return 0;
+}
+
+__host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  dim3 block3 ( 1, 1, 1024 );
+  dim3 grid3 = grid3D ( chn[0].nstrs, chn[0].nimgs, chn[0].nwl, block3 );
+  interpolatePsf <<< grid3D, block3 >>> ( chn[0].dim, chn[0].nwl, chn[0].xx, chn[0].sstt );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].sstt, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
+  return 0;
 }
 
 __host__ void readPsf ( const char *flnm, const int stindx, const int imindx, const int ns, const int nx, const int ny, float *dt, float *rfpnt, float *scl, float *psf ) {
@@ -53,36 +59,62 @@ __host__ void readPsf ( const char *flnm, const int stindx, const int imindx, co
   fclose ( pntr );
 }
 
-__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *rfpnt, const float *vls, const float *xi, const float *yi, const int nx, const int ny, const float *xx, float *ss ) {
+__global__ void interpolatePsf ( const int dim, const int nw, const int ns, const int ni, const float *rfpnt, const float *psf, const int nx, const int ny, const float *xx, float *ss ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
-  float dx, dy, phi, x0, y0, x, y, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  float dx, dy, phi, x0, y0, x, y, xi, yi, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
   if ( i < ns && j < ni && k < nw ) {
-    dx = 0.;
-    dy = 0.;
-    phi = 0.;
-    if ( j > 0 ) {
+    if ( j == 0 ) {
+      x = xx[3*(ni-1)+2*i+k*dim] + ( nx + 1 ) / 2;
+      y = xx[3*(ni-1)+1+2*i+k*dim] + ( ny + 1 ) / 2;
+      xi = floorf(x);
+      yi = floorf(y);
+      v = xi - 1;
+      w = yi - 1;
+    } else {
       dx = xx[3*(j-1)+k*dim];
       dy = xx[3*(j-1)+1+k*dim];
       phi = xx[3*(j-1)+2+k*dim];
+      x0 = xx[3*(ni-1)+2*i+k*dim] + ( nx + 1 ) / 2 + rfpnt[i*2];
+      y0 = xx[3*(ni-1)+1+2*i+k*dim] + ( ny + 1 ) / 2 + rfpnt[1+i*2];
+      x = cosf ( phi ) * x0 - sinf ( phi ) * y0;
+      y = sinf ( phi ) * x0 + cosf ( phi ) * y0;
+      x = x + dx;
+      y = y + dy;
+      x = x - rfpnt[i*2+j*2*ns];
+      y = y - rfpnt[1+i*2+j*2*ns];
     }
-    x0 = xx[3*(ns-1)+2*i+k*dim] + rfpnt[2*i];
-    y0 = xx[3*(ns-1)+2*i+1+k*dim] + rfpnt[2*i+1];
-    v = FindElementIndex ( xi, nx, x );
-    w = FindElementIndex ( yi, ny, y );
-    a = ( x - xi[v] ) / ( xi[v+1] - xi[v] );
-    b = ( y - yi[w] ) / ( yi[w+1] - yi[w] );
-    if ( v < nx && w < ny ) d00 = vls[v+w*nx+i*nx*ny+j*nx*ny*ns]; else d00 = 0.;
-    if ( v+1 < nx && w < ny ) d10 = vls[v+1+w*nx+i*nx*ny+j*nx*ny*ns]; else d10 = 0.;
-    if ( v < nx && w+1 < ny ) d01 = vls[v+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d01 = 0.;
-    if ( v+1 < nx && w+1 < ny ) d11 = vls[v+1+(w+1)*nx+i*nx*ny+j*nx*ny*ns]; else d11 = 0.;
+    xi = floorf(x);
+    yi = floorf(y);
+    v = xi - 1;
+    w = yi - 1;
+    a = ( x - xi );
+    b = ( y - yi );
+    d00 = psf[v+w*nx+i*nx*ny+j*nx*ny*ns];
+    d10 = psf[v+1+w*nx+i*nx*ny+j*nx*ny*ns];
+    d01 = psf[v+(w+1)*nx+i*nx*ny+j*nx*ny*ns];
+    d11 = psf[v+1+(w+1)*nx+i*nx*ny+j*nx*ny*ns];
     tmp1 = a * d10 + ( -d00 * a + d00 );
     tmp2 = a * d11 + ( -d01 * a + d01 );
     tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
     ss[i+j*ns+k*ns*ni] = tmp3;
   }
+}
+
+__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x ) {
+  int ju, jm, jl, jres;
+  jl = 0;
+  ju = n;
+  while ( ju - jl > 1 ) {
+    jm = floorf ( 0.5 * ( ju + jl ) );
+    if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
+  }
+  jres = jl;
+  if ( x == xx[0] ) jres = 0;
+  if ( x >= xx[n-1] ) jres = n - 1;
+  return jres;
 }
 
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *bn, const float *xx, float *cc ) {
@@ -699,27 +731,11 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn ) {
   return 0;
 }
 
-__host__ int statistic ( const Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  returnStatistic <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xx1, chn[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
-  return 0;
-}
-
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
   returnStatistic <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx1, chn[0].sstt1 );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].sstt1, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
-  return 0;
-}
-
-__host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  returnStatistic <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xx, chn[0].sstt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].sstt, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
 }
 
