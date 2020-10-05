@@ -10,12 +10,14 @@ Xset.chatter = 0
 Xset.abund = "angr"
 Xset.xsect = "bcmc"
 
+dist = 1. # kpc
+
 name = sys.argv[1]
 time = float(sys.argv[2])
 num = int(sys.argv[3])
 AllData(name+".pi")
-AllModels += "(nsa+powerlaw)*phabs"
-pars = (6.0, 1.4, 13., 1.E12, 1.E-6, 1.5, 4.E-5, 0.15)
+AllModels += "carbatm*phabs"
+pars = (1.0, 1.4, 13., 100./dist**2, 0.15)
 AllModels(1).setPars(pars)
 for i in range(num):
     if time == 0:
