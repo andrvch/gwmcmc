@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys
+import os,sys
 import math
 import numpy as np
 from xspec import *
