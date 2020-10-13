@@ -137,6 +137,11 @@ struct Model {
   float *RedData2, *Dist2, *EBV2;
   const char *rddnngFl3 = "Drimmel03.dat";
   float *RedData3, *Dist3, *EBV3;
+  const char *carbatmfl = "spc.dat";
+  int nen = 1000;
+  int nte = 61;
+  int nlg = 9;
+  float *cne, *cte, *clg, *cflx;
   const char *nsaFl = "nsa_spec_B_1e12G.dat";
   //const char *nsaFl = "nsa_spec_B_1e13G.dat";
   int numNsaE = 1000;

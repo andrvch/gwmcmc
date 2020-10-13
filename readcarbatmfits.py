@@ -36,12 +36,14 @@ print(lg['LOGGNAME'])
 
 flx1 = hdul['G1370'].data
 print(shape(flx1['FLUX'])[0],shape(flx1['FLUX'])[1])
-print(flx1['FLUX'])
+#print(flx1['FLUX'])
 
+"""
 for j in range(shape(flx1['FLUX'])[1]):
     #for i in range(shape(flx1['FLUX'])[0]):
     print(flx1['FLUX'][:,j])
     print('\n')
+"""
 
 exit()
 
