@@ -15,10 +15,12 @@ dist = 1. # kpc
 name = sys.argv[1]
 time = float(sys.argv[2])
 num = int(sys.argv[3])
+
 AllData(name+".pi")
 AllModels += "carbatm*phabs"
 pars = (1.0, 1.4, 13., 100./dist**2, 0.15)
 AllModels(1).setPars(pars)
+
 for i in range(num):
     if time == 0:
         fs1 = FakeitSettings(fileName=name+"_"+"%i"%(i)+".fak")
