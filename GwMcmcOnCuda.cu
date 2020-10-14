@@ -18,11 +18,12 @@
 int main ( int argc, char *argv[] ) {
   const int vrb = 1;
 
+  // cuda context:
   Cupar cdp[1];
   cdp[0].dev = atoi ( argv[1] );
-
   initializeCuda ( cdp );
 
+  // print cuda info:
   if ( vrb ) {
     printf ( "\n" );
     printf ( ".................................................................\n" );
@@ -32,46 +33,38 @@ int main ( int argc, char *argv[] ) {
     printf ( " Runtime API: v%d \n", cdp[0].runtimeVersion[0] );
   }
 
+  // model:
+  Model mdl[1];
+  InitializeModel ( mdl );
+
+  // chain:
   Chain chn[1];
-
-  Spectrum spc[NSPCTR];
-  Spectrum bkg[NSPCTR];
-  for ( int i = 0; i < NSPCTR; i++ ) {
-    spc[i].name = argv[2+2*i];
-    bkg[i].name = argv[2+2*i+1];
-  }
-
-  chn[0].name = argv[NSPCTR11+2];
-  chn[0].nwl = atoi ( argv[NSPCTR11+3] );
-  chn[0].nst = atoi ( argv[NSPCTR11+4] );
-  chn[0].indx = atoi ( argv[NSPCTR11+5] );
+  chn[0].name = argv[2];
+  chn[0].nwl = atoi ( argv[3] );
+  chn[0].nst = atoi ( argv[4] );
+  chn[0].indx = atoi ( argv[5] );
   chn[0].dim = NPRS;
   chn[0].dim1 = chn[0].dim + 3;
   chn[0].dlt = 1.E-4;
   chn[0].nkb = 100;
 
+  // spectrum:
+  Spectrum spc[NSPCTR];
   for ( int i = 0; i < NSPCTR; i++ ) {
-    spc[i].lwrNtcdEnrg = ( float ) atof ( argv[NSPCTR11+6] );
-    spc[i].hghrNtcdEnrg = ( float ) atof ( argv[NSPCTR11+7] );
+    spc[i].name = argv[6+i];
   }
-
-  Model mdl[1];
-  InitializeModel ( mdl );
+  for ( int i = 0; i < NSPCTR; i++ ) {
+    spc[i].lwrNtcdEnrg = ( float ) atof ( argv[6+NSPCTR] );
+    spc[i].hghrNtcdEnrg = ( float ) atof ( argv[6+NSPCTR+1] );
+  }
 
   SpecInfo ( vrb, spc );
-  SpecInfo ( vrb, bkg );
-
-  for ( int i = 0; i < NSPCTR; i++ ) {
-    bkg[i].nmbrOfBns = spc[i].nmbrOfBns;
-  }
-
   SpecAlloc ( chn, spc );
-  SpecAlloc ( chn, bkg );
-
-  SpecData ( cdp, vrb, mdl, spc, bkg );
+  SpecData ( cdp, vrb, mdl, spc );
 
   allocateChain ( chn );
 
+  // set starting parameters and boundaries:
   chn[0].x0[0] = 5.9;
   chn[0].xbnd[0] = 5.5;
   chn[0].xbnd[1] = 6.5;
@@ -84,53 +77,14 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[4] = -25.;
   chn[0].xbnd[5] = 25.;
 
-  chn[0].x0[3] = -5.;
-  chn[0].xbnd[6] = -25.;
+  chn[0].x0[3] = 0.1;
+  chn[0].xbnd[6] = 0.0;
   chn[0].xbnd[7] = 25.;
 
-  chn[0].x0[4] = 1.5;
-  chn[0].xbnd[8] = -25.;
-  chn[0].xbnd[9] = 25.;
-
-  chn[0].x0[5] = -5.;
-  chn[0].xbnd[10] = -25.;
-  chn[0].xbnd[11] = 25.;
-
-  chn[0].x0[6] = 0.1;
-  chn[0].xbnd[12] = 0.0;
-  chn[0].xbnd[13] = 25.;
-/*
-  chn[0].x0[7] = -5.;
-  chn[0].xbnd[14] = -25.;
-  chn[0].xbnd[15] = 25.;
-
-  chn[0].x0[8] = 1.5;
-  chn[0].xbnd[16] = -25.;
-  chn[0].xbnd[17] = 25.;
-
-  chn[0].x0[9] = -5.;
-  chn[0].xbnd[18] = -25.;
-  chn[0].xbnd[19] = 25.;
-
-  chn[0].x0[10] = 1.2;
-  chn[0].xbnd[20] = 1.0;
-  chn[0].xbnd[21] = 2.5;
-/*
-  chn[0].x0[11] = 0.03;
-  chn[0].xbnd[22] = 0.001;
-  chn[0].xbnd[23] = 1.5;
-
-  chn[0].x0[12] = 0.07;
-  chn[0].xbnd[24] = 0.0;
-  chn[0].xbnd[25] = 10.;
-
-  chn[0].x0[13] = 0.1;
-  chn[0].xbnd[26] = 0.;
-  chn[0].xbnd[27] = 25.;
-*/
+  // initialize chain:
   initializeChain ( cdp, chn );
   if ( chn[0].indx == 0 ) {
-    modelStatistic0 ( cdp, mdl, chn, spc, bkg );
+    modelStatistic0 ( cdp, mdl, chn, spc );
   }
 
   if ( vrb ) {
@@ -140,13 +94,16 @@ int main ( int argc, char *argv[] ) {
 
   cudaEventRecord ( cdp[0].start, 0 );
 
+  // initialize random numbers:
   initializeRandomForStreach ( cdp, chn );
+
+  // start chain:
   chn[0].ist = 0;
   while ( chn[0].ist < chn[0].nst ) {
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
       streachMove ( cdp, chn );
-      modelStatistic1 ( cdp, mdl, chn, spc, bkg );
+      modelStatistic1 ( cdp, mdl, chn, spc );
       streachUpdate ( cdp, chn, mdl );
       chn[0].isb += 1;
     }
@@ -221,14 +178,14 @@ int main ( int argc, char *argv[] ) {
   printf ( " %2.2f ", chn[0].chi[0] );
   printf ( "\n" );
 
-  modelStatistic00 ( cdp, mdl, chn, spc, bkg );
+  modelStatistic00 ( cdp, mdl, chn, spc );
 
   cudaDeviceSynchronize ();
 
   /* Write results to a file */
   simpleWriteDataFloat ( "Autocor.out", chn[0].nst, chn[0].atcrrFnctn );
   simpleWriteDataFloat ( "AutocorCM.out", chn[0].nst, chn[0].cmSmAtCrrFnctn );
-  writeSpectraToFile ( chn[0].name, spc, bkg );
+  writeSpectraToFile ( chn[0].name, spc );
   writeKdeToFile ( chn[0].name, chn[0].dim1, chn[0].nkb, chn[0].kbin, chn[0].kdePdf );
   writeWhalesToFile ( chn[0].name, chn[0].indx, chn[0].dim1, chn[0].nwl*chn[0].nst, chn[0].whales );
   writeChainToFile ( chn[0].name, chn[0].indx, chn[0].dim, chn[0].nwl, chn[0].nst, chn[0].smpls, chn[0].stat, chn[0].priors, chn[0].dist, chn[0].chiTwo );
@@ -237,7 +194,6 @@ int main ( int argc, char *argv[] ) {
   freeChain ( chn );
   FreeModel ( mdl );
   FreeSpec ( spc );
-  FreeSpec ( bkg );
 
   // Reset the device and exit
   // cudaDeviceReset causes the driver to clean up all state. While
