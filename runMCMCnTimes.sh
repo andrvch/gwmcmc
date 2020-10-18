@@ -18,7 +18,7 @@ while [ $i -lt $NCHAINS ]; do
   ./plotChain.py $CHAINFILE $i $NWALK
   #./printSpecStat.py $CHAINFILE
   #./plotSpectraFromFile.py $CHAINFILE
-  ./printCrdblFromFile.py $CHAINFILE
+  #./printCrdblFromFile.py $CHAINFILE
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"

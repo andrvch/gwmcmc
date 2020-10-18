@@ -129,8 +129,7 @@ __host__ int modelStatistic1 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].xbnd, chn[0].xx1, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  LinearInterpolationNoErrors <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].nwl/2, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx1, chn[0].nhMd, chn[0].nhSg );
-  arrayOfPriors1 <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].nhMd, chn[0].nhSg, chn[0].xx1, chn[0].prr1 );
+  arrayOfPriors1 <<< grid1D ( chn[0].nwl/2 ), THRDS >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].prr1 );
   return 0;
 }
 
@@ -165,8 +164,7 @@ __host__ int modelStatistic0 ( const Cupar *cdp, const Model *mdl, Chain *chn, S
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  LinearInterpolationNoErrors <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx, chn[0].nhMd, chn[0].nhSg );
-  arrayOfPriors1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].nhMd, chn[0].nhSg, chn[0].xx, chn[0].prr );
+  arrayOfPriors1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
   return 0;
 }
 
@@ -187,8 +185,7 @@ __host__ int modelStatistic00 ( const Cupar *cdp, const Model *mdl, Chain *chn, 
   }
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].xbnd, chn[0].xx, chn[0].ccnd );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
-  LinearInterpolationNoErrors <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, mdl[0].nmbrOfDistBins1, DINDX1, mdl[0].Dist1, mdl[0].EBV1, chn[0].xx, chn[0].nhMd, chn[0].nhSg );
-  arrayOfPriors1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].nhMd, chn[0].nhSg, chn[0].xx, chn[0].prr );
+  arrayOfPriors1 <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].dim, chn[0].nwl, chn[0].cnd, chn[0].xx, chn[0].prr );
   return 0;
 }
 
@@ -2391,24 +2388,8 @@ __host__ int InitializeModel ( Model *mdl ) {
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
   for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
   simpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
-  //SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
-  //SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV1 );
   readGreenSamples ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].numRedCol, mdl[0].RedData, mdl[0].Dist, mdl[0].EE );
-  /*
-  for ( int i = 0; i < mdl[0].nmbrOfDistBins; i++ ) {
-    printf ( " %2.6f ", mdl[0].Dist[i] );
-    for ( int j = 0; j < mdl[0].numRedCol-1; j++ ) {
-      printf ( " %2.6f ", mdl[0].EE[i+j*mdl[0].nmbrOfDistBins] );
-    }
-    printf ( "\n" );
-  }*/
-  /*SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl1, mdl[0].nmbrOfDistBins1, mdl[0].RedData1, mdl[0].Dist1, mdl[0].EBV1 );
-  SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl2, mdl[0].nmbrOfDistBins1, mdl[0].RedData2, mdl[0].Dist2, mdl[0].EBV2 );
-  SimpleReadReddenningDataNoErrors ( mdl[0].rddnngFl3, mdl[0].nmbrOfDistBins1, mdl[0].RedData3, mdl[0].Dist3, mdl[0].EBV3 );
-  */
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
-  //SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
-  SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
   return 0;
 }
 
@@ -2429,14 +2410,11 @@ __global__ void arrayOfPriors ( const int dim, const int nwl, const float *cn, c
   }
 }
 
-__global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, const float *nhMd, const float *nhSg, const float *xx, float *pr ) {
+__global__ void arrayOfPriors1 ( const int dim, const int nwl, const float *cn, const float *xx, float *pr ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
-  float sum; //, theta, kk;
+  float sum;
   if ( i < nwl ) {
-    //theta = powf ( nhSg[i], 2 ) / nhMd[i];
-    //kk = nhMd[i] / theta;
-    //sum = ( kk - 1 ) * logf ( xx[NHINDX+i*nwl] ) - xx[NHINDX+i*nwl] / theta;
-    sum = 0; //powf ( ( xx[NHINDX+i*nwl] - nhMd[i] ) / nhSg[i], 2 );
+    sum = 0;
     pr[i] = ( cn[i] == dim ) * sum + ( cn[i] < dim ) * INF;
   }
 }

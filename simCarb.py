@@ -16,8 +16,10 @@ name = sys.argv[1]
 time = float(sys.argv[2])
 
 AllData(name+".pi")
-AllModels += "carbatm*phabs"
-pars = (1.0, 1.4, 13., 100./dist**2, 0.15)
+#AllModels += "carbatm*phabs"
+#pars = (1.0, 1.4, 13., 100./dist**2, 0.15)
+AllModels += "nsa*phabs"
+pars = (6.0, 1.4, 13., 1.E12, 1./(dist*1.E3)**2, 0.15)
 AllModels(1).setPars(pars)
 
 if time == 0:

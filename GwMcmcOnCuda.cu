@@ -69,17 +69,13 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[0] = 5.5;
   chn[0].xbnd[1] = 6.5;
 
-  chn[0].x0[1] = 0.0;
+  chn[0].x0[1] = -2.0;
   chn[0].xbnd[2] = -25.;
   chn[0].xbnd[3] = 25.;
 
-  chn[0].x0[2] = 1.5;
-  chn[0].xbnd[4] = -25.;
+  chn[0].x0[2] = 0.1;
+  chn[0].xbnd[4] = 0.0;
   chn[0].xbnd[5] = 25.;
-
-  chn[0].x0[3] = 0.1;
-  chn[0].xbnd[6] = 0.0;
-  chn[0].xbnd[7] = 25.;
 
   // initialize chain:
   initializeChain ( cdp, chn );

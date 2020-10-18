@@ -11,7 +11,7 @@
 #define INCXX 1
 #define INCYY 1
 #define RANK 1
-#define NPRS 7 // Number of parameters
+#define NPRS 3 // Number of parameters
 #define THRDS 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
@@ -272,7 +272,7 @@ __host__ void SimpleReadReddenningDataNoErrors ( const char*, const int, float*,
 __host__ int printSpec ( const Spectrum* );
 
 __global__ void returnQ1 ( const int, const int, const float*, const float*, const float*, const float*, const float*, float* );
-__global__ void arrayOfPriors1 ( const int, const int, const float*, const float*, const float*, const float*, float* );
+__global__ void arrayOfPriors1 ( const int, const int, const float*, const float*, float* );
 __global__ void setPriorAtLast ( const int, const int, const float*, float* );
 __global__ void ReverseLinearInterpolationNoErrors ( const int, const int, const int, const float*, const float*, const float*, float* );
 __global__ void setDistanceAtLast ( const int, const int nwl, const float *lst, float *didi );
