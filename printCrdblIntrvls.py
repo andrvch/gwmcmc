@@ -1,8 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os, sys
 import math
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 import time
@@ -25,15 +28,15 @@ quantiles = [halfqq,50,qqlevel+halfqq]
 #nsm = 500000
 #samples = read_data_nsmpl(sys.argv[2],nsm)
 samples = read_data(sys.argv[2])
-print samples.shape
+print(samples.shape)
 #samples = samples[np.r_[0:samples.shape[0]-1],:]
 #print samples.shape
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
 
-samples[0] = np.sqrt(samples[-2]**2 + samples[-3]**2)
+#samples[0] = np.sqrt(samples[-2]**2 + samples[-3]**2)
 
-npars = 1 #len(samples)
+npars = len(samples)
 
 #samples[1] = samples[1] + samples[2]
 
@@ -44,7 +47,7 @@ sttime=time.time()
 for i in range(npars):
     xi,zi = kde_gauss_cuda1d(samples[i],nbins)
     zin,eqh_inter[i,:] = prc(xi,zi,qqq)
-    print eqh_inter[i,:]
+    print(eqh_inter[i,:])
 
 f = open(sys.argv[2]+"."+"%2.0f"%(float(sys.argv[1]))+"."+"credible", "w")
 for i in range(npars):
@@ -53,5 +56,5 @@ for i in range(npars):
     f.write("\n")
 f.close()
 
-print "gpu:"
-print time.time()-sttime
+print("gpu:")
+print(time.time()-sttime)
