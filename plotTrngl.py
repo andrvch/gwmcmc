@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os, sys
@@ -74,8 +74,8 @@ for j in range(npars):
 
         elif j > i:
             ax[i,j].set_visible(False)
-print "gpu:"
-print time.time()-sttime
+print("gpu:")
+print(time.time()-sttime)
 
 for i in range(npars):
     ax[i,i].set_ylabel("p.d.f.")
