@@ -38,12 +38,13 @@ int main ( int argc, char *argv[] ) {
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
   chn[0].dim = atoi ( argv[6] );
+  chn[0].strtng = atoi ( argv[7] );
   chn[0].dlt = 0.2E-1;
 
   allocateChain ( chn );
 
   for ( int i = 0; i < chn[0].dim; i++ ) {
-    chn[0].x0[i] = -1.;
+    chn[0].x0[i] = chn[0].strtng;
   }
 
   initializeChain ( cdp, chn );

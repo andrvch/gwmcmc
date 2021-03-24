@@ -43,6 +43,7 @@ struct Chain {
   float *cnd, *ccnd;
   float *ff;
   float *fconst;
+  float strtng;
 };
 
 __host__ int grid1D ( const int );

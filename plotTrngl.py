@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os, sys
 import math
 import numpy as np
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -26,14 +26,14 @@ nbins2D = 200
 #nsm = 500000
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
-print samples.shape
+print(samples.shape)
 #samples = samples[:samples.shape[0],:]
-samples = samples[:3,:]
-print samples.shape
+#samples = samples[:3,:]
+#print(samples.shape)
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
 
-npars = len(samples)
+npars = 5 #len(samples)
 
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
@@ -73,8 +73,8 @@ for j in range(npars):
 
         elif j > i:
             ax[i,j].set_visible(False)
-print "gpu:"
-print time.time()-sttime
+print("gpu:")
+print(time.time()-sttime)
 
 for i in range(npars):
     ax[i,i].set_ylabel("p.d.f.")
@@ -93,7 +93,7 @@ ax[0,0].yaxis.tick_right()
 setp([a.get_xticklabels() for a in ax[:npars-1,0]], visible=False)
 
 for i in range(npars):
-    print eqh_inter[i,:]
+    print(eqh_inter[i,:])
 
 for j in range(npars):
     for i in range(npars):
@@ -103,5 +103,5 @@ for j in range(npars):
         elif i > j:
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
-plt.show()
-#plt.savefig(sys.argv[1]+".trngl"+".jpg")
+#plt.show()
+plt.savefig(sys.argv[1]+".trngl"+".png")
