@@ -16,6 +16,29 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  int v, w;
+  if ( i < nmbrOfEnrgChnnls && j < nmbrOfWlkrs ) {
+    xxout = log10f ( enrgChnnls[i] );
+    yyout = wlkrs[tIndx];
+    v = FindElementIndex ( xin, M1, xxout );
+    w = FindElementIndex ( yin, M2, yyout );
+    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
+    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
+    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
+    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
+    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
+    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 );
+  }
+}
+
 __host__ int grid1D ( const int n ) {
   int b = ( n + THRDSPERBLCK - 1 ) / THRDSPERBLCK;
   return b;
