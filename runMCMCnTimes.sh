@@ -1,7 +1,7 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="spdeTest6_"
-LOGFILE="LogSpdeTest6"
+CHAINFILE="psffitTest1_"
+LOGFILE="LogPsfFitTest1"
 NWALK=128
 LSTEP=512
 DIM=100
