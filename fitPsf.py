@@ -50,7 +50,10 @@ f.close()
 
 xii,yii = np.mgrid[1.:nx:nx*1j,1.:ny:ny*1j]
 print(xii)
-print(data)
+
+for i in range(nx):
+    print(data[i,:])
+#print(data)
 
 def comp_lev(zi,quont):
     zisort = np.sort(zi)[::-1]
