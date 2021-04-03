@@ -16,33 +16,33 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x ) {
-  int ju, jm, jl, jres;
-  jl = 0;
-  ju = n;
-  while ( ju - jl > 1 ) {
-    jm = floorf ( 0.5 * ( ju + jl ) );
-    if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
-  }
-  jres = jl;
-  if ( x == xx[0] ) jres = 0;
-  if ( x >= xx[n-1] ) jres = n - 1;
-  return jres;
-}
-
-__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float *psf, const float *xx, float *pp ) {
+__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
-  //float xxout, yyout, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
-  float dx, dy, d00, d01, d10, d11;
+  float dx, dy, d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
   if ( i < nx && j < ny && k < nwl ) {
+
     dx = xx[k*dim];
     dy = xx[1+k*dim];
-    v = i - floorf ( dx );
-    w = j - floorf ( dy );
-    pp[i+j*nx+k*nx*ny] = psf[i];
+
+    v = i - floorf ( dx / pix );
+    w = j - floorf ( dy / pix );
+
+    a = ( i*pix - dx - v*pix ) / pix ;
+    b = ( j*pix - dy - w*pix ) / pix ;
+
+    if ( 0 < v   && v < nx   && 0 < w   && w < ny )   d00 = psf[v+w*nx];       else d00 = 0;
+    if ( 0 < v+1 && v+1 < nx && 0 < w   && w < ny )   d10 = psf[v+1+w*nx];     else d10 = 0;
+    if ( 0 < v   && v < nx   && 0 < w+1 && w+1 < ny ) d01 = psf[v+(w+1)*nx];   else d01 = 0;
+    if ( 0 < v+1 && v+1 < nx && 0 < w+1 && w+1 < ny ) d11 = psf[v+1+(w+1)*nx]; else d11 = 0;
+
+    tmp1 = a * d10 + ( -d00 * a + d00 );
+    tmp2 = a * d11 + ( -d01 * a + d01 );
+    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+
+    pp[i+j*nx+k*nx*ny] = tmp3;
   }
 }
 

@@ -120,8 +120,6 @@ __global__ void returnXXStatistic ( const int, const int, const float*, float* )
 __global__ void arrayOf2DConditions ( const int, const int, const float*, float* );
 __global__ void chainFunctionU ( const int, const int, const int, const float*, float* );
 
-__global__ void biinterpolation ( const int nwl, const int nx, const int ny, const float *psf, const float *xin, const float *yin, const float *xx, float *pp );
-__global__ void biinterpolation ( const int nwl, const int nx, const int ny, const float *psf, const float *xx, float *pp );
-__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x );
+__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
