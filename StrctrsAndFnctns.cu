@@ -16,26 +16,33 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-__global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs ) {
+__host__ __device__ int FindElementIndex ( const float *xx, const int n, const float x ) {
+  int ju, jm, jl, jres;
+  jl = 0;
+  ju = n;
+  while ( ju - jl > 1 ) {
+    jm = floorf ( 0.5 * ( ju + jl ) );
+    if ( x >= xx[jm] ) { jl = jm; } else { ju = jm; }
+  }
+  jres = jl;
+  if ( x == xx[0] ) jres = 0;
+  if ( x >= xx[n-1] ) jres = n - 1;
+  return jres;
+}
+
+__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float *psf, const float *xx, float *pp ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  float xxout, yyout, sa, gr, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
+  //float xxout, yyout, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
-  if ( i < nmbrOfEnrgChnnls && j < nmbrOfWlkrs ) {
-    xxout = log10f ( enrgChnnls[i] );
-    yyout = wlkrs[tIndx];
-    v = FindElementIndex ( xin, M1, xxout );
-    w = FindElementIndex ( yin, M2, yyout );
-    a = ( xxout - xin[v] ) / ( xin[v+1] - xin[v] );
-    b = ( yyout - yin[w] ) / ( yin[w+1] - yin[w] );
-    if ( v < M1 && w < M2 ) d00 = data[w*M1+v]; else d00 = 0.;
-    if ( v+1 < M1 && w < M2 ) d10 = data[w*M1+v+1]; else d10 = 0;
-    if ( v < M1 && w+1 < M2 ) d01 = data[(w+1)*M1+v]; else d01 = 0;
-    if ( v+1 < M1 && w+1 < M2 ) d11 = data[(w+1)*M1+v+1]; else d11 = 0;
-    tmp1 = a * d10 + ( -d00 * a + d00 );
-    tmp2 = a * d11 + ( -d01 * a + d01 );
-    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
-    mdlFlxs[i+j*nmbrOfEnrgChnnls] = powf ( 10., tmp3 );
+  float dx, dy;
+  int t = nx*ny;
+  if ( i < t && j < nwl ) {
+    dx = xx[j*dim];
+    dy = xx[1+j*dim];
+    v = - floorf ( dx );
+    w = - floorf ( dy );
+    pp[i+j*dim] = psf[i];
   }
 }
 
