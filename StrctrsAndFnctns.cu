@@ -33,16 +33,16 @@ __host__ __device__ int FindElementIndex ( const float *xx, const int n, const f
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float *psf, const float *xx, float *pp ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
   //float xxout, yyout, a, b, d00, d01, d10, d11, tmp1, tmp2, tmp3;
   int v, w;
-  float dx, dy;
-  int t = nx*ny;
-  if ( i < t && j < nwl ) {
-    dx = xx[j*dim];
-    dy = xx[1+j*dim];
-    v = - floorf ( dx );
-    w = - floorf ( dy );
-    pp[i+j*dim] = psf[i];
+  float dx, dy, d00, d01, d10, d11;
+  if ( i < nx && j < ny && k < nwl ) {
+    dx = xx[k*dim];
+    dy = xx[1+k*dim];
+    v = i - floorf ( dx );
+    w = j - floorf ( dy );
+    pp[i+j*nx+k*nx*ny] = psf[i];
   }
 }
 
