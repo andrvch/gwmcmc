@@ -17,11 +17,14 @@
 #include "StrctrsAndFnctns.cuh"
 
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp ) {
+
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
+
   int v, w;
   float dx, dy, d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
+
   if ( i < nx && j < ny && k < nwl ) {
 
     dx = xx[k*dim];
@@ -422,6 +425,8 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ff, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].fconst, chn[0].nwl * chn[0].nst * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].pp, chn[0].nwl * chn[0].nx * chn[0].ny * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].psf, chn[0].nx * chn[0].ny * sizeof ( float ) );
   return 0;
 }
 
@@ -715,6 +720,8 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].cnd );
   cudaFree ( chn[0].ff );
   cudaFree ( chn[0].fconst );
+  cudaFree ( chn[0].pp );
+  cudaFree ( chn[0].psf );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {

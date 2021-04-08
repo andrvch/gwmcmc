@@ -33,7 +33,7 @@ struct Cupar {
 };
 
 struct Chain {
-  char *name;
+  char *name, *psffl, *datafl;
   int indx, dim, nwl, nst, ist, isb, *kr, *kuni;
   float dlt, time;
   float *lst, *stn, *uni, *x0, *stt, *xx, *xx0, *xxC, *xx1, *xxCM, *xCM, *xxW, *zz, *wcnst, *dcnst, *smpls, *stat, *ru, *stt1, *q, *stt0, *xxCP, *zr, *zuni, *runi, *sstt1, *stn1, *rr, *sstt;
@@ -44,6 +44,8 @@ struct Chain {
   float *ff;
   float *fconst;
   float strtng;
+  float *pp, *psf;
+  int nx, ny;
 };
 
 __host__ int grid1D ( const int );

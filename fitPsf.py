@@ -34,12 +34,12 @@ ny = shape(data)[0]
 nx = shape(data)[1]
 print(nx,ny)
 
-f = open(fl+".psf", "w")
+f = open(fl+".newpsf", "w")
 
-f.write("%.13E\n"%(xrf))
-f.write("%.13E\n"%(yrf))
-f.write("%.18E\n"%(xscl))
-f.write("%.18E\n"%(yscl))
+#f.write("%.13E\n"%(xrf))
+#f.write("%.13E\n"%(yrf))
+#f.write("%.18E\n"%(xscl))
+#f.write("%.18E\n"%(yscl))
 
 for j in range(ny):
     for i in range(nx):

@@ -39,6 +39,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[5] );
   chn[0].dim = atoi ( argv[6] );
   chn[0].strtng = atoi ( argv[7] );
+  chn[0].psffl = argv[8];
+  chn[0].datafl = argv[9];
+  chn[0].nx = 41;
+  chn[0].ny = 41;
   chn[0].dlt = 0.2E-1;
 
   allocateChain ( chn );
@@ -46,6 +50,8 @@ int main ( int argc, char *argv[] ) {
   for ( int i = 0; i < chn[0].dim; i++ ) {
     chn[0].x0[i] = chn[0].strtng;
   }
+
+  simpleReadDataFloat ( chn[0].psffl, chn[0].psf );
 
   initializeChain ( cdp, chn );
 
