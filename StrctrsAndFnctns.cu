@@ -24,6 +24,8 @@ __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block )
 __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
+  dim3 block3 ( 1024, 1, 1 );
+  dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl, block3 );
   returnPPStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx, chn[0].sstt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
@@ -32,6 +34,8 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
 __host__ int statistic ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
+  dim3 block3 ( 1024, 1, 1 );
+  dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl, block3 );
   returnPPStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim-1, chn[0].nwl/2, chn[0].xx1, chn[0].sstt1 );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
   return 0;
