@@ -16,6 +16,11 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block ) {
+  dim3 grid ( ( n + block.x - 1 ) / block.x, ( m + block.y - 1 ) / block.y, ( l + block.z - 1 ) / block.z );
+  return grid;
+}
+
 __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
