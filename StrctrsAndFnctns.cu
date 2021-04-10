@@ -16,6 +16,33 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  returnPPStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx, chn[0].sstt );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
+  return 0;
+}
+
+__host__ int statistic ( const Cupar *cdp, Chain *chn ) {
+  int incxx = INCXX, incyy = INCYY;
+  float alpha = ALPHA, beta = BETA;
+  returnPPStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim-1, chn[0].nwl/2, chn[0].xx1, chn[0].sstt1 );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
+  return 0;
+}
+
+__global__ void returnPPStatistic ( const int dim, const int nwl, const float *xx, float *s ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int t = i + j * dim;
+  int t1 = i + j * ( dim - 1 );
+  float d = dim * 1.;
+  if ( i < dim - 1 && j < nwl ) {
+    s[t1] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d;
+  }
+}
+
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp ) {
 
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -521,27 +548,11 @@ __host__ int metropolisMove ( const Cupar *cdp, Chain *chn ) {
   return 0;
 }
 
-__host__ int statistic ( const Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  returnXXStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim-1, chn[0].nwl/2, chn[0].xx1, chn[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
-  return 0;
-}
-
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
   returnStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx1, chn[0].sstt1 );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt1, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
-  return 0;
-}
-
-__host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
-  int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
-  returnXXStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx, chn[0].sstt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
 }
 

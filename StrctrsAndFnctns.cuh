@@ -46,6 +46,7 @@ struct Chain {
   float strtng;
   float *pp, *psf;
   int nx, ny;
+  float pix;
 };
 
 __host__ int grid1D ( const int );
@@ -123,5 +124,6 @@ __global__ void arrayOf2DConditions ( const int, const int, const float*, float*
 __global__ void chainFunctionU ( const int, const int, const int, const float*, float* );
 
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp );
+__global__ void returnPPStatistic ( const int dim, const int nwl, const float *xx, float *s );
 
 #endif // _STRCTRSANDFNCTNS_CUH_

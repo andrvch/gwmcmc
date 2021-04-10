@@ -44,6 +44,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nx = 41;
   chn[0].ny = 41;
   chn[0].dlt = 0.2E-1;
+  chn[0].pix = 1.;
 
   allocateChain ( chn );
 
