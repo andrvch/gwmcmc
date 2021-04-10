@@ -125,5 +125,6 @@ __global__ void chainFunctionU ( const int, const int, const int, const float*, 
 
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp );
 __global__ void returnPPStatistic ( const int dim, const int nwl, const float *xx, float *s );
+__host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
