@@ -439,7 +439,7 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].xCM, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xxW, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].wcnst, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].dcnst, chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].dcnst, chn[0].nx * chn[0].ny * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].smpls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stat, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xxCP, chn[0].dim * chn[0].nwl * sizeof ( float ) );
@@ -472,14 +472,6 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
     statistic0 ( cdp, chn );
-    cudaDeviceSynchronize ();
-    for ( int j = 0; j < chn[0].nwl; j ++ ) {
-      for ( int i = 0; i < chn[0].dim; i ++ ) {
-        printf ( " %4.4f " , chn[0].xx[i+j*chn[0].dim] );
-      }
-      printf ( "\n" );
-    }
-    
   } else {
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );

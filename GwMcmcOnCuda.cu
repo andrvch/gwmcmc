@@ -56,7 +56,27 @@ int main ( int argc, char *argv[] ) {
 
   simpleReadDataFloat ( chn[0].psffl, chn[0].psf );
 
+  printf ( "Input psf file:" );
+  printf ( "\n" );
+  printf ( "\n" );
+  for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+    printf ( " %4.4f ", chn[0].psf[i] );
+  }
+  printf ( "\n" );
+  printf ( "\n" );
+
   initializeChain ( cdp, chn );
+  cudaDeviceSynchronize ();
+
+  printf ( "Initial walkers:" );
+  printf ( "\n" );
+  printf ( "\n" );
+  for ( int j = 0; j < chn[0].nwl; j ++ ) {
+    for ( int i = 0; i < chn[0].dim; i ++ ) {
+      printf ( " %4.4f " , chn[0].xx[i+j*chn[0].dim] );
+    }
+    printf ( "\n" );
+  }
 
   if ( vrb ) {
     printf ( " Start ... \n" );
