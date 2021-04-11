@@ -37,12 +37,13 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dim = atoi ( argv[6] );
+  chn[0].imdim = atoi ( argv[6] );
   chn[0].strtng = atoi ( argv[7] );
   chn[0].psffl = argv[8];
   chn[0].datafl = argv[9];
-  chn[0].nx = 41;
-  chn[0].ny = 41;
+  chn[0].dim = 3;
+  chn[0].nx = chn[0].imdim;
+  chn[0].ny = chn[0].imdim;
   chn[0].dlt = 0.2E-1;
   chn[0].pix = 1.;
 

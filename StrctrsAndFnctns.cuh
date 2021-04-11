@@ -47,6 +47,7 @@ struct Chain {
   float *pp, *psf;
   int nx, ny;
   float pix;
+  int imdim;
 };
 
 __host__ int grid1D ( const int );
