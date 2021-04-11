@@ -26,10 +26,10 @@ for i in range(nstps):
             wlkrs[k,j,i] = smpls[k,j+nwlkrs*i]
 
 stps = linspace(1,nstps,num=nstps)
-fig, ax = plt.subplots(nrows=10)
+fig, ax = plt.subplots(nrows=nprmtrs)
 plt.subplots_adjust(hspace=0.1)
 
-for i in range(10):
+for i in range(nprmtrs):
     for j in range(nwlkrs):
         ax[i].errorbar(stps,wlkrs[i,j,:])
 

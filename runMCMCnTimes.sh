@@ -1,7 +1,7 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="psffitTestSuperNew_"
-LOGFILE="LogPsfFitTestSuperNew"
+CHAINFILE="psffit000_"
+LOGFILE="LogPsfFit000"
 NWALK=128
 LSTEP=512
 IMDIM=41
