@@ -472,6 +472,14 @@ __host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
     statistic0 ( cdp, chn );
+    cudaDeviceSynchronize ();
+    for ( int j = 0; j < chn[0].nwl; j ++ ) {
+      for ( int i = 0; i < chn[0].dim; i ++ ) {
+        printf ( " %4.4f " , chn[0].xx[i+j*chn[0].dim] );
+      }
+      printf ( "\n" );
+    }
+    
   } else {
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
