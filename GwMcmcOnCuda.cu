@@ -49,9 +49,10 @@ int main ( int argc, char *argv[] ) {
 
   allocateChain ( chn );
 
-  for ( int i = 0; i < chn[0].dim; i++ ) {
+  for ( int i = 0; i < chn[0].dim-1; i++ ) {
     chn[0].x0[i] = chn[0].strtng;
   }
+  chn[0].x0[chn[0].dim-1] = 100;
 
   simpleReadDataFloat ( chn[0].psffl, chn[0].psf );
 
