@@ -52,7 +52,7 @@ int main ( int argc, char *argv[] ) {
   for ( int i = 0; i < chn[0].dim-1; i++ ) {
     chn[0].x0[i] = chn[0].strtng;
   }
-  chn[0].x0[chn[0].dim-1] = 100;
+  chn[0].x0[chn[0].dim-1] = 1;
 
   simpleReadDataFloat ( chn[0].psffl, chn[0].psf );
 
@@ -77,6 +77,20 @@ int main ( int argc, char *argv[] ) {
     }
     printf ( "\n" );
   }
+
+  printf ( "Initial shifted psf's:" );
+  printf ( "\n" );
+  printf ( "\n" );
+  for ( int j = 0; j < chn[0].nwl; j ++ ) {
+    printf ( " walk num %i :\n", j );
+    for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+      printf ( " %4.4f " , chn[0].pp[i+j*chn[0].nx*chn[0].ny] );
+      //printf ( " %i " , chn[0].ww[i+j*chn[0].nx*chn[0].ny] );
+    }
+    printf ( "\n" );
+    printf ( "\n" );
+  }
+
 
   if ( vrb ) {
     printf ( " Start ... \n" );

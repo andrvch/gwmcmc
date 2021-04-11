@@ -24,9 +24,9 @@ __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block )
 __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
-  dim3 block3 ( 1, 1, 1024 );
+  dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx, chn[0].pp );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx, chn[0].pp, chn[0].vv, chn[0].ww );
   returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl, chn[0].psf, chn[0].pp, chn[0].sstt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nx*chn[0].ny, chn[0].nwl, &alpha, chn[0].sstt, chn[0].nx*chn[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
@@ -35,9 +35,9 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
 __host__ int statistic ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
-  dim3 block3 ( 1, 1, 1024 );
+  dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl/2, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx1, chn[0].pp );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx1, chn[0].pp, chn[0].vv, chn[0].ww );
   returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl/2 ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl/2, chn[0].psf, chn[0].pp, chn[0].sstt1 );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nx*chn[0].ny, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].nx*chn[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
   return 0;
@@ -51,7 +51,9 @@ __global__ void returnPPStatistic ( const int imdim, const int nwl, const float 
   }
 }
 
-__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp ) {
+
+
+__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
 
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -65,22 +67,24 @@ __global__ void biinterpolation ( const int dim, const int nwl, const int nx, co
     dx = xx[k*dim];
     dy = xx[1+k*dim];
 
-    v = i - floorf ( dx / pix );
-    w = j - floorf ( dy / pix );
+    v = i + floorf ( dx / pix );
+    w = j + floorf ( dy / pix );
 
-    a = ( i*pix - dx - v*pix ) / pix ;
-    b = ( j*pix - dy - w*pix ) / pix ;
+    a = fabsf ( dx ) / pix ;
+    b = fabsf ( dy ) / pix ;
 
     if ( 0 < v   && v < nx   && 0 < w   && w < ny )   d00 = psf[v+w*nx];       else d00 = 0;
     if ( 0 < v+1 && v+1 < nx && 0 < w   && w < ny )   d10 = psf[v+1+w*nx];     else d10 = 0;
     if ( 0 < v   && v < nx   && 0 < w+1 && w+1 < ny ) d01 = psf[v+(w+1)*nx];   else d01 = 0;
     if ( 0 < v+1 && v+1 < nx && 0 < w+1 && w+1 < ny ) d11 = psf[v+1+(w+1)*nx]; else d11 = 0;
 
-    tmp1 = a * d10 + ( -d00 * a + d00 );
-    tmp2 = a * d11 + ( -d01 * a + d01 );
-    tmp3 = b * tmp2 + ( -tmp1 * b + tmp1 );
+    tmp1 = a * d10 + ( 1 - a ) * d00;
+    tmp2 = a * d11 + ( 1 - a ) * d01;
+    tmp3 = b * tmp2 + ( 1 - b ) * tmp1;
 
-    pp[i+j*nx+k*nx*ny] = tmp3;
+    pp[i+j*nx+k*nx*ny] = xx[2+k*dim] * tmp3;
+    vv[i+j*nx+k*nx*ny] = i;
+    ww[i+j*nx+k*nx*ny] = j;
   }
 }
 
@@ -461,6 +465,8 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].ff, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].fconst, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].pp, chn[0].nwl * chn[0].nx * chn[0].ny * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].vv, chn[0].nwl * chn[0].nx * chn[0].ny * sizeof ( int ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ww, chn[0].nwl * chn[0].nx * chn[0].ny * sizeof ( int ) );
   cudaMallocManaged ( ( void ** ) &chn[0].psf, chn[0].nx * chn[0].ny * sizeof ( float ) );
   return 0;
 }
@@ -740,6 +746,8 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].ff );
   cudaFree ( chn[0].fconst );
   cudaFree ( chn[0].pp );
+  cudaFree ( chn[0].vv );
+  cudaFree ( chn[0].ww );
   cudaFree ( chn[0].psf );
 }
 
