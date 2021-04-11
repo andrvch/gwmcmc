@@ -26,9 +26,9 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 1, 1, 1024 );
   dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl, block3 );
-  biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp );
-  returnPPStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx, chn[0].sstt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx, chn[0].pp );
+  returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl, chn[0].psf, chn[0].pp, chn[0].sstt );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nx*chn[0].ny, chn[0].nwl, &alpha, chn[0].sstt, chn[0].nx*chn[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
 }
 
@@ -36,21 +36,18 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 1, 1, 1024 );
-  dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl, block3 );
-  biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp );
-  returnPPStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim-1, chn[0].nwl/2, chn[0].xx1, chn[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
+  dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl/2, block3 );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx1, chn[0].pp );
+  returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl/2 ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl/2, chn[0].psf, chn[0].pp, chn[0].sstt1 );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nx*chn[0].ny, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].nx*chn[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
   return 0;
 }
 
-__global__ void returnPPStatistic ( const int dim, const int nwl, const float *xx, float *s ) {
+__global__ void returnPPStatistic ( const int imdim, const int nwl, const float *psf, const float *pp, float *ss ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
-  int t = i + j * dim;
-  int t1 = i + j * ( dim - 1 );
-  float d = dim * 1.;
-  if ( i < dim - 1 && j < nwl ) {
-    s[t1] = d * pow ( xx[t+1] - xx[t], 2. ) + ( funcVV ( xx[t+1] ) + funcVV ( xx[t] ) ) / d;
+  if ( i < imdim && j < nwl ) {
+    s[t1] = pow ( psf[i] - pp[i+j*nwl], 2. ) / sqrt ( psf[i] );
   }
 }
 
