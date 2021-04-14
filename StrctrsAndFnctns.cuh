@@ -49,6 +49,7 @@ struct Chain {
   float pix;
   int imdim;
   int *vv, *ww;
+  float *x0bn;
 };
 
 __host__ int grid1D ( const int );
@@ -72,7 +73,9 @@ __global__ void shiftWalkers ( const int, const int, const float*, const float*,
 __global__ void addWalkers ( const int, const int, const float*, const float*, float* );
 __global__ void returnQ ( const int, const int, const float*, const float*, const float*, const float*, float* );
 __global__ void returnQM ( const int, const int, const float*, const float*, float* );
-__global__ void updateWalkers ( const int, const int, const float*, const float*, const float*, float* );
+
+__global__ void updateWalkers ( const int dim, const int nwl, const float *cnd, const float *xx1, const float *q, const float *r, float *xx0 );
+
 __global__ void updateStatistic ( const int, const float*, const float*, const float*, float* );
 __global__ void saveWalkers ( const int, const int, const int, const float*, float* );
 __global__ void saveStatistic ( const int, const int, const float*, float* );
@@ -122,12 +125,12 @@ __host__ int metropolisUpdate ( const Cupar*, Chain* );
 __host__ __device__ double funcVV ( const float );
 __global__ void returnXXStatistic ( const int, const int, const float*, float* );
 
-__global__ void arrayOf2DConditions ( const int, const int, const float*, float* );
 __global__ void chainFunctionU ( const int, const int, const int, const float*, float* );
 
 //__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp );
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp, int *vv, int *ww );
 __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block );
 __global__ void returnPPStatistic ( const int imdim, const int nwl, const float *psf, const float *pp, float *ss );
+__global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *x0bn, const float *xx, float *cc );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
