@@ -76,8 +76,8 @@ int main ( int argc, char *argv[] ) {
       printf ( " %4.4f " , chn[0].xx[i+j*chn[0].dim] );
     }
     printf ( "\n" );
+    printf ( "\n" );
   }
-
   printf ( "Initial shifted psf's:" );
   printf ( "\n" );
   printf ( "\n" );
@@ -90,7 +90,30 @@ int main ( int argc, char *argv[] ) {
     printf ( "\n" );
     printf ( "\n" );
   }
-
+  printf ( "Initial stat:" );
+  printf ( "\n" );
+  printf ( "\n" );
+  for ( int j = 0; j < chn[0].nwl; j ++ ) {
+    printf ( " walk num %i :\n", j );
+    for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+      printf ( " %4.4f " , chn[0].sstt[i+j*chn[0].nx*chn[0].ny] );
+      //printf ( " %i " , chn[0].ww[i+j*chn[0].nx*chn[0].ny] );
+    }
+    printf ( "\n" );
+    printf ( "\n" );
+  }
+  printf ( "Initial total stat:" );
+  printf ( "\n" );
+  printf ( "\n" );
+  for ( int j = 0; j < chn[0].nwl; j ++ ) {
+    printf ( " walk num %i :\n", j );
+    for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+      printf ( " %4.4f " , chn[0].sstt[i+j*chn[0].nx*chn[0].ny] );
+      //printf ( " %i " , chn[0].ww[i+j*chn[0].nx*chn[0].ny] );
+    }
+    printf ( "\n" );
+    printf ( "\n" );
+  }
 
   if ( vrb ) {
     printf ( " Start ... \n" );
@@ -112,17 +135,73 @@ int main ( int argc, char *argv[] ) {
       //walkMove ( cdp, chn );
       streachMove ( cdp, chn );
       //metropolisMove ( cdp, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
+      printf ( "Proposed walkers:" );
+      printf ( "\n" );
+      printf ( "\n" );
+      for ( int j = 0; j < chn[0].nwl/2; j ++ ) {
+        for ( int i = 0; i < chn[0].dim; i ++ ) {
+          printf ( " %4.4f " , chn[0].xx1[i+j*chn[0].dim] );
+        }
+        printf ( "\n" );
+        printf ( "\n" );
+      }
+      printf ( "Proposed shifted psf's:" );
+      printf ( "\n" );
+      printf ( "\n" );
+      for ( int j = 0; j < chn[0].nwl/2; j ++ ) {
+        printf ( " walk num %i :\n", j );
+        for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+          printf ( " %4.4f " , chn[0].pp[i+j*chn[0].nx*chn[0].ny] );
+          //printf ( " %i " , chn[0].ww[i+j*chn[0].nx*chn[0].ny] );
+        }
+        printf ( "\n" );
+        printf ( "\n" );
+      }
       //printMetropolisMove ( chn );
       statistic ( cdp, chn );
       //statisticMetropolis ( cdp, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
+      printf ( "Proposed stat:" );
+      printf ( "\n" );
+      printf ( "\n" );
+      for ( int j = 0; j < chn[0].nwl/2; j ++ ) {
+        printf ( " walk num %i :\n", j );
+        for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+          printf ( " %4.4f " , chn[0].sstt1[i+j*chn[0].nx*chn[0].ny] );
+          //printf ( " %i " , chn[0].ww[i+j*chn[0].nx*chn[0].ny] );
+        }
+        printf ( "\n" );
+        printf ( "\n" );
+      }
       //printMetropolisMove ( chn );
       //printMove ( chn );
       //walkUpdate ( cdp, chn );
       streachUpdate ( cdp, chn );
       //metropolisUpdate ( cdp, chn );
-      //cudaDeviceSynchronize ();
+      cudaDeviceSynchronize ();
+      printf ( "Updated walkers:" );
+      printf ( "\n" );
+      printf ( "\n" );
+      for ( int j = 0; j < chn[0].nwl; j ++ ) {
+        for ( int i = 0; i < chn[0].dim; i ++ ) {
+          printf ( " %4.4f " , chn[0].xx[i+j*chn[0].dim] );
+        }
+        printf ( "\n" );
+        printf ( "\n" );
+      }
+      printf ( "Updated stat:" );
+      printf ( "\n" );
+      printf ( "\n" );
+      for ( int j = 0; j < chn[0].nwl; j ++ ) {
+        printf ( " walk num %i :\n", j );
+        //for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+        printf ( " %4.4f " , chn[0].stt[j] );
+          //printf ( " %i " , chn[0].ww[i+j*chn[0].nx*chn[0].ny] );
+        //}
+        printf ( "\n" );
+        printf ( "\n" );
+      }
       //printMetropolisUpdate ( chn );
       //printUpdate ( chn );
       chn[0].isb += 1;

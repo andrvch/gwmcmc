@@ -51,8 +51,6 @@ __global__ void returnPPStatistic ( const int imdim, const int nwl, const float 
   }
 }
 
-
-
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
 
   int i = threadIdx.x + blockDim.x * blockIdx.x;
