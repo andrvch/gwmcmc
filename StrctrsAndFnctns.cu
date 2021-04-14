@@ -47,7 +47,13 @@ __global__ void returnPPStatistic ( const int imdim, const int nwl, const float 
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   if ( i < imdim && j < nwl ) {
-    ss[i+j*imdim] = pow ( psf[i] - pp[i+j*imdim], 2. ) / sqrt ( psf[i] );
+    if ( psf[i] == 0 && pp[i+j*imdim] == 0 ) {
+      ss[i+j*imdim] = 0;
+    } else if ( psf[i] != 0 ) {
+      ss[i+j*imdim] = pow ( psf[i] - pp[i+j*imdim], 2. ) / sqrt ( psf[i] );
+    } else {
+      ss[i+j*imdim] = pow ( psf[i] - pp[i+j*imdim], 2. ) / sqrt ( pp[i+j*imdim] );
+    }
   }
 }
 

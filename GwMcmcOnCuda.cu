@@ -66,6 +66,8 @@ int main ( int argc, char *argv[] ) {
   printf ( "\n" );
 
   initializeChain ( cdp, chn );
+
+  /*
   cudaDeviceSynchronize ();
 
   printf ( "Initial walkers:" );
@@ -107,13 +109,13 @@ int main ( int argc, char *argv[] ) {
   printf ( "\n" );
   for ( int j = 0; j < chn[0].nwl; j ++ ) {
     printf ( " walk num %i :\n", j );
-    for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
-      printf ( " %4.4f " , chn[0].sstt[i+j*chn[0].nx*chn[0].ny] );
+    //for ( int i = 0; i < chn[0].nx*chn[0].ny; i ++ ) {
+    printf ( " %4.4f " , chn[0].stt[j] );
       //printf ( " %i " , chn[0].ww[i+j*chn[0].nx*chn[0].ny] );
-    }
+    //}
     printf ( "\n" );
     printf ( "\n" );
-  }
+  }*/
 
   if ( vrb ) {
     printf ( " Start ... \n" );
@@ -135,6 +137,7 @@ int main ( int argc, char *argv[] ) {
       //walkMove ( cdp, chn );
       streachMove ( cdp, chn );
       //metropolisMove ( cdp, chn );
+      /*
       cudaDeviceSynchronize ();
       printf ( "Proposed walkers:" );
       printf ( "\n" );
@@ -157,10 +160,11 @@ int main ( int argc, char *argv[] ) {
         }
         printf ( "\n" );
         printf ( "\n" );
-      }
+      }*/
       //printMetropolisMove ( chn );
       statistic ( cdp, chn );
       //statisticMetropolis ( cdp, chn );
+      /*
       cudaDeviceSynchronize ();
       printf ( "Proposed stat:" );
       printf ( "\n" );
@@ -177,8 +181,10 @@ int main ( int argc, char *argv[] ) {
       //printMetropolisMove ( chn );
       //printMove ( chn );
       //walkUpdate ( cdp, chn );
+      */
       streachUpdate ( cdp, chn );
       //metropolisUpdate ( cdp, chn );
+      /*
       cudaDeviceSynchronize ();
       printf ( "Updated walkers:" );
       printf ( "\n" );
@@ -201,7 +207,7 @@ int main ( int argc, char *argv[] ) {
         //}
         printf ( "\n" );
         printf ( "\n" );
-      }
+      } */
       //printMetropolisUpdate ( chn );
       //printUpdate ( chn );
       chn[0].isb += 1;
