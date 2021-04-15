@@ -44,7 +44,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].dim = 3;
   chn[0].nx = chn[0].imdim;
   chn[0].ny = chn[0].imdim;
-  chn[0].dlt = 0.2E-6;
+  chn[0].dlt = 0.2E-4;
   chn[0].pix = 1.;
 
   allocateChain ( chn );
@@ -54,12 +54,12 @@ int main ( int argc, char *argv[] ) {
   }
   chn[0].x0[chn[0].dim-1] = 1;
 
-  chn[0].x0bn[0] = -0.1;
-  chn[0].x0bn[1] = 0.1;
-  chn[0].x0bn[2] = -0.1;
-  chn[0].x0bn[3] = 0.1;
-  chn[0].x0bn[4] = 0.9;
-  chn[0].x0bn[5] = 1.1;
+  chn[0].x0bn[0] = -10.;
+  chn[0].x0bn[1] = 10.;
+  chn[0].x0bn[2] = -10.;
+  chn[0].x0bn[3] = 10.;
+  chn[0].x0bn[4] = 0.1;
+  chn[0].x0bn[5] = 1.9;
 
   simpleReadDataFloat ( chn[0].psffl, chn[0].psf );
 

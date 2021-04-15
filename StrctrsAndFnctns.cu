@@ -58,37 +58,42 @@ __global__ void returnPPStatistic ( const int imdim, const int nwl, const float 
 }
 
 __global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
-
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
-
-  int v, w;
-  float dx, dy, norm;
+  int v, w, dxi, dyi;
+  float dx, dy, nr, dxf, dyf;
   float d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
-
   if ( i < nx && j < ny && k < nwl ) {
-
-    dx = xx[k*dim];
-    dy = xx[1+k*dim];
-    norm = xx[2+k*dim];
-
-    v = i - floorf ( dx / pix );
-    w = j - floorf ( dy / pix );
-
-    a = fabsf ( dx ) / pix ;
-    b = fabsf ( dy ) / pix ;
-
+    dx = xx[k*dim] / pix;
+    dy = xx[1+k*dim] / pix;
+    nr = xx[2+k*dim];
+    dxi = floorf ( fabsf ( dx ) );
+    dxf = fabsf ( dx ) - dxi;
+    dyi = floorf ( fabsf ( dy ) );
+    dyf = fabsf ( dy ) - dyi;
+    if ( dx >= 0 ) {
+      v = i + dxi;
+      a = dxf;
+    } else {
+      v = i - dxi - 1;
+      a = 1 - dxf;
+    }
+    if ( dy >= 0 ) {
+      w = j + dyi;
+      b = dyf;
+    } else {
+      w = j - dyi - 1;
+      b = 1 - dyf;
+    }
     if ( 0 < v   && v   < nx && 0 < w   && w   < ny ) d00 = psf[v+w*nx];       else d00 = 0;
     if ( 0 < v+1 && v+1 < nx && 0 < w   && w   < ny ) d10 = psf[v+1+w*nx];     else d10 = 0;
     if ( 0 < v   && v   < nx && 0 < w+1 && w+1 < ny ) d01 = psf[v+(w+1)*nx];   else d01 = 0;
     if ( 0 < v+1 && v+1 < nx && 0 < w+1 && w+1 < ny ) d11 = psf[v+1+(w+1)*nx]; else d11 = 0;
-
     tmp1 = a * d10 + ( 1 - a ) * d00;
     tmp2 = a * d11 + ( 1 - a ) * d01;
     tmp3 = b * tmp2 + ( 1 - b ) * tmp1;
-
-    pp[i+j*nx+k*nx*ny] = tmp3 * norm;
+    pp[i+j*nx+k*nx*ny] = tmp3 * nr;
     vv[i+j*nx+k*nx*ny] = v;
     ww[i+j*nx+k*nx*ny] = w;
   }
