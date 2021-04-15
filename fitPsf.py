@@ -40,6 +40,9 @@ f = open(fl+".newpsf", "w")
 #f.write("%.13E\n"%(yrf))
 #f.write("%.18E\n"%(xscl))
 #f.write("%.18E\n"%(yscl))
+tot = data.sum()
+print("Total:")
+print(tot)
 
 for j in range(ny):
     for i in range(nx):
@@ -47,12 +50,10 @@ for j in range(ny):
     f.write("\n")
 f.close()
 
-
 xii,yii = np.mgrid[1.:nx:nx*1j,1.:ny:ny*1j]
-print(xii)
-
-for i in range(nx):
-    print(data[i,:])
+#print(xii)
+#for i in range(nx):
+#    print(data[i,:])
 #print(data)
 
 def comp_lev(zi,quont):
@@ -67,7 +68,7 @@ def comp_lev(zi,quont):
     levels = [zisortnorm[np.where(zicumsumnorm>qu)][0] for qu in quont]
     return levels,zinorm,zisum
 
-
+"""
 quont = [0.90,0.68,0.40]
 lev,zin,zisum = comp_lev(data.flatten(),quont)
 
@@ -80,6 +81,7 @@ for i in range(len(quont)):
 plt.contour(xii,yii,zin.reshape(xii.shape), lev, colors='blue', linewidth=.5)
 
 plt.savefig(sys.argv[1]+"cntr"+".png")
+"""
 
 """
 def gauss(x,y):

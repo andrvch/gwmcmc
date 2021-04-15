@@ -44,7 +44,7 @@ struct Chain {
   float *ff;
   float *fconst;
   float strtng;
-  float *pp, *psf;
+  float *pp, *psf, *img;
   int nx, ny;
   float pix;
   int imdim;

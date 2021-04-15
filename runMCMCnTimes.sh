@@ -1,7 +1,7 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="psffit000_"
-LOGFILE="LogPsfFit000"
+CHAINFILE="psffit001_"
+LOGFILE="LogPsfFit001"
 NWALK=128
 LSTEP=2048
 IMDIM=41
@@ -9,7 +9,7 @@ i=$1
 NCHAINS=1
 SRT=0
 PSFFL="psf_19165_psr_1pix_new.fits.newpsf"
-DATAFL="psf_19165_psr_1pix_new.fits.newpsf"
+DATAFL="img_19165_psr_new.fits.newpsf"
 let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do

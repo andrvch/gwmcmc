@@ -52,16 +52,17 @@ int main ( int argc, char *argv[] ) {
   for ( int i = 0; i < chn[0].dim-1; i++ ) {
     chn[0].x0[i] = chn[0].strtng;
   }
-  chn[0].x0[chn[0].dim-1] = 1;
+  chn[0].x0[chn[0].dim-1] = 0.1;
 
   chn[0].x0bn[0] = -10.;
   chn[0].x0bn[1] = 10.;
   chn[0].x0bn[2] = -10.;
   chn[0].x0bn[3] = 10.;
-  chn[0].x0bn[4] = 0.1;
-  chn[0].x0bn[5] = 1.9;
+  chn[0].x0bn[4] = 0.;
+  chn[0].x0bn[5] = 1.E6;
 
   simpleReadDataFloat ( chn[0].psffl, chn[0].psf );
+  simpleReadDataFloat ( chn[0].datafl, chn[0].img );
 
   printf ( "Input psf file:" );
   printf ( "\n" );
