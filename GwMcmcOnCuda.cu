@@ -37,20 +37,29 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].imdim = atoi ( argv[6] );
-  chn[0].strtng = atoi ( argv[7] );
-  chn[0].psffl = argv[8];
-  chn[0].datafl = argv[9];
-  chn[0].dim = 3;
-  chn[0].nx = chn[0].imdim;
-  chn[0].ny = chn[0].imdim;
   chn[0].dlt = 0.2E-4;
-  chn[0].pix = 1.;
+
+  Image img[NIMG];
+  img[0].imdim = atoi ( argv[6] );
+  img[0].psffl = argv[7];
+  img[0].datafl = argv[8];
+  img[0].nx = img[0].imdim;
+  img[0].ny = img[0].imdim;
+  img[0].pix = 1.;
+
+  chn[0].imdim = img[0].imdim;
+  chn[0].psffl = img[0].psffl;
+  chn[0].datafl = img[0].datafl;
+  chn[0].nx = img[0].imdim;
+  chn[0].ny = img[0].imdim;
+  chn[0].pix = img[0].pix;
+
+  chn[0].dim = 3;
 
   allocateChain ( chn );
 
   for ( int i = 0; i < chn[0].dim-1; i++ ) {
-    chn[0].x0[i] = chn[0].strtng;
+    chn[0].x0[i] = 0.;
   }
   chn[0].x0[chn[0].dim-1] = 0.04;
 
@@ -58,11 +67,11 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0bn[1] = 5.;
   chn[0].x0bn[2] = -5.;
   chn[0].x0bn[3] = 5.;
-  chn[0].x0bn[4] = 0.007;
+  chn[0].x0bn[4] = 0.0;
   chn[0].x0bn[5] = 10000.;
 
-  simpleReadDataFloat ( chn[0].psffl, chn[0].psf );
-  simpleReadDataFloat ( chn[0].datafl, chn[0].img );
+  simpleReadDataFloat ( img[0].psffl, chn[0].psf );
+  simpleReadDataFloat ( img[0].datafl, chn[0].img );
 
   printf ( "Input psf file:" );
   printf ( "\n" );

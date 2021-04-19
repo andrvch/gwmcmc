@@ -56,23 +56,9 @@ struct Chain {
 struct Image {
   char *name, *psffl, *datafl;
   float *psf, *img;
-  char *spcLst[NIMG];
-  float lwrNtcdEnrg, hghrNtcdEnrg;
-  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns, nmbrOfNtcdBns, nmbrOfiVls, nmbrOfUsdBns, nmbrOfNtcdChnnls;
-  float srcExptm, bckgrndExptm;
-  float backscal_src, backscal_bkg;
-  int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
-  float *grpVls, *ntcVls, *bnsbns, *grpng, *grpIgnVls, *iVls, *srcGrp, *ignRmfVls, *ignVls, *srcIgn;
-  int *grpIndx, *grpPntr, *grpIgnIndx, *grpIgnPntr, *iPntr, *iIndx, *ignRmfIndx, *ignRmfPntr;
-  int *ntcIndx, *ntcPntr, *ignPntr, *ignIndx;
-  float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
-  float *crssctns, *absrptnFctrs, *mdlFlxs, *nsFlxs, *plFlxs, *flddMdlFlxs, *flddNSFlxs, *flddPLFlxs, *ntcdChnnls, *chnnlSttstcs, *chiSttstcs, smOfNtcdChnnls;
-  float *nsa1Flxs, *nsa2Flxs;
-  int nmbrOfgrpIgnVls, nmbrOfignRmfVls;
-  int hghrBn, lwrBn, hghrCh, lwrCh;
-  float *bkgGrp, *bkgIgn;
-  float *chi, *stat;
-  float *lwrGrp, *hghrGrp;
+  float pix;
+  int imdim;
+  int nx, ny;
 };
 
 
