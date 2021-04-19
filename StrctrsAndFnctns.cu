@@ -16,6 +16,21 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+__host__ int allocateImage ( Chain *chn, Image *img ) {
+  for ( int i = 0; i < NIMG; i++ ) {
+    cudaMallocManaged ( ( void ** ) &img[i].psf, img[i].nx * img[i].ny * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &img[i].img, img[i].nx * img[i].ny * sizeof ( float ) );
+  }
+  return 0;
+}
+
+__host__ void freeImage ( const Image *img ) {
+  for ( int i = 0; i < NIMG; i++ ) {
+    cudaFree ( img[i].psf );
+    cudaFree ( img[i].img );
+  }
+}
+
 __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block ) {
   dim3 grid ( ( n + block.x - 1 ) / block.x, ( m + block.y - 1 ) / block.y, ( l + block.z - 1 ) / block.z );
   return grid;
@@ -26,8 +41,8 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx, chn[0].pp, chn[0].vv, chn[0].ww );
-  returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl, chn[0].img, chn[0].pp, chn[0].sstt );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, chn[0].nx, chn[0].ny, chn[0].pix, img[0].psf, chn[0].xx, chn[0].pp, chn[0].vv, chn[0].ww );
+  returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl, img[0].img, chn[0].pp, chn[0].sstt );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nx*chn[0].ny, chn[0].nwl, &alpha, chn[0].sstt, chn[0].nx*chn[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
 }
@@ -37,8 +52,8 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( chn[0].nx, chn[0].ny, chn[0].nwl/2, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].nx, chn[0].ny, chn[0].pix, chn[0].psf, chn[0].xx1, chn[0].pp, chn[0].vv, chn[0].ww );
-  returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl/2 ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl/2, chn[0].img, chn[0].pp, chn[0].sstt1 );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, chn[0].nx, chn[0].ny, chn[0].pix, img[0].psf, chn[0].xx1, chn[0].pp, chn[0].vv, chn[0].ww );
+  returnPPStatistic <<< grid2D ( chn[0].nx*chn[0].ny, chn[0].nwl/2 ), block2D () >>> ( chn[0].nx*chn[0].ny, chn[0].nwl/2, img[0].img, chn[0].pp, chn[0].sstt1 );
   cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].nx*chn[0].ny, chn[0].nwl/2, &alpha, chn[0].sstt1, chn[0].nx*chn[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
   return 0;
 }

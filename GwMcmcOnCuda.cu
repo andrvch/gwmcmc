@@ -57,6 +57,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].dim = 3;
 
   allocateChain ( chn );
+  allocateImage ( chn, img );
 
   for ( int i = 0; i < chn[0].dim-1; i++ ) {
     chn[0].x0[i] = 0.;
@@ -72,6 +73,8 @@ int main ( int argc, char *argv[] ) {
 
   simpleReadDataFloat ( img[0].psffl, chn[0].psf );
   simpleReadDataFloat ( img[0].datafl, chn[0].img );
+  simpleReadDataFloat ( img[0].psffl, img[0].psf );
+  simpleReadDataFloat ( img[0].datafl, img[0].img );
 
   printf ( "Input psf file:" );
   printf ( "\n" );

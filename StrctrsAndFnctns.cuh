@@ -143,6 +143,7 @@ __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float 
 __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img );
 __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img );
 __host__ int initializeChain ( Cupar*, Chain*, Image *img );
-
+__host__ int allocateImage ( Chain *chn, Image *img );
+__host__ void freeImage ( const Image *img );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
