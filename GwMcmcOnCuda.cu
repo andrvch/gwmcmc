@@ -82,7 +82,7 @@ int main ( int argc, char *argv[] ) {
   printf ( "\n" );
   printf ( "\n" );
 
-  initializeChain ( cdp, chn );
+  initializeChain ( cdp, chn, img );
 
   /*
   cudaDeviceSynchronize ();
@@ -179,7 +179,7 @@ int main ( int argc, char *argv[] ) {
         printf ( "\n" );
       }*/
       //printMetropolisMove ( chn );
-      statistic ( cdp, chn );
+      statistic ( cdp, chn, img );
       //statisticMetropolis ( cdp, chn );
       /*
       cudaDeviceSynchronize ();

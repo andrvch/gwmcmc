@@ -102,12 +102,10 @@ __global__ void metropolisPoposal2 ( const int, const int, const int, const floa
 
 __host__ int initializeCuda ( Cupar* );
 __host__ int allocateChain ( Chain * );
-__host__ int initializeChain ( Cupar*, Chain* );
 __host__ int initializeRandomForWalk ( Cupar*, Chain* );
 __host__ int initializeRandomForStreach ( Cupar*, Chain* );
 __host__ int walkMove ( const Cupar*, Chain* );
 __host__ int streachMove ( const Cupar*, Chain* );
-__host__ int statistic ( const Cupar*, Chain* );
 __host__ int walkUpdate ( const Cupar*, Chain* );
 __host__ int streachUpdate ( const Cupar*, Chain* );
 __host__ int saveCurrent ( Chain* );
@@ -129,7 +127,6 @@ __host__ int chooseWindow ( const int, const float, const float* );
 __host__ int initializeRandomForMetropolis ( Cupar *cdp, Chain *chn );
 __host__ int metropolisMove ( const Cupar *cdp, Chain *chn );
 __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn );
-__host__ int statistic0 ( const Cupar*, Chain* );
 __host__ int metropolisUpdate ( const Cupar*, Chain* );
 
 __host__ __device__ double funcVV ( const float );
@@ -142,5 +139,10 @@ __global__ void biinterpolation ( const int dim, const int nwl, const int nx, co
 __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block );
 __global__ void returnPPStatistic ( const int imdim, const int nwl, const float *psf, const float *pp, float *ss );
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *x0bn, const float *xx, float *cc );
+
+__host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img );
+__host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img );
+__host__ int initializeChain ( Cupar*, Chain*, Image *img );
+
 
 #endif // _STRCTRSANDFNCTNS_CUH_

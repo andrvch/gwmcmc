@@ -21,7 +21,7 @@ __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block )
   return grid;
 }
 
-__host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
+__host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 16, 16, 4 );
@@ -32,7 +32,7 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn ) {
   return 0;
 }
 
-__host__ int statistic ( const Cupar *cdp, Chain *chn ) {
+__host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 16, 16, 4 );
@@ -484,13 +484,13 @@ __host__ int allocateChain ( Chain *chn ) {
   return 0;
 }
 
-__host__ int initializeChain ( Cupar *cdp, Chain *chn ) {
+__host__ int initializeChain ( Cupar *cdp, Chain *chn, Image *img ) {
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, 1., chn[0].wcnst );
   constantArray <<< grid1D ( chn[0].nx*chn[0].ny ), THRDSPERBLCK >>> ( chn[0].nx*chn[0].ny, 1., chn[0].dcnst );
   if ( chn[0].indx == 0 ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
-    statistic0 ( cdp, chn );
+    statistic0 ( cdp, chn, img );
   } else {
     readLastFromFile ( chn[0].name, chn[0].indx-1, chn[0].dim, chn[0].nwl, chn[0].lst );
     setWalkersAtLast <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].lst, chn[0].xx );
