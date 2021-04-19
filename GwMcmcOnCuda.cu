@@ -47,12 +47,12 @@ int main ( int argc, char *argv[] ) {
   img[0].ny = img[0].imdim;
   img[0].pix = 1.;
 
-  chn[0].imdim = img[0].imdim;
-  chn[0].psffl = img[0].psffl;
-  chn[0].datafl = img[0].datafl;
+  //chn[0].imdim = img[0].imdim;
+  //chn[0].psffl = img[0].psffl;
+  //chn[0].datafl = img[0].datafl;
   chn[0].nx = img[0].imdim;
   chn[0].ny = img[0].imdim;
-  chn[0].pix = img[0].pix;
+  //chn[0].pix = img[0].pix;
 
   chn[0].dim = 3;
 
@@ -71,8 +71,8 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0bn[4] = 0.0;
   chn[0].x0bn[5] = 10000.;
 
-  simpleReadDataFloat ( img[0].psffl, chn[0].psf );
-  simpleReadDataFloat ( img[0].datafl, chn[0].img );
+  //simpleReadDataFloat ( img[0].psffl, chn[0].psf );
+  //simpleReadDataFloat ( img[0].datafl, chn[0].img );
   simpleReadDataFloat ( img[0].psffl, img[0].psf );
   simpleReadDataFloat ( img[0].datafl, img[0].img );
 
