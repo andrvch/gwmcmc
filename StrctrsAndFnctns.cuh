@@ -59,6 +59,9 @@ struct Image {
   float pix;
   int imdim;
   int nx, ny;
+  int *vv, *ww;
+  float *pp;
+  float *sstt1, *sstt;
 };
 
 

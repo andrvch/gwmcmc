@@ -20,6 +20,11 @@ __host__ int allocateImage ( Chain *chn, Image *img ) {
   for ( int i = 0; i < NIMG; i++ ) {
     cudaMallocManaged ( ( void ** ) &img[i].psf, img[i].nx * img[i].ny * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &img[i].img, img[i].nx * img[i].ny * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &img[i].pp, chn[0].nwl * img[i].nx * img[i].ny * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &img[i].vv, chn[0].nwl * img[i].nx * img[i].ny * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &img[i].ww, chn[0].nwl * img[i].nx * img[i].ny * sizeof ( int ) );
+    cudaMallocManaged ( ( void ** ) &img[i].sstt1, img[i].nx * img[i].ny * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &img[i].sstt, img[i].nx * img[i].ny * chn[0].nwl * sizeof ( float ) );
   }
   return 0;
 }
@@ -28,6 +33,11 @@ __host__ void freeImage ( const Image *img ) {
   for ( int i = 0; i < NIMG; i++ ) {
     cudaFree ( img[i].psf );
     cudaFree ( img[i].img );
+    cudaFree ( img[i].pp );
+    cudaFree ( img[i].vv );
+    cudaFree ( img[i].ww );
+    cudaFree ( img[i].sstt1 );
+    cudaFree ( img[i].sstt );
   }
 }
 
@@ -41,9 +51,9 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx, chn[0].pp, chn[0].vv, chn[0].ww );
-  returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl, img[0].img, chn[0].pp, chn[0].sstt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl, &alpha, chn[0].sstt, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx, img[0].pp, img[0].vv, img[0].ww );
+  returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl, img[0].img, img[0].pp, img[0].sstt );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl, &alpha, img[0].sstt, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
   return 0;
 }
 
@@ -52,9 +62,9 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   float alpha = ALPHA, beta = BETA;
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl/2, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx1, chn[0].pp, chn[0].vv, chn[0].ww );
-  returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl/2 ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl/2, img[0].img, chn[0].pp, chn[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl/2, &alpha, chn[0].sstt1, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
+  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx1, img[0].pp, img[0].vv, img[0].ww );
+  returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl/2 ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl/2, img[0].img, img[0].pp, img[0].sstt1 );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl/2, &alpha, img[0].sstt1, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
   return 0;
 }
 
@@ -457,8 +467,6 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].rr, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt1, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sstt1, chn[0].nx * chn[0].ny * chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].sstt, chn[0].nx * chn[0].ny * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stt0, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].q, chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xx, chn[0].dim * chn[0].nwl * sizeof ( float ) );
@@ -490,11 +498,6 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].ccnd, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ff, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].fconst, chn[0].nwl * chn[0].nst * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].pp, chn[0].nwl * chn[0].nx * chn[0].ny * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].vv, chn[0].nwl * chn[0].nx * chn[0].ny * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].ww, chn[0].nwl * chn[0].nx * chn[0].ny * sizeof ( int ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].psf, chn[0].nx * chn[0].ny * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].img, chn[0].nx * chn[0].ny * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].x0bn, 2 * chn[0].dim * sizeof ( float ) );
   return 0;
 }
@@ -748,7 +751,6 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].smpls );
   cudaFree ( chn[0].stat );
   cudaFree ( chn[0].stt1 );
-  cudaFree ( chn[0].sstt1 );
   cudaFree ( chn[0].ru );
   cudaFree ( chn[0].q );
   cudaFree ( chn[0].stt0 );
@@ -768,16 +770,10 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].cmSmAtCrrFnctn );
   cudaFree ( chn[0].stn1 );
   cudaFree ( chn[0].rr );
-  cudaFree ( chn[0].sstt );
   cudaFree ( chn[0].ccnd );
   cudaFree ( chn[0].cnd );
   cudaFree ( chn[0].ff );
   cudaFree ( chn[0].fconst );
-  cudaFree ( chn[0].pp );
-  cudaFree ( chn[0].vv );
-  cudaFree ( chn[0].ww );
-  cudaFree ( chn[0].psf );
-  cudaFree ( chn[0].img );
   cudaFree ( chn[0].x0bn );
 }
 
