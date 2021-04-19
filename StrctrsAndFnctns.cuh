@@ -54,7 +54,8 @@ struct Chain {
 };
 
 struct Image {
-  char *name;
+  char *name, *psffl, *datafl;
+  float *psf, *img;
   char *spcLst[NIMG];
   float lwrNtcdEnrg, hghrNtcdEnrg;
   int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns, nmbrOfNtcdBns, nmbrOfiVls, nmbrOfUsdBns, nmbrOfNtcdChnnls;
