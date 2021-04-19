@@ -13,6 +13,7 @@
 #define THRDSPERBLCK 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
+#define NIMG 6
 
 typedef float2 Complex;
 
@@ -52,10 +53,9 @@ struct Chain {
   float *x0bn;
 };
 
-struct Spectrum {
+struct Image {
   char *name;
-  char *spcLst[NSPCTR];
-  char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
+  char *spcLst[NIMG];
   float lwrNtcdEnrg, hghrNtcdEnrg;
   int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns, nmbrOfNtcdBns, nmbrOfiVls, nmbrOfUsdBns, nmbrOfNtcdChnnls;
   float srcExptm, bckgrndExptm;
