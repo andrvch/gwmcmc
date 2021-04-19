@@ -52,6 +52,29 @@ struct Chain {
   float *x0bn;
 };
 
+struct Spectrum {
+  char *name;
+  char *spcLst[NSPCTR];
+  char srcTbl[FLEN_CARD], arfTbl[FLEN_CARD], rmfTbl[FLEN_CARD], bckgrndTbl[FLEN_CARD];
+  float lwrNtcdEnrg, hghrNtcdEnrg;
+  int nmbrOfChnnls, nmbrOfEnrgChnnls, nmbrOfRmfVls, nmbrOfBns, nmbrOfNtcdBns, nmbrOfiVls, nmbrOfUsdBns, nmbrOfNtcdChnnls;
+  float srcExptm, bckgrndExptm;
+  float backscal_src, backscal_bkg;
+  int *rmfPntrInCsc, *rmfIndxInCsc, *rmfPntr, *rmfIndx;
+  float *grpVls, *ntcVls, *bnsbns, *grpng, *grpIgnVls, *iVls, *srcGrp, *ignRmfVls, *ignVls, *srcIgn;
+  int *grpIndx, *grpPntr, *grpIgnIndx, *grpIgnPntr, *iPntr, *iIndx, *ignRmfIndx, *ignRmfPntr;
+  int *ntcIndx, *ntcPntr, *ignPntr, *ignIndx;
+  float *rmfVlsInCsc, *rmfVls, *enrgChnnls, *arfFctrs, *srcCnts, *bckgrndCnts, *lwrChnnlBndrs, *hghrChnnlBndrs, *gdQltChnnls;
+  float *crssctns, *absrptnFctrs, *mdlFlxs, *nsFlxs, *plFlxs, *flddMdlFlxs, *flddNSFlxs, *flddPLFlxs, *ntcdChnnls, *chnnlSttstcs, *chiSttstcs, smOfNtcdChnnls;
+  float *nsa1Flxs, *nsa2Flxs;
+  int nmbrOfgrpIgnVls, nmbrOfignRmfVls;
+  int hghrBn, lwrBn, hghrCh, lwrCh;
+  float *bkgGrp, *bkgIgn;
+  float *chi, *stat;
+  float *lwrGrp, *hghrGrp;
+};
+
+
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
 __host__ dim3 block2D ();
