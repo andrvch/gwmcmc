@@ -48,23 +48,25 @@ __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block )
 
 __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
+  float alpha = ALPHA, beta = BETA, beta1 = 1;
+  constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, 0., chn[0].stt );
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl, block3 );
   biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx, img[0].pp, img[0].vv, img[0].ww );
   returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl, img[0].img, img[0].pp, img[0].sstt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl, &alpha, img[0].sstt, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt, incyy );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl, &alpha, img[0].sstt, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta1, chn[0].stt, incyy );
   return 0;
 }
 
 __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   int incxx = INCXX, incyy = INCYY;
-  float alpha = ALPHA, beta = BETA;
+  float alpha = ALPHA, beta = BETA, beta1 = 1;
+  constantArray <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, 0., chn[0].stt1 );
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl/2, block3 );
   biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx1, img[0].pp, img[0].vv, img[0].ww );
   returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl/2 ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl/2, img[0].img, img[0].pp, img[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl/2, &alpha, img[0].sstt1, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl/2, &alpha, img[0].sstt1, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta1, chn[0].stt1, incyy );
   return 0;
 }
 
