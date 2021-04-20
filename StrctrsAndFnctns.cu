@@ -25,6 +25,7 @@ __host__ int allocateImage ( Chain *chn, Image *img ) {
     cudaMallocManaged ( ( void ** ) &img[i].ww, chn[0].nwl * img[i].nx * img[i].ny * sizeof ( int ) );
     cudaMallocManaged ( ( void ** ) &img[i].sstt1, img[i].nx * img[i].ny * chn[0].nwl * sizeof ( float ) );
     cudaMallocManaged ( ( void ** ) &img[i].sstt, img[i].nx * img[i].ny * chn[0].nwl * sizeof ( float ) );
+    cudaMallocManaged ( ( void ** ) &img[i].dcnst, img[i].nx * img[i].ny * sizeof ( float ) );
   }
   return 0;
 }
@@ -38,6 +39,7 @@ __host__ void freeImage ( const Image *img ) {
     cudaFree ( img[i].ww );
     cudaFree ( img[i].sstt1 );
     cudaFree ( img[i].sstt );
+    cudaFree ( img[i].dcnst );
   }
 }
 
@@ -54,7 +56,7 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl, block3 );
   biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx, img[0].pp, img[0].vv, img[0].ww );
   returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl, img[0].img, img[0].pp, img[0].sstt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl, &alpha, img[0].sstt, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta1, chn[0].stt, incyy );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl, &alpha, img[0].sstt, img[0].nx*img[0].ny, img[0].dcnst, incxx, &beta1, chn[0].stt, incyy );
   return 0;
 }
 
@@ -66,7 +68,7 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl/2, block3 );
   biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx1, img[0].pp, img[0].vv, img[0].ww );
   returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl/2 ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl/2, img[0].img, img[0].pp, img[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl/2, &alpha, img[0].sstt1, img[0].nx*img[0].ny, chn[0].dcnst, incxx, &beta1, chn[0].stt1, incyy );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl/2, &alpha, img[0].sstt1, img[0].nx*img[0].ny, img[0].dcnst, incxx, &beta1, chn[0].stt1, incyy );
   return 0;
 }
 
@@ -479,7 +481,6 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].xCM, chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xxW, chn[0].dim * chn[0].nwl * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].wcnst, chn[0].nwl * sizeof ( float ) );
-  cudaMallocManaged ( ( void ** ) &chn[0].dcnst, chn[0].nx * chn[0].ny * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].smpls, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].stat, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].xxCP, chn[0].dim * chn[0].nwl * sizeof ( float ) );
@@ -501,12 +502,14 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].ff, chn[0].dim * chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].fconst, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].x0bn, 2 * chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].ddcnst, 2 * chn[0].dim * sizeof ( float ) );
   return 0;
 }
 
 __host__ int initializeChain ( Cupar *cdp, Chain *chn, Image *img ) {
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, 1., chn[0].wcnst );
-  constantArray <<< grid1D ( chn[0].nx*chn[0].ny ), THRDSPERBLCK >>> ( chn[0].nx*chn[0].ny, 1., chn[0].dcnst );
+  constantArray <<< grid1D ( img[0].nx*img[0].ny ), THRDSPERBLCK >>> ( img[0].nx*img[0].ny, 1., img[0].dcnst );
+  constantArray <<< grid1D ( 2*chn[0].dim ), THRDSPERBLCK >>> ( 2*chn[0].dim, 1., chn[0].ddcnst );
   if ( chn[0].indx == 0 ) {
     curandGenerateNormal ( cdp[0].curandGnrtr, chn[0].stn, chn[0].dim * chn[0].nwl, 0, 1 );
     initializeAtRandom <<< grid2D ( chn[0].dim, chn[0].nwl ), block2D () >>> ( chn[0].dim, chn[0].nwl, chn[0].dlt, chn[0].x0, chn[0].stn, chn[0].xx );
@@ -599,7 +602,7 @@ __host__ int statisticMetropolis ( const Cupar *cdp, Chain *chn ) {
   int incxx = INCXX, incyy = INCYY;
   float alpha = ALPHA, beta = BETA;
   returnStatistic <<< grid2D ( chn[0].dim-1, chn[0].nwl ), block2D () >>> ( chn[0].dim-1, chn[0].nwl, chn[0].xx1, chn[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt1, chn[0].dim-1, chn[0].dcnst, incxx, &beta, chn[0].stt1, incyy );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim-1, chn[0].nwl, &alpha, chn[0].sstt1, chn[0].dim-1, chn[0].ddcnst, incxx, &beta, chn[0].stt1, incyy );
   return 0;
 }
 
@@ -631,7 +634,7 @@ __host__ int streachUpdate ( const Cupar *cdp, Chain *chn ) {
   int nss = chn[0].nwl / 2;
   int indxS0 = chn[0].isb * nss;
   arrayOf2DConditions <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].x0bn, chn[0].xx1, chn[0].ccnd );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].dcnst, incxx, &beta, chn[0].cnd, incyy );
+  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, chn[0].dim, chn[0].nwl/2, &alpha, chn[0].ccnd, chn[0].dim, chn[0].ddcnst, incxx, &beta, chn[0].cnd, incyy );
   returnQ <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].stt1, chn[0].stt0, chn[0].zr, chn[0].q );
   updateWalkers <<< grid2D ( chn[0].dim, chn[0].nwl/2 ), block2D () >>> ( chn[0].dim, chn[0].nwl/2, chn[0].cnd, chn[0].xx1, chn[0].q, chn[0].ru, chn[0].xx0 );
   updateStatistic <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, chn[0].stt1, chn[0].q, chn[0].ru, chn[0].stt0 );
@@ -748,7 +751,6 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].xCM );
   cudaFree ( chn[0].xxW );
   cudaFree ( chn[0].wcnst );
-  cudaFree ( chn[0].dcnst );
   cudaFree ( chn[0].x0 );
   cudaFree ( chn[0].smpls );
   cudaFree ( chn[0].stat );
@@ -777,6 +779,7 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].ff );
   cudaFree ( chn[0].fconst );
   cudaFree ( chn[0].x0bn );
+  cudaFree ( chn[0].ddcnst );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {
