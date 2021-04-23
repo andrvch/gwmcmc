@@ -25,15 +25,18 @@ xrf = hdr['CRVAL1P']
 yrf = hdr['CRVAL2P']
 xscl = hdr['CDELT1P']
 yscl = hdr['CDELT2P']
-print(xrf,yrf)
+
+print(xrf+20.5,yrf+20.5)
 print(xscl,yscl)
 
 data = hdul[0].data
 
 ny = shape(data)[0]
 nx = shape(data)[1]
+
 print(nx,ny)
 
+exit()
 f = open(fl+".newpsf", "w")
 
 #f.write("%.13E\n"%(xrf))

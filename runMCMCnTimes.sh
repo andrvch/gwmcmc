@@ -1,9 +1,9 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="psffit08_11123_src3_"
-LOGFILE="LogPsfFit08_11123_src3"
+CHAINFILE="psffit08_11123_psr_"
+LOGFILE="LogPsfFit08_11123_psr"
 NWALK=128
-LSTEP=2048
+LSTEP=1024
 IMDIM=41
 i=$1
 NCHAINS=1
@@ -12,8 +12,9 @@ NCHAINS=1
 #DATAFL="img_19165_psr_new.fits.newpsf"
 #PSFFL="psf_19165_src1_1pix_new.fits.newpsf"
 #DATAFL="img_19165_src1_new.fits.newpsf"
-PSFFL="psf_11123_src3_1pix_new.fits.newpsf"
-DATAFL="img_11123_src3_new.fits.newpsf"
+PSFFL="psf_11123_psr_1pix_new.fits.newpsf"
+#DATAFL="img_11123_psr_new.fits.newpsf"
+DATAFL="psf_19165_psr_1pix_new.fits.newpsf"
 #DATAFL="psf_20876_src3_1pix_new.fits.newpsf"
 let NCHAINS=NCHAINS+i
 printf "Start>"
