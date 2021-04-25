@@ -40,29 +40,42 @@ int main ( int argc, char *argv[] ) {
   chn[0].dlt = 0.2E-4;
 
   Image img[NIMG];
-  img[0].imdim = atoi ( argv[6] );
-  img[0].nx = img[0].imdim;
-  img[0].ny = img[0].imdim;
-  img[0].pix = 1.;
+  float pixdim = atoi ( argv[6] );
+  for ( int i = 0; i < NIMG; i ++ ) {
+    img[i].imdim = pixdim;
+    img[i].nx = pixdim;
+    img[i].ny = pixdim;
+    img[i].pix = 1.;
+  }
+
   img[0].psffl = argv[7];
   img[0].datafl = argv[8];
+  img[1].psffl = argv[9];
+  img[1].datafl = argv[10];
+  img[2].psffl = argv[11];
+  img[2].datafl = argv[12];
 
-  //chn[0].imdim = img[0].imdim;
-  //chn[0].psffl = img[0].psffl;
-  //chn[0].datafl = img[0].datafl;
-  //chn[0].nx = img[0].imdim;
-  //chn[0].ny = img[0].imdim;
-  //chn[0].pix = img[0].pix;
+  img[0].xref = 4147.5912;
+  img[0].yref = 3955.0466;
+  img[1].xref = 4017.1864;
+  img[1].yref = 4183.6101;
+  img[2].xref = 4313.9623;
+  img[2].yref = 4284.8801;
 
-  chn[0].dim = 3;
+  chn[0].dim = 3; // * ( NIMG / 2 );
 
   allocateChain ( chn );
   allocateImage ( chn, img );
 
+  /*
   for ( int i = 0; i < chn[0].dim-1; i++ ) {
     chn[0].x0[i] = 0.;
+  }*/
+  for ( int i = 0; i < 1; i++ ) {
+    chn[0].x0[3*i] = 0.;
+    chn[0].x0[3*i+1] = 0.;
+    chn[0].x0[3*i+2] = 0.04;
   }
-  chn[0].x0[chn[0].dim-1] = 0.04;
 
   chn[0].x0bn[0] = -5.;
   chn[0].x0bn[1] = 5.;
@@ -71,11 +84,12 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0bn[4] = 0.0;
   chn[0].x0bn[5] = 10000.;
 
-  //simpleReadDataFloat ( img[0].psffl, chn[0].psf );
-  //simpleReadDataFloat ( img[0].datafl, chn[0].img );
-  simpleReadDataFloat ( img[0].psffl, img[0].psf );
-  simpleReadDataFloat ( img[0].datafl, img[0].img );
+  for ( int i = 0; i < NIMG/2; i++ ) {
+    simpleReadDataFloat ( img[i].psffl, img[i].psf );
+    simpleReadDataFloat ( img[i].datafl, img[i].img );
+  }
 
+  /*
   printf ( "Input psf file:" );
   printf ( "\n" );
   printf ( "\n" );
@@ -84,6 +98,7 @@ int main ( int argc, char *argv[] ) {
   }
   printf ( "\n" );
   printf ( "\n" );
+  */
 
   initializeChain ( cdp, chn, img );
 

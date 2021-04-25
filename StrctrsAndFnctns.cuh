@@ -63,6 +63,7 @@ struct Image {
   float *pp;
   float *sstt1, *sstt;
   float *dcnst;
+  float xref, yref;
 };
 
 
