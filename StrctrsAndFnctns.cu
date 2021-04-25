@@ -53,10 +53,13 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   float alpha = ALPHA, beta = BETA, beta1 = 1;
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, 0., chn[0].stt );
   dim3 block3 ( 16, 16, 4 );
-  dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx, img[0].pp, img[0].vv, img[0].ww );
-  returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl, img[0].img, img[0].pp, img[0].sstt );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl, &alpha, img[0].sstt, img[0].nx*img[0].ny, img[0].dcnst, incxx, &beta1, chn[0].stt, incyy );
+  dim3 grid3;
+  for ( int i = 0; i < NIMG/2; i++ ) {
+    grid3 = grid3D ( img[i].nx, img[i].ny, chn[0].nwl, block3 );
+    biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
+    returnPPStatistic <<< grid2D ( img[i].nx*img[i].ny, chn[0].nwl ), block2D () >>> ( img[i].nx*img[i].ny, chn[0].nwl, img[i].img, img[i].pp, img[i].sstt );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[i].nx*img[i].ny, chn[0].nwl, &alpha, img[i].sstt, img[i].nx*img[i].ny, img[i].dcnst, incxx, &beta1, chn[0].stt, incyy );
+  }
   return 0;
 }
 
@@ -65,10 +68,13 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   float alpha = ALPHA, beta = BETA, beta1 = 1;
   constantArray <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, 0., chn[0].stt1 );
   dim3 block3 ( 16, 16, 4 );
-  dim3 grid3 = grid3D ( img[0].nx, img[0].ny, chn[0].nwl/2, block3 );
-  biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[0].nx, img[0].ny, img[0].pix, img[0].psf, chn[0].xx1, img[0].pp, img[0].vv, img[0].ww );
-  returnPPStatistic <<< grid2D ( img[0].nx*img[0].ny, chn[0].nwl/2 ), block2D () >>> ( img[0].nx*img[0].ny, chn[0].nwl/2, img[0].img, img[0].pp, img[0].sstt1 );
-  cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[0].nx*img[0].ny, chn[0].nwl/2, &alpha, img[0].sstt1, img[0].nx*img[0].ny, img[0].dcnst, incxx, &beta1, chn[0].stt1, incyy );
+  dim3 grid3;
+  for ( int i = 0; i < NIMG/2; i++ ) {
+    grid3 = grid3D ( img[i].nx, img[i].ny, chn[0].nwl/2, block3 );
+    biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx1, img[i].pp, img[i].vv, img[i].ww );
+    returnPPStatistic <<< grid2D ( img[i].nx*img[i].ny, chn[0].nwl/2 ), block2D () >>> ( img[i].nx*img[i].ny, chn[0].nwl/2, img[i].img, img[i].pp, img[i].sstt1 );
+    cublasSgemv ( cdp[0].cublasHandle, CUBLAS_OP_T, img[i].nx*img[i].ny, chn[0].nwl/2, &alpha, img[i].sstt1, img[i].nx*img[i].ny, img[i].dcnst, incxx, &beta1, chn[0].stt1, incyy );
+  }
   return 0;
 }
 
@@ -86,7 +92,7 @@ __global__ void returnPPStatistic ( const int imdim, const int nwl, const float 
   }
 }
 
-__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
+__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
@@ -94,9 +100,9 @@ __global__ void biinterpolation ( const int dim, const int nwl, const int nx, co
   float dx, dy, nr, dxf, dyf;
   float d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
   if ( i < nx && j < ny && k < nwl ) {
-    dx = xx[k*dim] / pix;
-    dy = xx[1+k*dim] / pix;
-    nr = xx[2+k*dim];
+    dx = xx[0+3*imidx+k*dim] / pix;
+    dy = xx[1+3*imidx+k*dim] / pix;
+    nr = xx[2+3*imidx+k*dim];
     dxi = floorf ( fabsf ( dx ) );
     dxf = fabsf ( dx ) - dxi;
     dyi = floorf ( fabsf ( dy ) );

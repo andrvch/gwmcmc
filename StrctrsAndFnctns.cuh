@@ -64,6 +64,7 @@ struct Image {
   float *sstt1, *sstt;
   float *dcnst;
   float xref, yref;
+  int idx;
 };
 
 
@@ -139,8 +140,7 @@ __global__ void returnXXStatistic ( const int, const int, const float*, float* )
 
 __global__ void chainFunctionU ( const int, const int, const int, const float*, float* );
 
-//__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp );
-__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const float *psf, const float *xx, float *pp, int *vv, int *ww );
+__global__ void biinterpolation ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *psf, const float *xx, float *pp, int *vv, int *ww );
 __host__ dim3 grid3D ( const int n, const int m, const int l, const dim3 block );
 __global__ void returnPPStatistic ( const int imdim, const int nwl, const float *psf, const float *pp, float *ss );
 __global__ void arrayOf2DConditions ( const int dim, const int nwl, const float *x0bn, const float *xx, float *cc );

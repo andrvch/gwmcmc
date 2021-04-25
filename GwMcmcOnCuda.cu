@@ -41,7 +41,7 @@ int main ( int argc, char *argv[] ) {
 
   Image img[NIMG];
   float pixdim = atoi ( argv[6] );
-  for ( int i = 0; i < NIMG; i ++ ) {
+  for ( int i = 0; i < NIMG/2; i ++ ) {
     img[i].imdim = pixdim;
     img[i].nx = pixdim;
     img[i].ny = pixdim;
@@ -62,27 +62,35 @@ int main ( int argc, char *argv[] ) {
   img[2].xref = 4313.9623;
   img[2].yref = 4284.8801;
 
-  chn[0].dim = 3; // * ( NIMG / 2 );
+  chn[0].dim = 3 * ( NIMG / 2 );
+  printf ( " chain dimension = %i \n ", chn[0].dim );
 
   allocateChain ( chn );
   allocateImage ( chn, img );
+
+  for ( int i = 0; i < NIMG/2; i++ ) {
+    img[i].idx = i;
+  }
 
   /*
   for ( int i = 0; i < chn[0].dim-1; i++ ) {
     chn[0].x0[i] = 0.;
   }*/
-  for ( int i = 0; i < 1; i++ ) {
+
+  for ( int i = 0; i < NIMG/2; i++ ) {
     chn[0].x0[3*i] = 0.;
     chn[0].x0[3*i+1] = 0.;
     chn[0].x0[3*i+2] = 0.04;
   }
 
-  chn[0].x0bn[0] = -5.;
-  chn[0].x0bn[1] = 5.;
-  chn[0].x0bn[2] = -5.;
-  chn[0].x0bn[3] = 5.;
-  chn[0].x0bn[4] = 0.0;
-  chn[0].x0bn[5] = 10000.;
+  for ( int i = 0; i < NIMG/2; i++ ) {
+    chn[0].x0bn[6*i] = -5.;
+    chn[0].x0bn[6*i+1] = 5.;
+    chn[0].x0bn[6*i+2] = -5.;
+    chn[0].x0bn[6*i+3] = 5.;
+    chn[0].x0bn[6*i+4] = 0.0;
+    chn[0].x0bn[6*i+5] = 10000.;
+  }
 
   for ( int i = 0; i < NIMG/2; i++ ) {
     simpleReadDataFloat ( img[i].psffl, img[i].psf );
