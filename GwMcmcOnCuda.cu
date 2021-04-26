@@ -37,7 +37,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].nwl = atoi ( argv[3] );
   chn[0].nst = atoi ( argv[4] );
   chn[0].indx = atoi ( argv[5] );
-  chn[0].dlt = 0.2E-4;
+  chn[0].dlt = 0.2E-5;
 
   Image img[NIMG];
   float pixdim = atoi ( argv[6] );
