@@ -168,6 +168,67 @@ __global__ void biinterpolation ( const int dim, const int nwl, const int nx, co
   }
 }
 
+__global__ void biinterpolation00 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  int v, w, dxi, dyi;
+  float dx0, dy0, dx, dy, xs, ys, phi, cs, si, x0, y0, x1, y1, nr, dxf, dyf;
+  float d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
+  if ( i < nx && j < ny && k < nwl ) {
+
+    dx0 = xx[0+3*(imidx-3)+k*dim] / pix;
+    dy0 = xx[1+3*(imidx-3)+k*dim] / pix;
+
+    nr = xx[3*NIMG/2+(imidx-3)+k*dim];
+
+    xs = xx[3*NIMG/2+(NIMG-3)+k*dim];
+    ys = xx[3*NIMG/2+(NIMG-2)+k*dim];
+    phi = xx[3*NIMG/2+(NIMG-1)+k*dim];
+
+    x0 = phr[2*(imidx-3)] + dx0;
+    y0 = phr[2*(imidx-3)+1] + dy0;
+
+    cs = cosf ( phi );
+    si = sinf ( phi );
+
+    x1 = cs * x0 - si * y0 + xs;
+    y1 = si * x0 + cs * y0 + ys;
+
+    dx = x1 - phr[2*imidx];
+    dy = y1 - phr[2*imidx+1];
+
+    dxi = floorf ( fabsf ( dx ) );
+    dxf = fabsf ( dx ) - dxi;
+    dyi = floorf ( fabsf ( dy ) );
+    dyf = fabsf ( dy ) - dyi;
+    if ( dx >= 0 ) {
+      v = i + dxi;
+      a = dxf;
+    } else {
+      v = i - dxi - 1;
+      a = 1 - dxf;
+    }
+    if ( dy >= 0 ) {
+      w = j + dyi;
+      b = dyf;
+    } else {
+      w = j - dyi - 1;
+      b = 1 - dyf;
+    }
+    if ( 0 < v   && v   < nx && 0 < w   && w   < ny ) d00 = psf[v+w*nx];       else d00 = 0;
+    if ( 0 < v+1 && v+1 < nx && 0 < w   && w   < ny ) d10 = psf[v+1+w*nx];     else d10 = 0;
+    if ( 0 < v   && v   < nx && 0 < w+1 && w+1 < ny ) d01 = psf[v+(w+1)*nx];   else d01 = 0;
+    if ( 0 < v+1 && v+1 < nx && 0 < w+1 && w+1 < ny ) d11 = psf[v+1+(w+1)*nx]; else d11 = 0;
+    tmp1 = a * d10 + ( 1 - a ) * d00;
+    tmp2 = a * d11 + ( 1 - a ) * d01;
+    tmp3 = b * tmp2 + ( 1 - b ) * tmp1;
+    pp[i+j*nx+k*nx*ny] = tmp3 * nr;
+    vv[i+j*nx+k*nx*ny] = v;
+    ww[i+j*nx+k*nx*ny] = w;
+  }
+}
+
 __host__ int grid1D ( const int n ) {
   int b = ( n + THRDSPERBLCK - 1 ) / THRDSPERBLCK;
   return b;
@@ -543,6 +604,7 @@ __host__ int allocateChain ( Chain *chn ) {
   cudaMallocManaged ( ( void ** ) &chn[0].fconst, chn[0].nwl * chn[0].nst * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].x0bn, 2 * chn[0].dim * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &chn[0].ddcnst, 2 * chn[0].dim * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &chn[0].phr, 2 * NIMG * sizeof ( float ) );
   return 0;
 }
 
@@ -822,6 +884,7 @@ __host__ void freeChain ( const Chain *chn ) {
   cudaFree ( chn[0].fconst );
   cudaFree ( chn[0].x0bn );
   cudaFree ( chn[0].ddcnst );
+  cudaFree ( chn[0].phr );
 }
 
 __host__ void cumulativeSumOfAutocorrelationFunction ( const int nst, const float *chn, float *cmSmChn ) {

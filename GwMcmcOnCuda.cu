@@ -81,6 +81,11 @@ int main ( int argc, char *argv[] ) {
   allocateImage ( chn, img );
 
   for ( int i = 0; i < NIMG; i++ ) {
+    chn[0].phr[2*i] = img[i].xref;
+    chn[0].phr[2*i+1] = img[i].yref;
+  }
+
+  for ( int i = 0; i < NIMG; i++ ) {
     img[i].idx = i;
   }
 

@@ -51,6 +51,7 @@ struct Chain {
   int imdim;
   int *vv, *ww;
   float *x0bn;
+  float *phr;
 };
 
 struct Image {
@@ -150,5 +151,7 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img );
 __host__ int initializeChain ( Cupar*, Chain*, Image *img );
 __host__ int allocateImage ( Chain *chn, Image *img );
 __host__ void freeImage ( const Image *img );
+
+__global__ void biinterpolation00 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww );
 
 #endif // _STRCTRSANDFNCTNS_CUH_
