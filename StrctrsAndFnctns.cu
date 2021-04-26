@@ -54,12 +54,25 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, 0., chn[0].stt );
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3;
-  for ( int i = 0; i < NIMG/2; i++ ) {
+  for ( int i = 0; i < NIMG; i++ ) {
     grid3 = grid3D ( img[i].nx, img[i].ny, chn[0].nwl, block3 );
-    biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
+    if ( img[i].idx < 3 ) {
+      biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
+    } else {
+      biinterpolation00 <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, chn[0].phr, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
+    }
     returnPPStatistic <<< grid2D ( img[i].nx*img[i].ny, chn[0].nwl ), block2D () >>> ( img[i].nx*img[i].ny, chn[0].nwl, img[i].img, img[i].pp, img[i].sstt );
     /*
     cudaDeviceSynchronize ();
+    printf ( " im num = %i \n ", img[i].idx );
+    for ( int j = 0; j < chn[0].nwl; j++ ) {
+      printf ( " wlk num = %i \n ", j );
+      for ( int k = 0; k < img[i].nx*img[i].ny; k++ ) {
+        printf ( " %4.4f ", img[i].pp[k+j*img[i].nx*img[i].ny] );
+      }
+      printf ( " \n " );
+    }*/
+    /*
     printf ( " im num = %i \n ", img[i].idx );
     for ( int k = 0; k < img[i].nx*img[i].ny; k++ ) {
       printf ( " %4.4f ", img[i].dcnst[k] );
@@ -88,12 +101,24 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   constantArray <<< grid1D ( chn[0].nwl/2 ), THRDSPERBLCK >>> ( chn[0].nwl/2, 0., chn[0].stt1 );
   dim3 block3 ( 16, 16, 4 );
   dim3 grid3;
-  for ( int i = 0; i < NIMG/2; i++ ) {
+  for ( int i = 0; i < NIMG; i++ ) {
     grid3 = grid3D ( img[i].nx, img[i].ny, chn[0].nwl/2, block3 );
-    biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx1, img[i].pp, img[i].vv, img[i].ww );
+    if ( img[i].idx < 3 ) {
+      biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx1, img[i].pp, img[i].vv, img[i].ww );
+    } else {
+      biinterpolation00 <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[i].nx, img[i].ny, img[i].pix, img[i].idx, chn[0].phr, img[i].psf, chn[0].xx1, img[i].pp, img[i].vv, img[i].ww );
+    }
     returnPPStatistic <<< grid2D ( img[i].nx*img[i].ny, chn[0].nwl/2 ), block2D () >>> ( img[i].nx*img[i].ny, chn[0].nwl/2, img[i].img, img[i].pp, img[i].sstt1 );
+    /*cudaDeviceSynchronize ();
+    printf ( " im num = %i \n ", img[i].idx );
+    for ( int j = 0; j < chn[0].nwl/2; j++ ) {
+      printf ( " wlk num = %i \n ", j );
+      for ( int k = 0; k < img[i].nx*img[i].ny; k++ ) {
+        printf ( " %4.4f ", img[i].pp[k+j*img[i].nx*img[i].ny] );
+      }
+      printf ( " \n " );
+    }*/
     /*
-    cudaDeviceSynchronize ();
     printf ( " im num = %i \n ", img[i].idx );
     for ( int j = 0; j < chn[0].nwl/2; j++ ) {
       printf ( " wlk num = %i \n ", j );
@@ -610,7 +635,7 @@ __host__ int allocateChain ( Chain *chn ) {
 
 __host__ int initializeChain ( Cupar *cdp, Chain *chn, Image *img ) {
   constantArray <<< grid1D ( chn[0].nwl ), THRDSPERBLCK >>> ( chn[0].nwl, 1., chn[0].wcnst );
-  for ( int i = 0; i < NIMG/2; i++ ) {
+  for ( int i = 0; i < NIMG; i++ ) {
     constantArray <<< grid1D ( img[0].nx*img[0].ny ), THRDSPERBLCK >>> ( img[i].nx*img[i].ny, 1., img[i].dcnst );
   }
   constantArray <<< grid1D ( 2*chn[0].dim ), THRDSPERBLCK >>> ( 2*chn[0].dim, 1., chn[0].ddcnst );

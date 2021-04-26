@@ -74,7 +74,7 @@ int main ( int argc, char *argv[] ) {
   img[5].xref = 4291.6013;
   img[5].yref = 4267.2133;
 
-  chn[0].dim = 3 * ( NIMG / 2 );
+  chn[0].dim = 3 * ( NIMG / 2 ) + ( NIMG / 2 ) + 3;
   //printf ( " chain dimension = %i \n ", chn[0].dim );
 
   allocateChain ( chn );
@@ -100,6 +100,14 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0[3*i+2] = 0.04;
   }
 
+  chn[0].x0[3*NIMG/2] = 0.04;
+  chn[0].x0[3*NIMG/2+1] = 0.04;
+  chn[0].x0[3*NIMG/2+2] = 0.04;
+
+  chn[0].x0[3*NIMG/2+3] = -22.5;
+  chn[0].x0[3*NIMG/2+4] = -17.5;
+  chn[0].x0[3*NIMG/2+5] = 0.0;
+
   for ( int i = 0; i < NIMG/2; i++ ) {
     chn[0].x0bn[6*i] = -5.;
     chn[0].x0bn[6*i+1] = 5.;
@@ -108,6 +116,20 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0bn[6*i+4] = 0.0;
     chn[0].x0bn[6*i+5] = 10000.;
   }
+
+  chn[0].x0bn[2*3*NIMG/2] = 0.0;
+  chn[0].x0bn[2*3*NIMG/2+1] = 10000.;
+  chn[0].x0bn[2*3*NIMG/2+2] = 0.0;
+  chn[0].x0bn[2*3*NIMG/2+3] = 10000.;
+  chn[0].x0bn[2*3*NIMG/2+4] = 0.0;
+  chn[0].x0bn[2*3*NIMG/2+5] = 10000.;
+
+  chn[0].x0bn[2*3*NIMG/2+6] = -100.;
+  chn[0].x0bn[2*3*NIMG/2+7] = 100.;
+  chn[0].x0bn[2*3*NIMG/2+8] = -100.;
+  chn[0].x0bn[2*3*NIMG/2+9] = 100.;
+  chn[0].x0bn[2*3*NIMG/2+10] = -PI;
+  chn[0].x0bn[2*3*NIMG/2+11] = PI;
 
   for ( int i = 0; i < NIMG; i++ ) {
     simpleReadDataFloat ( img[i].psffl, img[i].psf );
