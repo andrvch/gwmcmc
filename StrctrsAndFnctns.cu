@@ -56,7 +56,7 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
   dim3 grid3;
   for ( int i = 0; i < NIMG; i++ ) {
     grid3 = grid3D ( img[i].nx, img[i].ny, chn[0].nwl, block3 );
-    if ( img[i].idx < 3 ) {
+    if ( img[i].idx < NIMG/2 ) {
       biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
     } else {
       biinterpolation00 <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, chn[0].phr, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
@@ -202,17 +202,17 @@ __global__ void biinterpolation00 ( const int dim, const int nwl, const int nx, 
   float d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
   if ( i < nx && j < ny && k < nwl ) {
 
-    dx0 = xx[0+3*(imidx-3)+k*dim] / pix;
-    dy0 = xx[1+3*(imidx-3)+k*dim] / pix;
+    dx0 = xx[0+3*(imidx-NIMG/2)+k*dim] / pix;
+    dy0 = xx[1+3*(imidx-NIMG/2)+k*dim] / pix;
 
-    nr = xx[3*NIMG/2+(imidx-3)+k*dim];
+    nr = xx[3*NIMG/2+(imidx-NIMG/2)+k*dim];
 
-    xs = xx[3*NIMG/2+(NIMG-3)+k*dim];
-    ys = xx[3*NIMG/2+(NIMG-2)+k*dim];
-    phi = xx[3*NIMG/2+(NIMG-1)+k*dim];
+    xs  = xx[3*NIMG/2+NIMG/2+k*dim];
+    ys  = xx[3*NIMG/2+NIMG/2+1+k*dim];
+    phi = xx[3*NIMG/2+NIMG/2+2+k*dim];
 
-    x0 = phr[2*(imidx-3)] + dx0;
-    y0 = phr[2*(imidx-3)+1] + dy0;
+    x0 = phr[2*(imidx-NIMG/2)] + dx0;
+    y0 = phr[2*(imidx-NIMG/2)+1] + dy0;
 
     cs = cosf ( phi );
     si = sinf ( phi );

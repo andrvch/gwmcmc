@@ -48,18 +48,10 @@ int main ( int argc, char *argv[] ) {
     img[i].pix = 1.;
   }
 
-  img[0].psffl = argv[7];
-  img[0].datafl = argv[8];
-  img[1].psffl = argv[9];
-  img[1].datafl = argv[10];
-  img[2].psffl = argv[11];
-  img[2].datafl = argv[12];
-  img[3].psffl = argv[13];
-  img[3].datafl = argv[14];
-  img[4].psffl = argv[15];
-  img[4].datafl = argv[16];
-  img[5].psffl = argv[17];
-  img[5].datafl = argv[18];
+  for ( int i = 0; i < NIMG; i++ ) {
+    img[i].psffl = argv[7+2*i];
+    img[i].datafl = argv[7+2*i+1];
+  }
 
   img[0].xref = 4147.5912;
   img[0].yref = 3955.0466;
@@ -67,12 +59,18 @@ int main ( int argc, char *argv[] ) {
   img[1].yref = 4183.6101;
   img[2].xref = 4313.9623;
   img[2].yref = 4284.8801;
+  //img[3].xref = 4109.9594;
+  //img[3].yref = 4065.3322;
+
   img[3].xref = 4124.7263;
   img[3].yref = 3937.6023;
   img[4].xref = 3994.8097;
   img[4].yref = 4166.3718;
   img[5].xref = 4291.6013;
   img[5].yref = 4267.2133;
+  //img[7].xref = 4087.8866;
+  //img[7].yref = 4048.3352;
+
 
   chn[0].dim = 3 * ( NIMG / 2 ) + ( NIMG / 2 ) + 3;
   //printf ( " chain dimension = %i \n ", chn[0].dim );
@@ -89,25 +87,22 @@ int main ( int argc, char *argv[] ) {
     img[i].idx = i;
   }
 
-  /*
-  for ( int i = 0; i < chn[0].dim-1; i++ ) {
-    chn[0].x0[i] = 0.;
-  }*/
-
+  // set up starting values:
   for ( int i = 0; i < NIMG/2; i++ ) {
     chn[0].x0[3*i] = 0.;
     chn[0].x0[3*i+1] = 0.;
     chn[0].x0[3*i+2] = 0.04;
   }
 
-  chn[0].x0[3*NIMG/2] = 0.04;
-  chn[0].x0[3*NIMG/2+1] = 0.04;
-  chn[0].x0[3*NIMG/2+2] = 0.04;
+  for ( int i = 0; i < NIMG/2; i++ ) {
+    chn[0].x0[3*NIMG/2+i] = 0.04;
+  }
 
-  chn[0].x0[3*NIMG/2+3] = -22.5;
-  chn[0].x0[3*NIMG/2+4] = -17.5;
-  chn[0].x0[3*NIMG/2+5] = 0.0;
+  chn[0].x0[3*NIMG/2+NIMG/2] = -22.5;
+  chn[0].x0[3*NIMG/2+NIMG/2+1] = -17.5;
+  chn[0].x0[3*NIMG/2+NIMG/2+2] = 0.0;
 
+  // set up boundaries:
   for ( int i = 0; i < NIMG/2; i++ ) {
     chn[0].x0bn[6*i] = -5.;
     chn[0].x0bn[6*i+1] = 5.;
@@ -117,19 +112,17 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0bn[6*i+5] = 10000.;
   }
 
-  chn[0].x0bn[2*3*NIMG/2] = 0.0;
-  chn[0].x0bn[2*3*NIMG/2+1] = 10000.;
-  chn[0].x0bn[2*3*NIMG/2+2] = 0.0;
-  chn[0].x0bn[2*3*NIMG/2+3] = 10000.;
-  chn[0].x0bn[2*3*NIMG/2+4] = 0.0;
-  chn[0].x0bn[2*3*NIMG/2+5] = 10000.;
+  for ( int i = 0; i < NIMG/2; i++ ) {
+    chn[0].x0bn[2*(3*NIMG/2)+2*i] = 0.0;
+    chn[0].x0bn[2*(3*NIMG/2)+2*i+1] = 10000.;
+  }
 
-  chn[0].x0bn[2*3*NIMG/2+6] = -100.;
-  chn[0].x0bn[2*3*NIMG/2+7] = 100.;
-  chn[0].x0bn[2*3*NIMG/2+8] = -100.;
-  chn[0].x0bn[2*3*NIMG/2+9] = 100.;
-  chn[0].x0bn[2*3*NIMG/2+10] = -PI;
-  chn[0].x0bn[2*3*NIMG/2+11] = PI;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG] = -100.;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+1] = 100.;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+2] = -100.;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+3] = 100.;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+4] = -PI;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+5] = PI;
 
   for ( int i = 0; i < NIMG; i++ ) {
     simpleReadDataFloat ( img[i].psffl, img[i].psf );
