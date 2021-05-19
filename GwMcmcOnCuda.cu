@@ -59,17 +59,17 @@ int main ( int argc, char *argv[] ) {
   img[1].yref = 4183.6101;
   img[2].xref = 4313.9623;
   img[2].yref = 4284.8801;
-  //img[3].xref = 4109.9594;
-  //img[3].yref = 4065.3322;
+  img[3].xref = 4109.9594;
+  img[3].yref = 4065.3322;
 
-  img[3].xref = 4124.7263;
-  img[3].yref = 3937.6023;
-  img[4].xref = 3994.8097;
-  img[4].yref = 4166.3718;
-  img[5].xref = 4291.6013;
-  img[5].yref = 4267.2133;
-  //img[7].xref = 4087.8866;
-  //img[7].yref = 4048.3352;
+  img[4].xref = 4124.7263;
+  img[4].yref = 3937.6023;
+  img[5].xref = 3994.8097;
+  img[5].yref = 4166.3718;
+  img[6].xref = 4291.6013;
+  img[6].yref = 4267.2133;
+  img[7].xref = 4087.8866;
+  img[7].yref = 4048.3352;
 
 
   chn[0].dim = 3 * ( NIMG / 2 ) + ( NIMG / 2 ) + 3;

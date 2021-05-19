@@ -13,7 +13,7 @@
 #define THRDSPERBLCK 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
-#define NIMG 6
+#define NIMG 8
 
 typedef float2 Complex;
 
