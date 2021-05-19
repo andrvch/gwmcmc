@@ -68,7 +68,6 @@ struct Image {
   int idx;
 };
 
-
 __host__ int grid1D ( const int );
 __host__ dim3 grid2D ( const int, const int );
 __host__ dim3 block2D ();
@@ -153,5 +152,5 @@ __host__ int allocateImage ( Chain *chn, Image *img );
 __host__ void freeImage ( const Image *img );
 
 __global__ void biinterpolation00 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww );
-
+__global__ void biinterpolation01 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww );
 #endif // _STRCTRSANDFNCTNS_CUH_

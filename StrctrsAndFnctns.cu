@@ -58,8 +58,10 @@ __host__ int statistic0 ( const Cupar *cdp, Chain *chn, Image *img ) {
     grid3 = grid3D ( img[i].nx, img[i].ny, chn[0].nwl, block3 );
     if ( img[i].idx < NIMG/2 ) {
       biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
-    } else {
+    } else if ( NIMG/2 - 1 < img[i].idx && img[i].idx < NIMG - 1 ) {
       biinterpolation00 <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, chn[0].phr, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
+    } else {
+      biinterpolation01 <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl, img[i].nx, img[i].ny, img[i].pix, img[i].idx, chn[0].phr, img[i].psf, chn[0].xx, img[i].pp, img[i].vv, img[i].ww );
     }
     returnPPStatistic <<< grid2D ( img[i].nx*img[i].ny, chn[0].nwl ), block2D () >>> ( img[i].nx*img[i].ny, chn[0].nwl, img[i].img, img[i].pp, img[i].sstt );
     /*
@@ -103,10 +105,12 @@ __host__ int statistic ( const Cupar *cdp, Chain *chn, Image *img ) {
   dim3 grid3;
   for ( int i = 0; i < NIMG; i++ ) {
     grid3 = grid3D ( img[i].nx, img[i].ny, chn[0].nwl/2, block3 );
-    if ( img[i].idx < 3 ) {
+    if ( img[i].idx < NIMG/2 ) {
       biinterpolation <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[i].nx, img[i].ny, img[i].pix, img[i].idx, img[i].psf, chn[0].xx1, img[i].pp, img[i].vv, img[i].ww );
-    } else {
+    } else if ( NIMG/2 - 1 < img[i].idx && img[i].idx < NIMG - 1 ) {
       biinterpolation00 <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[i].nx, img[i].ny, img[i].pix, img[i].idx, chn[0].phr, img[i].psf, chn[0].xx1, img[i].pp, img[i].vv, img[i].ww );
+    } else {
+      biinterpolation01 <<< grid3, block3 >>> ( chn[0].dim, chn[0].nwl/2, img[i].nx, img[i].ny, img[i].pix, img[i].idx, chn[0].phr, img[i].psf, chn[0].xx1, img[i].pp, img[i].vv, img[i].ww );
     }
     returnPPStatistic <<< grid2D ( img[i].nx*img[i].ny, chn[0].nwl/2 ), block2D () >>> ( img[i].nx*img[i].ny, chn[0].nwl/2, img[i].img, img[i].pp, img[i].sstt1 );
     /*cudaDeviceSynchronize ();
@@ -194,6 +198,67 @@ __global__ void biinterpolation ( const int dim, const int nwl, const int nx, co
 }
 
 __global__ void biinterpolation00 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  int k = threadIdx.z + blockDim.z * blockIdx.z;
+  int v, w, dxi, dyi;
+  float dx0, dy0, dx, dy, xs, ys, phi, cs, si, x0, y0, x1, y1, nr, dxf, dyf;
+  float d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
+  if ( i < nx && j < ny && k < nwl ) {
+
+    dx0 = xx[0+3*(imidx-NIMG/2)+k*dim] / pix;
+    dy0 = xx[1+3*(imidx-NIMG/2)+k*dim] / pix;
+
+    nr = xx[3*NIMG/2+(imidx-NIMG/2)+k*dim];
+
+    xs  = xx[3*NIMG/2+NIMG/2+k*dim];
+    ys  = xx[3*NIMG/2+NIMG/2+1+k*dim];
+    phi = xx[3*NIMG/2+NIMG/2+2+k*dim];
+
+    x0 = phr[2*(imidx-NIMG/2)] + dx0;
+    y0 = phr[2*(imidx-NIMG/2)+1] + dy0;
+
+    cs = cosf ( phi );
+    si = sinf ( phi );
+
+    x1 = cs * x0 - si * y0 + xs;
+    y1 = si * x0 + cs * y0 + ys;
+
+    dx = x1 - phr[2*imidx];
+    dy = y1 - phr[2*imidx+1];
+
+    dxi = floorf ( fabsf ( dx ) );
+    dxf = fabsf ( dx ) - dxi;
+    dyi = floorf ( fabsf ( dy ) );
+    dyf = fabsf ( dy ) - dyi;
+    if ( dx >= 0 ) {
+      v = i + dxi;
+      a = dxf;
+    } else {
+      v = i - dxi - 1;
+      a = 1 - dxf;
+    }
+    if ( dy >= 0 ) {
+      w = j + dyi;
+      b = dyf;
+    } else {
+      w = j - dyi - 1;
+      b = 1 - dyf;
+    }
+    if ( 0 < v   && v   < nx && 0 < w   && w   < ny ) d00 = psf[v+w*nx];       else d00 = 0;
+    if ( 0 < v+1 && v+1 < nx && 0 < w   && w   < ny ) d10 = psf[v+1+w*nx];     else d10 = 0;
+    if ( 0 < v   && v   < nx && 0 < w+1 && w+1 < ny ) d01 = psf[v+(w+1)*nx];   else d01 = 0;
+    if ( 0 < v+1 && v+1 < nx && 0 < w+1 && w+1 < ny ) d11 = psf[v+1+(w+1)*nx]; else d11 = 0;
+    tmp1 = a * d10 + ( 1 - a ) * d00;
+    tmp2 = a * d11 + ( 1 - a ) * d01;
+    tmp3 = b * tmp2 + ( 1 - b ) * tmp1;
+    pp[i+j*nx+k*nx*ny] = tmp3 * nr;
+    vv[i+j*nx+k*nx*ny] = v;
+    ww[i+j*nx+k*nx*ny] = w;
+  }
+}
+
+__global__ void biinterpolation01 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
