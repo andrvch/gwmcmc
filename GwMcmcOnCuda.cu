@@ -72,7 +72,7 @@ int main ( int argc, char *argv[] ) {
   img[7].yref = 4048.3352;
 
 
-  chn[0].dim = 3 * ( NIMG / 2 ) + ( NIMG / 2 ) + 3;
+  chn[0].dim = 3 * ( NIMG / 2 ) + ( NIMG / 2 ) + 3 + 2;
   //printf ( " chain dimension = %i \n ", chn[0].dim );
 
   allocateChain ( chn );
@@ -102,6 +102,9 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[3*NIMG/2+NIMG/2+1] = -17.5;
   chn[0].x0[3*NIMG/2+NIMG/2+2] = 0.0;
 
+  chn[0].x0[3*NIMG/2+NIMG/2+3] = 0.0;
+  chn[0].x0[3*NIMG/2+NIMG/2+4] = 0.0;
+
   // set up boundaries:
   for ( int i = 0; i < NIMG/2; i++ ) {
     chn[0].x0bn[6*i] = -5.;
@@ -123,6 +126,11 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0bn[2*(3*NIMG/2)+NIMG+3] = 100.;
   chn[0].x0bn[2*(3*NIMG/2)+NIMG+4] = -PI;
   chn[0].x0bn[2*(3*NIMG/2)+NIMG+5] = PI;
+
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+6] = -5.;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+7] = 5.;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+8] = -5.;
+  chn[0].x0bn[2*(3*NIMG/2)+NIMG+9] = 5.;
 
   for ( int i = 0; i < NIMG; i++ ) {
     simpleReadDataFloat ( img[i].psffl, img[i].psf );

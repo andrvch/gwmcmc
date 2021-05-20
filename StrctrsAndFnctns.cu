@@ -263,7 +263,7 @@ __global__ void biinterpolation01 ( const int dim, const int nwl, const int nx, 
   int j = threadIdx.y + blockDim.y * blockIdx.y;
   int k = threadIdx.z + blockDim.z * blockIdx.z;
   int v, w, dxi, dyi;
-  float dx0, dy0, dx, dy, xs, ys, phi, cs, si, x0, y0, x1, y1, nr, dxf, dyf;
+  float dx0, dy0, dx, dy, xs, ys, phi, cs, si, x0, y0, x1, y1, nr, dxf, dyf, dxp, dyp;
   float d00, d01, d10, d11, tmp1, tmp2, tmp3, a, b;
   if ( i < nx && j < ny && k < nwl ) {
 
@@ -276,14 +276,17 @@ __global__ void biinterpolation01 ( const int dim, const int nwl, const int nx, 
     ys  = xx[3*NIMG/2+NIMG/2+1+k*dim];
     phi = xx[3*NIMG/2+NIMG/2+2+k*dim];
 
+    dxp = xx[3*NIMG/2+NIMG/2+3+k*dim];
+    dyp = xx[3*NIMG/2+NIMG/2+4+k*dim];
+
     x0 = phr[2*(imidx-NIMG/2)] + dx0;
     y0 = phr[2*(imidx-NIMG/2)+1] + dy0;
 
     cs = cosf ( phi );
     si = sinf ( phi );
 
-    x1 = cs * x0 - si * y0 + xs;
-    y1 = si * x0 + cs * y0 + ys;
+    x1 = cs * x0 - si * y0 + xs + dxp;
+    y1 = si * x0 + cs * y0 + ys + dyp;
 
     dx = x1 - phr[2*imidx];
     dy = y1 - phr[2*imidx+1];

@@ -20,13 +20,17 @@ kb = 1.38E-16
 kev = 1.6022E-9
 gr = math.sqrt(1 - 2.952 * Mns / Rns)
 
-nbins1D = 100
-nbins2D = 200
+nbins1D = 200
+nbins2D = 300
 
 #nsm = 500000
 #samples = read_data_nsmpl(sys.argv[1],nsm)
 samples = read_data(sys.argv[1])
 print(samples.shape)
+nsmpl = len(samples)
+
+samples = samples[(nsmpl-3):nsmpl,:]
+
 #samples = samples[:samples.shape[0],:]
 #samples = samples[:3,:]
 #print(samples.shape)
@@ -38,7 +42,7 @@ npars = len(samples)
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
 #quont = [0.99,0.95,0.90,0.68,0.40]
-quont = [0.90,0.68,0.40]
+quont = [0.95,0.68,0.40]
 eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
