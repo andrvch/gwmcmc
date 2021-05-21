@@ -13,7 +13,7 @@
 #define THRDSPERBLCK 32
 #define RANK 1
 #define ACONST 2.0f // Goodman-Weare "a" constant
-#define NIMG 8
+#define NIMG 12
 
 typedef float2 Complex;
 
@@ -153,4 +153,6 @@ __host__ void freeImage ( const Image *img );
 
 __global__ void biinterpolation00 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww );
 __global__ void biinterpolation01 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww );
+__global__ void biinterpolation02 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww );
+__global__ void biinterpolation03 ( const int dim, const int nwl, const int nx, const int ny, const float pix, const int imidx, const float *phr, const float *psf, const float *xx, float *pp, int *vv, int *ww );
 #endif // _STRCTRSANDFNCTNS_CUH_

@@ -71,8 +71,16 @@ int main ( int argc, char *argv[] ) {
   img[7].xref = 4087.8866;
   img[7].yref = 4048.3352;
 
+  img[8].xref  = 4126.1491;
+  img[8].yref  = 3933.2969;
+  img[9].xref  = 3995.9177;
+  img[9].yref  = 4161.5708;
+  img[10].xref = 4292.9343;
+  img[10].yref = 4262.3128;
+  img[11].xref = 4088.8051;
+  img[11].yref = 4043.8665;
 
-  chn[0].dim = 3 * ( NIMG / 2 ) + ( NIMG / 2 ) + 3 + 2;
+  chn[0].dim = 3 * ( NIMG / 3 ) + 2 * ( NIMG / 3 ) + 2 * 3 + 2;
   //printf ( " chain dimension = %i \n ", chn[0].dim );
 
   allocateChain ( chn );
@@ -88,25 +96,29 @@ int main ( int argc, char *argv[] ) {
   }
 
   // set up starting values:
-  for ( int i = 0; i < NIMG/2; i++ ) {
+  for ( int i = 0; i < NIMG/3; i++ ) {
     chn[0].x0[3*i] = 0.;
     chn[0].x0[3*i+1] = 0.;
     chn[0].x0[3*i+2] = 0.04;
   }
 
-  for ( int i = 0; i < NIMG/2; i++ ) {
-    chn[0].x0[3*NIMG/2+i] = 0.04;
+  for ( int i = 0; i < 2*NIMG/3; i++ ) {
+    chn[0].x0[3*NIMG/3+i] = 0.04;
   }
 
-  chn[0].x0[3*NIMG/2+NIMG/2] = -22.5;
-  chn[0].x0[3*NIMG/2+NIMG/2+1] = -17.5;
-  chn[0].x0[3*NIMG/2+NIMG/2+2] = 0.0;
+  chn[0].x0[3*NIMG/3+2*NIMG/3] = -22.5;
+  chn[0].x0[3*NIMG/3+2*NIMG/3+1] = -17.5;
+  chn[0].x0[3*NIMG/3+2*NIMG/3+2] = 0.0;
 
-  chn[0].x0[3*NIMG/2+NIMG/2+3] = 0.0;
-  chn[0].x0[3*NIMG/2+NIMG/2+4] = 0.0;
+  chn[0].x0[3*NIMG/3+2*NIMG/3+3] = -22.5;
+  chn[0].x0[3*NIMG/3+2*NIMG/3+4] = -17.5;
+  chn[0].x0[3*NIMG/3+2*NIMG/3+5] = 0.0;
+
+  chn[0].x0[3*NIMG/3+2*NIMG/3+6] = 0.0;
+  chn[0].x0[3*NIMG/3+2*NIMG/3+7] = 0.0;
 
   // set up boundaries:
-  for ( int i = 0; i < NIMG/2; i++ ) {
+  for ( int i = 0; i < NIMG/3; i++ ) {
     chn[0].x0bn[6*i] = -5.;
     chn[0].x0bn[6*i+1] = 5.;
     chn[0].x0bn[6*i+2] = -5.;
@@ -115,22 +127,29 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0bn[6*i+5] = 10000.;
   }
 
-  for ( int i = 0; i < NIMG/2; i++ ) {
-    chn[0].x0bn[2*(3*NIMG/2)+2*i] = 0.0;
-    chn[0].x0bn[2*(3*NIMG/2)+2*i+1] = 10000.;
+  for ( int i = 0; i < 2*NIMG/3; i++ ) {
+    chn[0].x0bn[2*(3*NIMG/3)+2*i] = 0.0;
+    chn[0].x0bn[2*(3*NIMG/3)+2*i+1] = 10000.;
   }
 
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG] = -100.;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+1] = 100.;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+2] = -100.;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+3] = 100.;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+4] = -PI;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+5] = PI;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)] = -100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+1] = 100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+2] = -100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+3] = 100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+4] = -PI;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+5] = PI;
 
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+6] = -5.;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+7] = 5.;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+8] = -5.;
-  chn[0].x0bn[2*(3*NIMG/2)+NIMG+9] = 5.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+6] = -100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+7] = 100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+8] = -100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+9] = 100.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+10] = -PI;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+11] = PI;
+
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+12] = -5.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+13] = 5.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+14] = -5.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+15] = 5.;
 
   for ( int i = 0; i < NIMG; i++ ) {
     simpleReadDataFloat ( img[i].psffl, img[i].psf );

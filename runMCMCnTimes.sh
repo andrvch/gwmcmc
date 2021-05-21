@@ -1,9 +1,9 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="psffit128Test005_11123_19165_src123psr_"
-LOGFILE="LogPsfFit128Test005_11123_19165_src123psr"
+CHAINFILE="psffit128Test006_11123_19165_20876_src123psr_"
+LOGFILE="LogPsfFit128Test006_11123_19165_20876_src123psr"
 NWALK=128
-LSTEP=1024
+LSTEP=16384
 IMDIM=41
 i=$1
 NCHAINS=1
@@ -23,10 +23,18 @@ PSFFL7="psf_19165_src3_1pix_new.fits.newpsf"
 DATAFL7="img_19165_src3_new.fits.newpsf"
 PSFFL8="psf_19165_psr_1pix_new.fits.newpsf"
 DATAFL8="img_19165_psr_new.fits.newpsf"
+PSFFL9="psf_20876_src1_1pix_new.fits.newpsf"
+DATAFL9="img_20876_src1_new.fits.newpsf"
+PSFFL10="psf_20876_src2_1pix_new.fits.newpsf"
+DATAFL10="img_20876_src2_new.fits.newpsf"
+PSFFL11="psf_20876_src3_1pix_new.fits.newpsf"
+DATAFL11="img_20876_src3_new.fits.newpsf"
+PSFFL12="psf_20876_psr_1pix_new.fits.newpsf"
+DATAFL12="img_20876_psr_new.fits.newpsf"
 let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
-  ./runSFH $CUDAID $CHAINFILE $NWALK $LSTEP $i $IMDIM $PSFFL1 $DATAFL1 $PSFFL2 $DATAFL2 $PSFFL3 $DATAFL3 $PSFFL4 $DATAFL4 $PSFFL5 $DATAFL5 $PSFFL6 $DATAFL6 $PSFFL7 $DATAFL7 $PSFFL8 $DATAFL8 > $LOGFILE
+  ./runSFH $CUDAID $CHAINFILE $NWALK $LSTEP $i $IMDIM $PSFFL1 $DATAFL1 $PSFFL2 $DATAFL2 $PSFFL3 $DATAFL3 $PSFFL4 $DATAFL4 $PSFFL5 $DATAFL5 $PSFFL6 $DATAFL6 $PSFFL7 $DATAFL7 $PSFFL8 $DATAFL8 $PSFFL9 $DATAFL9 $PSFFL10 $DATAFL10 $PSFFL11 $DATAFL11 $PSFFL12 $DATAFL12 > $LOGFILE
   ./plotChain.py $CHAINFILE $i $NWALK
   let i=i+1
   let TOTAL=i*LSTEP
