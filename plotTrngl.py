@@ -20,8 +20,8 @@ kb = 1.38E-16
 kev = 1.6022E-9
 gr = math.sqrt(1 - 2.952 * Mns / Rns)
 
-nbins1D = 200
-nbins2D = 300
+nbins1D = 100
+nbins2D = 200
 
 #nsm = 500000
 #samples = read_data_nsmpl(sys.argv[1],nsm)
@@ -30,6 +30,12 @@ print(samples.shape)
 nsmpl = len(samples)
 
 samples = samples[(nsmpl-3):nsmpl,:]
+
+r = np.sqrt(samples[0,:]**2+samples[1,:]**2)
+tg = samples[0,:]
+
+samples[0,:] = r
+samples[1,:] = tg
 
 #samples = samples[:samples.shape[0],:]
 #samples = samples[:3,:]
