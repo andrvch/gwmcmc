@@ -114,7 +114,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0[3*NIMG/3+2*NIMG/3+4] = -17.5;
   chn[0].x0[3*NIMG/3+2*NIMG/3+5] = 0.0;
 
-  chn[0].x0[3*NIMG/3+2*NIMG/3+6] = 0.0;
+  chn[0].x0[3*NIMG/3+2*NIMG/3+6] = 0.5;
   chn[0].x0[3*NIMG/3+2*NIMG/3+7] = 0.0;
 
   // set up boundaries:
@@ -146,10 +146,10 @@ int main ( int argc, char *argv[] ) {
   chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+10] = -PI;
   chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+11] = PI;
 
-  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+12] = -5.;
-  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+13] = 5.;
-  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+14] = -5.;
-  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+15] = 5.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+12] = 0.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+13] = 10.;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+14] = -PI;
+  chn[0].x0bn[2*(3*NIMG/3)+2*(2*NIMG/3)+15] = PI;
 
   for ( int i = 0; i < NIMG; i++ ) {
     simpleReadDataFloat ( img[i].psffl, img[i].psf );
