@@ -293,8 +293,8 @@ __global__ void biinterpolation01 ( const int dim, const int nwl, const int nx, 
     cs = cosf ( phi );
     si = sinf ( phi );
 
-    x1 = cs * x0 - si * y0 + xs + dxp * sinf ( dyp );
-    y1 = si * x0 + cs * y0 + ys + dxp * cosf ( dyp );
+    x1 = cs * x0 - si * y0 + xs + dxp * cosf ( dyp );
+    y1 = si * x0 + cs * y0 + ys + dxp * sinf ( dyp );
 
     dx = x1 - phr[2*imidx];
     dy = y1 - phr[2*imidx+1];
@@ -418,8 +418,8 @@ __global__ void biinterpolation03 ( const int dim, const int nwl, const int nx, 
     cs = cosf ( phi );
     si = sinf ( phi );
 
-    x1 = cs * x0 - si * y0 + xs + dxp * sinf ( dyp );
-    y1 = si * x0 + cs * y0 + ys + dxp * cosf ( dyp );
+    x1 = cs * x0 - si * y0 + xs + dxp * cosf ( dyp );
+    y1 = si * x0 + cs * y0 + ys + dxp * sinf ( dyp );
 
     dx = x1 - phr[2*imidx];
     dy = y1 - phr[2*imidx+1];

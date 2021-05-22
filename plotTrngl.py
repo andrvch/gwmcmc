@@ -42,7 +42,7 @@ npars = len(samples)
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
 #quont = [0.99,0.95,0.90,0.68,0.40]
-quont = [0.997,0.95,0.68]
+quont = [0.95,0.90,0.68]
 eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)

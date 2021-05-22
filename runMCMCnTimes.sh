@@ -1,12 +1,12 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="psffit128Test006Polar_11123_19165_20876_src123psr_"
-LOGFILE="LogPsfFit128Test006Polar_11123_19165_20876_src123psr"
+CHAINFILE="psffit128007007Polar4_11123_19165_20876_src123psr_"
+LOGFILE="LogPsfFit128007007Polar4_11123_19165_20876_src123psr"
 NWALK=128
 LSTEP=8192
 IMDIM=41
 i=$1
-NCHAINS=1
+NCHAINS=10
 PSFFL1="psf_11123_src1_1pix_new.fits.newpsf"
 DATAFL1="img_11123_src1_new.fits.newpsf"
 PSFFL2="psf_11123_src2_1pix_new.fits.newpsf"
