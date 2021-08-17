@@ -31,11 +31,15 @@ nsmpl = len(samples)
 
 samples = samples[(nsmpl-3):nsmpl,:]
 
+"""
 r = np.sqrt(samples[0,:]**2+samples[1,:]**2)
-tg = samples[0,:]
+tg = samples[1,:] / r
 
 samples[0,:] = r
 samples[1,:] = tg
+
+print(samples[0,0], samples[0,1])
+"""
 
 #samples = samples[:samples.shape[0],:]
 #samples = samples[:3,:]
@@ -48,7 +52,7 @@ npars = len(samples)
 qlevel = float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
 #quont = [0.99,0.95,0.90,0.68,0.40]
-quont = [0.95,0.68,0.40]
+quont = [0.997,0.99,0.95,0.68,0.40,0.10]
 eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
@@ -79,6 +83,8 @@ for j in range(npars):
             lev,zin = comp_lev(zi,quont)
             #ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
+            ax[i,j].plot([0,0], [samples[i].min()-0.05*(samples[i].max()-samples[i].min()),samples[i].max()+0.05*(samples[i].max()-samples[i].min())], '--', color='black' )
+            ax[i,j].plot([samples[j].min()-0.001*((samples[j].max()-samples[j].min())),samples[j].max()+0.001*((samples[j].max()-samples[j].min()))], [0,0], '--', color='black')
             #ax[i,j].contourf(xii,yii,ziin.reshape(xii.shape), lev, alpha=.35, cmap=plt.cm.Greens)
             #if i < npars-1:
             #    ax[i,j].contour(xii,yii,ziin.reshape(xii.shape), levi, colors='black', linewidth=.5)
@@ -116,4 +122,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+".trngl"+".png")
+plt.savefig(sys.argv[1]+"%2.0f"%(float(sys.argv[2]))+".XY00700LineRadialTrngl"+".png")
