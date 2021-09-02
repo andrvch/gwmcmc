@@ -29,7 +29,7 @@ samples = read_data(sys.argv[1])
 print(samples.shape)
 nsmpl = len(samples)
 
-samples = samples[(nsmpl-3):nsmpl,:]
+#samples = samples[(nsmpl-3):nsmpl,:]
 
 #samples = samples[:samples.shape[0],:]
 #samples = samples[:3,:]
@@ -110,4 +110,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+".trngl"+".png")
+plt.savefig(sys.argv[1]+".trngl00"+".png")

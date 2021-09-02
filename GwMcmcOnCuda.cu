@@ -53,23 +53,23 @@ int main ( int argc, char *argv[] ) {
     img[i].datafl = argv[7+2*i+1];
   }
 
-  img[0].xref = 4147.5912;
-  img[0].yref = 3955.0466;
-  img[1].xref = 4017.1864;
-  img[1].yref = 4183.6101;
-  img[2].xref = 4313.9623;
-  img[2].yref = 4284.8801;
-  img[3].xref = 4109.9594;
-  img[3].yref = 4065.3322;
+  img[0].xref = 4219.1376;
+  img[0].yref = 4113.3950;
+  img[1].xref = 3869.3410;
+  img[1].yref = 3946.4976;
+  img[2].xref = 4213.6589;
+  img[2].yref = 4286.8925;
+  img[3].xref = 4118.4548;
+  img[3].yref = 4133.1050;
 
-  img[4].xref = 4124.7263;
-  img[4].yref = 3937.6023;
-  img[5].xref = 3994.8097;
-  img[5].yref = 4166.3718;
-  img[6].xref = 4291.6013;
-  img[6].yref = 4267.2133;
-  img[7].xref = 4087.8866;
-  img[7].yref = 4048.3352;
+  img[4].xref = 4211.8631;
+  img[4].yref = 4091.1163;
+  img[5].xref = 3861.809;
+  img[5].yref = 3924.7092;
+  img[6].xref = 4205.8589;
+  img[6].yref = 4264.7592;
+  img[7].xref = 4110.6743;
+  img[7].yref = 4110.2977;
 
 
   chn[0].dim = 3 * ( NIMG / 2 ) + ( NIMG / 2 ) + 3 + 2;
@@ -98,8 +98,8 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0[3*NIMG/2+i] = 0.04;
   }
 
-  chn[0].x0[3*NIMG/2+NIMG/2] = -22.5;
-  chn[0].x0[3*NIMG/2+NIMG/2+1] = -17.5;
+  chn[0].x0[3*NIMG/2+NIMG/2] = 7.3;
+  chn[0].x0[3*NIMG/2+NIMG/2+1] = 22.3;
   chn[0].x0[3*NIMG/2+NIMG/2+2] = 0.0;
 
   chn[0].x0[3*NIMG/2+NIMG/2+3] = 0.0;

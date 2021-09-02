@@ -36,7 +36,7 @@ nx = shape(data)[1]
 
 print(nx,ny)
 
-exit()
+#exit()
 f = open(fl+".newpsf", "w")
 
 #f.write("%.13E\n"%(xrf))
