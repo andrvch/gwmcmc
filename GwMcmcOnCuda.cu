@@ -98,8 +98,8 @@ int main ( int argc, char *argv[] ) {
     chn[0].x0[3*NIMG/2+i] = 0.04;
   }
 
-  chn[0].x0[3*NIMG/2+NIMG/2] = 7.3;
-  chn[0].x0[3*NIMG/2+NIMG/2+1] = 22.3;
+  chn[0].x0[3*NIMG/2+NIMG/2] = -7.3;
+  chn[0].x0[3*NIMG/2+NIMG/2+1] = -22.3;
   chn[0].x0[3*NIMG/2+NIMG/2+2] = 0.0;
 
   chn[0].x0[3*NIMG/2+NIMG/2+3] = 0.0;
