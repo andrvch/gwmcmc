@@ -17,7 +17,7 @@
 #define ACONST 2.0f // Goodman-Weare "a" constant
 #define BACKIN 1
 #define NSPCTR 1
-#define NSPCTR11 12
+//#define NSPCTR11 12
 #define NSPCTRCHI NSPCTR
 #define ATNMR 18
 #define NELMS 30

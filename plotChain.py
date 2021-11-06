@@ -16,7 +16,7 @@ nwlkrs = int(sys.argv[3])
 nprmtrs = shape(smpls)[0]
 nstps = int(shape(smpls)[1]/float(nwlkrs))
 
-print nstps, nprmtrs
+print(nstps, nprmtrs)
 
 wlkrs = np.empty([nprmtrs,nwlkrs,nstps])
 

@@ -45,7 +45,7 @@ int main ( int argc, char *argv[] ) {
   chn[0].indx = atoi ( argv[5] );
   chn[0].dim = NPRS;
   chn[0].dim1 = chn[0].dim + 3;
-  chn[0].dlt = 1.E-4;
+  chn[0].dlt = 1.E-3;
   chn[0].nkb = 100;
 
   // spectrum:
@@ -53,6 +53,7 @@ int main ( int argc, char *argv[] ) {
   for ( int i = 0; i < NSPCTR; i++ ) {
     spc[i].name = argv[6+i];
   }
+
   for ( int i = 0; i < NSPCTR; i++ ) {
     spc[i].lwrNtcdEnrg = ( float ) atof ( argv[6+NSPCTR] );
     spc[i].hghrNtcdEnrg = ( float ) atof ( argv[6+NSPCTR+1] );
@@ -65,11 +66,11 @@ int main ( int argc, char *argv[] ) {
   allocateChain ( chn );
 
   // set starting parameters and boundaries:
-  chn[0].x0[0] = 5.9;
+  chn[0].x0[0] = 5.7;
   chn[0].xbnd[0] = 5.5;
   chn[0].xbnd[1] = 6.5;
 
-  chn[0].x0[1] = -2.0;
+  chn[0].x0[1] = -6.;
   chn[0].xbnd[2] = -25.;
   chn[0].xbnd[3] = 25.;
 
@@ -82,6 +83,46 @@ int main ( int argc, char *argv[] ) {
   if ( chn[0].indx == 0 ) {
     modelStatistic0 ( cdp, mdl, chn, spc );
   }
+
+  /*
+  cudaDeviceSynchronize ();
+
+  for ( int j = 0; j < spc[0].nmbrOfNtcdBns; j++ ) {
+    printf ( " %.8E ", spc[0].srcGrp[j] );
+  }
+  printf ( "\n" );
+  printf ( "\n" );
+  printf ( "\n" );
+
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    for ( int j = 0; j < spc[0].nmbrOfNtcdBns; j++ ) {
+      printf ( " %.8E ", spc[0].chnnlSttstcs[j+i*spc[0].nmbrOfNtcdBns] );
+    }
+    printf ( "\n" );
+    printf ( "\n" );
+    printf ( "\n" );
+
+    printf ( " %.8E ", chn[0].stt[i] );
+
+    printf ( "\n" );
+    printf ( "\n" );
+    printf ( "\n" );
+  }
+
+  printf ( "\n" );
+  printf ( "\n" );
+  printf ( "\n" );
+
+  for ( int i = 0; i < chn[0].nwl; i++ ) {
+    for ( int j = 0; j < spc[0].nmbrOfNtcdBns; j++ ) {
+      printf ( " %.8E ", spc[0].flddMdlFlxs[j+i*spc[0].nmbrOfNtcdBns] );
+    }
+    printf ( "\n" );
+    printf ( "\n" );
+    printf ( "\n" );
+    printf ( "\n" );
+  }
+  */
 
   if ( vrb ) {
     printf ( ".................................................................\n" );
@@ -100,6 +141,24 @@ int main ( int argc, char *argv[] ) {
     while ( chn[0].isb < 2 ) {
       streachMove ( cdp, chn );
       modelStatistic1 ( cdp, mdl, chn, spc );
+
+      cudaDeviceSynchronize ();
+
+      for ( int i = 0; i < chn[0].nwl/2; i++ ) {
+        for ( int j = 0; j < spc[0].nmbrOfNtcdBns; j++ ) {
+          printf ( " %.8E ", spc[0].chnnlSttstcs[j+i*spc[0].nmbrOfNtcdBns] );
+        }
+        printf ( "\n" );
+        printf ( "\n" );
+        printf ( "\n" );
+
+        printf ( " %.8E ", chn[0].stt1[i] );
+
+        printf ( "\n" );
+        printf ( "\n" );
+        printf ( "\n" );
+      }
+
       streachUpdate ( cdp, chn, mdl );
       chn[0].isb += 1;
     }
