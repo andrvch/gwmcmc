@@ -140,6 +140,7 @@ int main ( int argc, char *argv[] ) {
     chn[0].isb = 0;
     while ( chn[0].isb < 2 ) {
       streachMove ( cdp, chn );
+
       modelStatistic1 ( cdp, mdl, chn, spc );
 
       cudaDeviceSynchronize ();
