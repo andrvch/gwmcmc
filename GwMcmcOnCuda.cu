@@ -88,17 +88,9 @@ int main ( int argc, char *argv[] ) {
   chn[0].xbnd[6] = -25.;
   chn[0].xbnd[7] = 25.;
 
-  chn[0].x0[4] = 1.5;
-  chn[0].xbnd[8] = -25.;
+  chn[0].x0[4] = 0.1;
+  chn[0].xbnd[8] = 0.0;
   chn[0].xbnd[9] = 25.;
-
-  chn[0].x0[5] = -5.;
-  chn[0].xbnd[10] = -25.;
-  chn[0].xbnd[11] = 25.;
-
-  chn[0].x0[6] = 0.1;
-  chn[0].xbnd[12] = 0.0;
-  chn[0].xbnd[13] = 25.;
 /*
   chn[0].x0[7] = -5.;
   chn[0].xbnd[14] = -25.;
