@@ -57,13 +57,13 @@ for j in range(npars):
             xqu = [eqh_inter[i,0],eqh_inter[i,-1],eqh_inter[i,-1],eqh_inter[i,0]]
             yqu = [zin.min(),zin.min(),zin.max()+3*(zin.max()-zin.min()),zin.max()+3*(zin.max()-zin.min())]
             ax[i,i].fill(xqu,yqu,color='0.75')
-            ax[i,i].plot([eqh_inter[i,1],eqh_inter[i,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black',linewidth=1.5)
+            ax[i,i].plot([eqh_inter[i,1],eqh_inter[i,1]],[zin.min(),zin.max()+3*(zin.max()-zin.min())],'--',color='black')
             zizi.append(zin)
         elif i > j:
             xi,yi,zi = kde_gauss_cuda2d(samples[j],samples[i],nbins2D)
             lev,zin = comp_lev(zi,quont)
             #ax[i,j].contourf(xi,yi,zin.reshape(xi.shape), lev, alpha=.35, cmap=plt.cm.Greens)
-            ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
+            ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue')
         elif j > i:
             ax[i,j].set_visible(False)
 print("gpu:")
