@@ -215,7 +215,6 @@ __global__ void scaleWalkers ( const int n, const float c, const float *a, float
   }
 }
 
-
 __global__ void shiftWalkers ( const int dim, const int nwl, const float *xx, const float *x, float *yy ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -301,7 +300,6 @@ __global__ void mapKex ( const int nwl, const float *r, int *kex ) {
   }
 }
 
-
 __global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -310,7 +308,6 @@ __global__ void TestpermuteWalkers ( const int dim, const int nwl, const int *kr
     xxCP[t] = xxC[t];
   }
 }
-
 
 __global__ void permuteWalkers ( const int dim, const int nwl, const int *kr, const float *xxC, float *xxCP ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
@@ -2130,7 +2127,6 @@ __host__ int modelStatistic00 ( const Cupar *cdp, const Model *mdl, Chain *chn, 
   //constantArray <<< grid1D ( chn[0].nwl ), THRDS >>> ( chn[0].nwl, 0., chn[0].prr );
   return 0;
 }
-
 
 __host__ __device__ float PowerLaw ( const float phtnIndx, const float nrmlztn, const float enrgLwr, const float enrgHghr ) {
   float flx;
