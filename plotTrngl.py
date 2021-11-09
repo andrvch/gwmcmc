@@ -25,9 +25,9 @@ nbins1D = 100
 nbins2D = 200
 
 samples = read_data(sys.argv[1])
-print samples.shape
+print(samples.shape)
 samples = samples[:samples.shape[0]-1,:]
-print samples.shape
+print(samples.shape)
 
 ##
 #samples[0] = 10**samples[0]*kb/1.6022E-12/redshift
@@ -40,8 +40,8 @@ print samples.shape
 
 npars = len(samples)
 
-qlevel = 90 # percent
-quont = [0.999,0.99,0.90,0.68,0.40]
+qlevel = float(sys.argv[2])
+quont = [0.996,0.95,0.90,0.68,0.40]
 eqh_inter = np.empty([npars,3])
 
 fig, ax = plt.subplots(ncols=npars, nrows=npars)
@@ -66,8 +66,8 @@ for j in range(npars):
             ax[i,j].contour(xi,yi,zin.reshape(xi.shape), lev, colors='blue', linewidth=.5)
         elif j > i:
             ax[i,j].set_visible(False)
-print "gpu:"
-print time.time()-sttime
+print("gpu:")
+print(time.time()-sttime)
 
 for i in range(npars):
     ax[i,i].set_ylabel("p.d.f.")
@@ -86,7 +86,7 @@ ax[0,0].yaxis.tick_right()
 setp([a.get_xticklabels() for a in ax[:npars-1,0]], visible=False)
 
 for i in range(npars):
-    print eqh_inter[i,:]
+    print(eqh_inter[i,:])
 
 for j in range(npars):
     for i in range(npars):
@@ -97,4 +97,4 @@ for j in range(npars):
             ax[i,j].set_ylim(samples[i].min()-0.05*(samples[i].max()-samples[i].min()), samples[i].max()+0.05*(samples[i].max()-samples[i].min()))
 
 #plt.show()
-plt.savefig(sys.argv[1]+".trngl"+".jpeg")
+plt.savefig(sys.argv[1]+".trngl"+".png")
