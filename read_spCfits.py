@@ -14,72 +14,30 @@ import numpy as np
 import pyregion
 import re
 
-fitsfls = [sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]] # (files position_input or position_input_11)
-
 fl = "spC.fits"
+
 hdul = fits.open(fl)
+
+print("0:")
 hdr = hdul[0].header
 print(repr(hdr))
 
+print("1:")
+hdr = hdul[1].header
+print(repr(hdr))
 
-for fl in fitsfls:
-    hdul = fits.open(fl)
-    #hdul.info()
+print("2:")
+hdr = hdul[2].header
+print(repr(hdr))
 
-    hdr = hdul[0].header
-    #print(repr(hdr))
-    xrf = hdr['CRVAL1P']
-    yrf = hdr['CRVAL2P']
-    xscl = hdr['CDELT1P']
-    yscl = hdr['CDELT2P']
-    print(xrf,yrf)
-    print(xscl,yscl)
+print("3:")
+hdr = hdul[3].header
+print(repr(hdr))
 
-    data = hdul[0].data
-    ny = shape(data)[0]
-    nx = shape(data)[1]
-    print(nx,ny)
-    f = open(fl+".psf", "w")
-    f.write("%.13E\n"%(xrf))
-    f.write("%.13E\n"%(yrf))
-    f.write("%.18E\n"%(xscl))
-    f.write("%.18E\n"%(yscl))
-    for j in range(ny):
-        for i in range(nx):
-            f.write("%.15E "%(data[j,i]))
-        f.write("\n")
-    f.close()
+print("4:")
+hdr = hdul[4].header
+print(repr(hdr))
 
-
-exit()
-
-
-#data.field(0)
-#for i in range(len(data)):
-#    print(data[i])
-
-#clms = hdul[1].columns
-#cnms = clms.names
-
-#n1 = len(cnms)
-#n2 = len(data)
-
-
-#print(clms.names)
-
-
-for i in range(n2):
-    print(data['X'][i],data['X_ERR'][i],data['Y_ERR'][i])
-
-for i in range(n1):
-    print(cnms[i],data[0][i])
-
-print(np.floor(pars[0,:,0]))
-for i in range(n2):
-    res = np.where(np.floor(pars[0,:,0])==math.floor(data['X'][i]))
-    if len(res[0]) > 0:
-        print(res[0][0],math.floor(data['X'][i]))
-
-
-
-#print(hdul[1].data)
+print("5:")
+hdr = hdul[5].header
+print(repr(hdr))
