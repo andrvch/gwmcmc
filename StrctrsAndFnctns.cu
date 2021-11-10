@@ -16,6 +16,35 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
+
+__global__ void trilinearInterpolation ( const int dim, const int nwl, const int nen, const int yindx, const int zindx, const float *mm, const float *xi, const float *yi, const float *zi, const int nx, const int ny, const int nz, const float *en, const float *xx, float *ff ) {
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int j = threadIdx.y + blockDim.y * blockIdx.y;
+  float sa, gr, x, y, z, a, b, c, d00, d01, d10, d11, d0, d1, d;
+  int k, l, m;
+  if ( i < nen && j < nwl ) {
+    gr = sqrtf ( 1. - 2.952 * MNS / RNS );
+    sa = powf ( RNS, 2. );
+    x = log10f ( en[i] / gr );
+    y = xx[yindx+j*dim];
+    z = xx[zindx+j*dim];
+    k = FindElementIndex ( xi, nx, x );
+    l = FindElementIndex ( yi, ny, y );
+    m = FindElementIndex ( zi, nz, z );
+    a = ( x - xi[k] ) / ( xi[k+1] - xi[k] );
+    b = ( y - yi[l] ) / ( yi[l+1] - yi[l] );
+    c = ( z - zi[m] ) / ( zi[m+1] - zi[m] );
+    d00 = mm[k+nx*l+nx*ny*m] * ( 1 - a ) + mm[(k+1)+nx*l+nx*ny*m] * a;
+    d01 = mm[k+nx*l+nx*ny*(m+1)] * ( 1 - a ) + mm[(k+1)+nx*l+nx*ny*(m+1)] * a;
+    d10 = mm[k+nx*(l+1)+nx*ny*m] * ( 1 - a ) + mm[(k+1)+nx*(l+1)+nx*ny*m] * a;
+    d11 = mm[k+nx*(l+1)+nx*ny*(m+1)] * ( 1 - a ) + mm[(k+1)+nx*(l+1)+nx*ny*(m+1)] * a;
+    d0 = d00 * ( 1 - b ) + d10 * b;
+    d1 = d01 * ( 1 - b ) + d11 * b;
+    d = d0 * ( 1 - c ) + d1 * c;
+    ff[i+j*nen] = powf ( 10., d ) * sa;
+  }
+}
+
 __host__ int grid1D ( const int n ) {
   int b = ( n + THRDS - 1 ) / THRDS;
   return b;
