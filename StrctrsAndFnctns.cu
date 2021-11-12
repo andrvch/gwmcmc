@@ -16,7 +16,6 @@
 //
 #include "StrctrsAndFnctns.cuh"
 
-
 __global__ void trilinearInterpolation ( const int dim, const int nwl, const int nen, const int yindx, const int zindx, const float *mm, const float *xi, const float *yi, const float *zi, const int nx, const int ny, const int nz, const float *en, const float *xx, float *ff ) {
   int i = threadIdx.x + blockDim.x * blockIdx.x;
   int j = threadIdx.y + blockDim.y * blockIdx.y;
@@ -43,6 +42,32 @@ __global__ void trilinearInterpolation ( const int dim, const int nwl, const int
     d = d0 * ( 1 - c ) + d1 * c;
     ff[i+j*nen] = powf ( 10., d ) * sa;
   }
+}
+
+__host__ void readcarbatm ( const char *flnm, const int nx, const int ny, const int nz, float *dt, float *xi, float *yi, float *zi, float *flx ) {
+  FILE *pntr;
+  pntr = fopen ( flnm, "r" );
+  float v;
+  int i = 0;
+  //printf ( " %i ", fscanf ( pntr, "%e", &v ));
+  while ( fscanf ( pntr, "%e", &v ) == 1 ) {
+    dt[i] = v;
+    //printf ( " %.8E ", v );
+    i += 1;
+  }
+  for ( int i = 0; i < nx; i++ ) {
+    xi[i] = dt[i];
+  }
+  for ( int i = 0; i < ny; i++ ) {
+    yi[i] = dt[nx+i];
+  }
+  for ( int i = 0; i < nz; i++ ) {
+    zi[i] = dt[nx+ny+i];
+  }
+  for ( int i = 0; i < nx*ny*nz; i++ ) {
+    flx[i] = dt[nx+ny+nz+i];
+  }
+  fclose ( pntr );
 }
 
 __host__ int grid1D ( const int n ) {

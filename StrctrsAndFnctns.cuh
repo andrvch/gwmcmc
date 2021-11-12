@@ -342,4 +342,7 @@ __global__ void chooseSample ( const int nDB, const int si, const float *EE, flo
 __global__ void LinearInterpolationFromSamples ( const int nmbrOfWlkrs, const int nmbrOfDistBins, const int si, const float *Dist, const float *EBV, const float *wlkrs, float *dist );
 __global__ void chooseDistance ( const int nwl, const int *kex, const float *didi11, float *didi1 );
 
+__global__ void trilinearInterpolation ( const int dim, const int nwl, const int nen, const int yindx, const int zindx, const float *mm, const float *xi, const float *yi, const float *zi, const int nx, const int ny, const int nz, const float *en, const float *xx, float *ff );
+__host__ void readcarbatm ( const char *flnm, const int nx, const int ny, const int nz, float *dt, float *xi, float *yi, float *zi, float *flx );
+
 #endif // _STRCTRSANDFNCTNS_CUH_
