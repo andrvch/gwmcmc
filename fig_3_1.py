@@ -8,39 +8,43 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import math
 from pylab import *
-from astropy.io import ascii
-from astropy.io import fits
 import numpy as np
-#import pyregion
-#import re
 
-fl = "spC.fits"
+pipi = 3.14159265359
 
-hdul = fits.open(fl)
-print(shape(hdul)[0])
-f = open(fl+".spC", "w")
+N = 1000
 
-for i in range(shape(hdul)[0]):
-    print("%i:"%i)
-    hdr = hdul[i].header
-    #print(repr(hdr))
-    data = hdul[i].data
-    print(shape(data))
-    if i < 5:
-        print(data)
-    if i == 1:
-        for j in range(shape(data)[0]):
-            for k in range(2):
-                f.write(" %.15E "%(data[j][k]))
-        f.write("\n")
-    if i == 2 or i == 3:
-        for j in range(shape(data)[0]):
-            f.write(" %.15E "%(data[j][0]))
-        f.write("\n")
-    if 3 < i:
-        #for k in range(61):
-        #    for j in range(1000):
-        #        f.write(" %.15E "%(data[0][k][j]))
-        f.write("\n")
+E0 = 10.
+W = 10.
+l2 = 1.
+l3 = 1.
+bt = 1.
+bt3 = 1.
 
-f.close()
+#lmbd = math.sqrt(l2*l1*(1+bt**2)/(1+bt3**2))
+#lmbd3 = 64.*l3/55./pipi/(1+bt3**2)
+
+yy = np.linspace(-W/2.,W/2.,N)
+
+def velocity(y,E0,W,l2,l3,bt,bt3):
+    lmbd = math.sqrt(l2*l1*(1+bt**2)/(1+bt3**2))
+    lmbd3 = 64.*l3/55./pipi/(1+bt3**2)
+    A = bt*E0*W/2./(1+lmbd3/lmbd)*math.exp(-W/2./lmbd)
+    D = E0*W**2/8./l2 + 3*pipi*E0*W/16. + (bt3-bt)*E0*l3*bt*W/2./(1+bt3**2)/(lmbd+lmbd3)
+    v = - E0*y**2/2/l2 + D + l3*(bt+bt3)/lmbd/(1+bt3**2)*2*A*math.sinh(y/lmbd)
+
+vv = np.empty([N])
+
+for i in range(N):
+    vv[i] = velocity(yy[i],E0,W,l2,l3,bt,bt3)
+
+plt.plot(yy,vv,'-')
+plt.savefig("fig3"+".png")
+exit()
+
+plt.plot(frqs,np.exp(odds)/frqs,'o')
+plt.xlim(3.362327,3.362337)
+oddsN = np.exp(odds)/frqs
+print oddsN.sum()/len(oddsN)
+#plt.show()
+plt.savefig(sys.argv[1]+"odds"+".jpg")
