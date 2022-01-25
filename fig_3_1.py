@@ -14,9 +14,9 @@ pipi = 3.14159265359
 
 N = 1000
 
-omg = 0.5
+omg = 0.2
 E0 = 1.
-W = 100.
+W = 128.
 l2 = 1.
 l3 = 1.
 
@@ -87,22 +87,24 @@ for i in range(N):
     eehp[i] = ehall_poi(yy[i],omg,E0,W,l2,l3,bt,bt3)
     #print(vv[i])
 
-#plt.plot(yy,vv,'-')
-#plt.plot(yy,vvp,'--') #dddddddddddddddddddddddddddsssßsssssssßßßßßßßsssssßßßßßßssssssßßsssssßssßs
+plt.plot(yy,vv,'-')
+plt.plot(yy,vvp,'--') #dddddddddddddddddddddddddddsssßsssssssßßßßßßßsssssßßßßßßssssssßßsssssßssßs
 
 #plt.plot([-W/2.,-W/2.],[0,np.max(vv)+0.1*np.max(vv)],'-',color='k')
 
 plt.grid(color = 'grey', linestyle = '--', linewidth = 0.5)
 
-#plt.ylim(0, np.max(vv)+0.1*np.max(vv))
+plt.ylim(0, np.max(vv)+0.1*np.max(vv))
+
 plt.xlim(-W/2., W/2.)
-plt.xlabel("y")
-#plt.savefig("fig3"+".png")
+plt.xlabel(r"$y$")
+plt.ylabel(r"$v_x$")
+plt.savefig("fig3"+".pdf")
 #plt.plot([-W/2.,-W/2.],[0,np.max(eeh)+0.1*np.max(eeh)],'-',color='k')
 #plt.plot([W/2.,W/2.],[0,np.max(eeh)+0.1*np.max(eeh)],'-',color='k')
-#exit()
-plt.xlim(-W/2., W/2.)
+exit()
+plt.ylabel(r"$E_H$")
 plt.ylim(0, np.max(eeh)+0.1*np.max(eeh))
 plt.plot(yy,eeh,'-')
 plt.plot(yy,eehp,'--')
-plt.savefig("fig3_1"+".png")
+plt.savefig("fig3_1"+".pdf")
