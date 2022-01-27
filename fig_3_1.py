@@ -14,9 +14,9 @@ pipi = 3.14159265359
 
 N = 1000
 
-omg = 0.2
+omg = 0.1
 E0 = 1.
-W = 128.
+W = 64.
 l2 = 1.
 l3 = 1.
 
@@ -87,24 +87,31 @@ for i in range(N):
     eehp[i] = ehall_poi(yy[i],omg,E0,W,l2,l3,bt,bt3)
     #print(vv[i])
 
-plt.plot(yy,vv,'-')
-plt.plot(yy,vvp,'--') #dddddddddddddddddddddddddddsssßsssssssßßßßßßßsssssßßßßßßssssssßßsssssßssßs
+fig, ax = plt.subplots(nrows=2)
+plt.subplots_adjust(hspace=0.05)
 
-#plt.plot([-W/2.,-W/2.],[0,np.max(vv)+0.1*np.max(vv)],'-',color='k')
+ax[0].text(22, 520, r'$\omega_c = 0.1$', fontsize=11)
+ax[0].text(22, 450, r'$W = 64$', fontsize=11)
+ax[0].text(22, 390, r'$l_2 = l_3 = 1$', fontsize=11)
 
-plt.grid(color = 'grey', linestyle = '--', linewidth = 0.5)
+ax[0].plot(yy,vv,'-')
+ax[0].plot(yy,vvp,'--') #dddddddddddddddddddddddddddsssßsssssssßßßßßßßsssssßßßßßßssssssßßsssssßssßs
+ax[0].grid(color = 'grey', linestyle = '--', linewidth = 0.5)
+ax[0].set_ylim(0, np.max(vv)+0.05*np.max(vv))
+ax[0].set_xlim(-W/2., W/2.)
+ax[0].set_ylabel(r"$v_x$",fontsize=12)
+setp([a.get_xticklabels() for a in ax[:1]], visible=False)
 
-plt.ylim(0, np.max(vv)+0.1*np.max(vv))
+ax[1].text(22, 52, r'$\omega_c = 0.1$', fontsize=11)
+ax[1].text(22, 45, r'$W = 64$', fontsize=11)
+ax[1].text(22, 39, r'$l_2 = l_3 = 1$', fontsize=11)
+ax[1].grid(color = 'grey', linestyle = '--', linewidth = 0.5)
+ax[1].set_xlim(-W/2., W/2.)
+ax[1].set_ylabel(r"$E_H$",fontsize=12)
+ax[1].set_xlabel(r"$y$",fontsize=12)
+ax[1].set_ylim(0, np.max(eeh)+0.05*np.max(eeh))
+ax[1].plot(yy,eeh,'-')
+ax[1].plot(yy,eehp,'--')
 
-plt.xlim(-W/2., W/2.)
-plt.xlabel(r"$y$")
-plt.ylabel(r"$v_x$")
-plt.savefig("fig3"+".pdf")
-#plt.plot([-W/2.,-W/2.],[0,np.max(eeh)+0.1*np.max(eeh)],'-',color='k')
-#plt.plot([W/2.,W/2.],[0,np.max(eeh)+0.1*np.max(eeh)],'-',color='k')
-exit()
-plt.ylabel(r"$E_H$")
-plt.ylim(0, np.max(eeh)+0.1*np.max(eeh))
-plt.plot(yy,eeh,'-')
-plt.plot(yy,eehp,'--')
+
 plt.savefig("fig3_1"+".pdf")
