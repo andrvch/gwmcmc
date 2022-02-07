@@ -95,11 +95,11 @@ ax[0].text(22, 450, r'$W = 64$', fontsize=11)
 ax[0].text(22, 390, r'$l_2 = l_3 = 1$', fontsize=11)
 
 #ax[0].plot(yy,vv,'-')
-ax[0].plot(yy,vv-vvp,'--') #dddddddddddddddddddddddddddsssßsssssssßßßßßßßsssssßßßßßßssssssßßsssssßssßs
+ax[0].plot(yy,vv-vvp,'-') #dddddddddddddddddddddddddddsssßsssssssßßßßßßßsssssßßßßßßssssssßßsssssßssßs
 ax[0].grid(color = 'grey', linestyle = '--', linewidth = 0.5)
-ax[0].set_ylim(0, np.max(vv)+0.05*np.max(vv))
+ax[0].set_ylim(38, np.max(vv-vvp)+0.02*np.max(vv-vvp))
 ax[0].set_xlim(-W/2., W/2.)
-ax[0].set_ylabel(r"$v_x$",fontsize=12)
+ax[0].set_ylabel(r"$\delta v_x$",fontsize=12)
 setp([a.get_xticklabels() for a in ax[:1]], visible=False)
 
 ax[1].text(22, 52, r'$\omega_c = 0.1$', fontsize=11)
@@ -107,11 +107,11 @@ ax[1].text(22, 45, r'$W = 64$', fontsize=11)
 ax[1].text(22, 39, r'$l_2 = l_3 = 1$', fontsize=11)
 ax[1].grid(color = 'grey', linestyle = '--', linewidth = 0.5)
 ax[1].set_xlim(-W/2., W/2.)
-ax[1].set_ylabel(r"$E_H$",fontsize=12)
+ax[1].set_ylabel(r"$\delta E_H$",fontsize=12)
 ax[1].set_xlabel(r"$y$",fontsize=12)
-ax[1].set_ylim(0, np.max(eeh)+0.05*np.max(eeh))
+ax[1].set_ylim(3.5, np.max(eeh-eehp)+0.05*np.max(eeh-eehp))
 #ax[1].plot(yy,eeh,'-')
-ax[1].plot(yy,eeh-eehp,'--')
+ax[1].plot(yy,eeh-eehp,'-')
 
 
-plt.savefig("fig3_1"+".pdf")
+plt.savefig("fig3_2"+".pdf")
