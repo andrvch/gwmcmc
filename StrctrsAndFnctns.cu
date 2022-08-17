@@ -44,6 +44,7 @@ __global__ void trilinearInterpolation ( const int dim, const int nwl, const int
   }
 }
 
+//readcarbatm ( mdl[0].carbFl, mdl[0].numCarbE, mdl[0].numCarbG, mdl[0].numCarbT, mdl[0].carbDt, mdl[0].carbE, mdl[0].carbG, mdl[0].carbT, mdl[0].carbFlx );
 __host__ void readcarbatm ( const char *flnm, const int nx, const int ny, const int nz, float *dt, float *xi, float *yi, float *zi, float *flx ) {
   FILE *pntr;
   pntr = fopen ( flnm, "r" );
@@ -1643,6 +1644,11 @@ __host__ void FreeModel ( const Model *mdl ) {
   cudaFree ( mdl[0].nsmaxgT );
   cudaFree ( mdl[0].nsmaxgE );
   cudaFree ( mdl[0].nsmaxgFlxs );
+  cudaFree ( mdl[0].carbDt );
+  cudaFree ( mdl[0].carbT );
+  cudaFree ( mdl[0].carbE );
+  cudaFree ( mdl[0].carbG );
+  cudaFree ( mdl[0].carbFlxs );
 }
 
 __global__ void BilinearInterpolation ( const int nmbrOfWlkrs, const int nmbrOfEnrgChnnls, const int tIndx, const int grIndx, const float *data, const float *xin, const float *yin, const int M1, const int M2, const float *enrgChnnls, const float *wlkrs, float *mdlFlxs ) {
@@ -2471,7 +2477,15 @@ __host__ int InitializeModel ( Model *mdl ) {
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgDt, ( mdl[0].numNsaE + 1 ) * ( mdl[0].numNsaT + 1 ) * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgE, mdl[0].numNsaE * sizeof ( float ) );
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgT, mdl[0].numNsaT * sizeof ( float ) );
+
   cudaMallocManaged ( ( void ** ) &mdl[0].nsmaxgFlxs, mdl[0].numNsaE * mdl[0].numNsaT * sizeof ( float ) );
+
+  cudaMallocManaged ( ( void ** ) &mdl[0].carbDt, ( mdl[0].numCarbG + 1 ) * ( mdl[0].numCarbE + 1 ) * ( mdl[0].numCarbT + 1 ) * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].carbE, mdl[0].numCarbE * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].carbT, mdl[0].numCarbT * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].carbG, mdl[0].numCarbG * sizeof ( float ) );
+  cudaMallocManaged ( ( void ** ) &mdl[0].carbFlxs, mdl[0].numCarbE * mdl[0].numCarbT * mdl[0].numCarbG * sizeof ( float ) );
+
   for ( int i = 0; i < ATNMR; i++ ) { mdl[0].atmcNmbrs[i] = mdl[0].atNm[i]; }
   simpleReadDataFloat ( mdl[0].abndncsFl, mdl[0].abndncs );
   //SimpleReadReddenningData ( mdl[0].rddnngFl, mdl[0].nmbrOfDistBins, mdl[0].RedData, mdl[0].Dist, mdl[0].EBV, mdl[0].errDist, mdl[0].errEBV );
@@ -2492,6 +2506,8 @@ __host__ int InitializeModel ( Model *mdl ) {
   SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   //SimpleReadNsaTable ( mdl[0].nsaFl, mdl[0].numNsaE, mdl[0].numNsaT, mdl[0].nsaDt, mdl[0].nsaT, mdl[0].nsaE, mdl[0].nsaFlxs );
   SimpleReadNsmaxgTable ( mdl[0].nsmaxgFl, mdl[0].numNsmaxgE, mdl[0].numNsmaxgT, mdl[0].nsmaxgDt, mdl[0].nsmaxgT, mdl[0].nsmaxgE, mdl[0].nsmaxgFlxs );
+  //readcarbatm ( mdl[0].carbFl, mdl[0].numCarbE, mdl[0].numCarbG, mdl[0].numCarbT, mdl[0].carbDt, mdl[0].carbT, mdl[0].carbE, mdl[0].carbG, mdl[0].carbFlx );
+  readcarbatm ( mdl[0].carbFl, mdl[0].numCarbE, mdl[0].numCarbG, mdl[0].numCarbT, mdl[0].carbDt, mdl[0].carbE, mdl[0].carbG, mdl[0].carbT, mdl[0].carbFlxs );
   return 0;
 }
 

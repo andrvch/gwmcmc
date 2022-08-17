@@ -58,6 +58,23 @@ int main ( int argc, char *argv[] ) {
   Model mdl[1];
   InitializeModel ( mdl );
 
+  /*
+  printf ( "\n" );
+  for ( int i = 0; i < mdl[0].numCarbE; i++ ) {
+    printf ( " %.8E\n ", mdl[0].carbE[i] );
+  }
+  printf ( "\n" );
+  for ( int i = 0; i < mdl[0].numCarbG; i++ ) {
+    printf ( " %.8E\n ", mdl[0].carbG[i] );
+  }
+  printf ( "\n" );
+  printf ( "\n" );
+  for ( int i = 0; i < mdl[0].numCarbT; i++ ) {
+    printf ( " %.8E\n ", mdl[0].carbT[i] );
+  }
+  printf ( "\n" );
+  */
+
   SpecInfo ( vrb, spc );
   SpecInfo ( vrb, bkg );
 

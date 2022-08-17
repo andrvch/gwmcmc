@@ -18,7 +18,7 @@ fl = "spC.fits"
 
 hdul = fits.open(fl)
 print(shape(hdul)[0])
-f = open(fl+".spC", "w")
+f = open("carb.tab", "w")
 
 for i in range(shape(hdul)[0]):
     print("%i:"%i)
@@ -30,22 +30,22 @@ for i in range(shape(hdul)[0]):
     #print(data)
     if i == 1:
         for j in range(shape(data)[0]):
-            for k in range(2):
-                f.write(" %.15E "%(data[j][k]))
+            #for k in range(2):
+            f.write(" %.15E "%(data[j][0]))
             f.write("\n")
-        f.write("\n")
+        #f.write("\n")
     if i == 2 or i == 3:
         for j in range(shape(data)[0]):
             f.write(" %.15E "%(data[j][0]))
-        f.write("\n")
-        f.write("\n")
-    if 4 == i:
+        #f.write("\n")
+        #f.write("\n")
+    if 3 < i:
         #print(data)
         print(type(data))
         for k in range(61):
             for j in range(1000):
                 f.write(" %.15E "%(data[k][0][j]))
             f.write("\n")
-        f.write("\n")
+        #f.write("\n")
 
 f.close()

@@ -150,6 +150,11 @@ struct Model {
   int numNsmaxgE = 117;
   int numNsmaxgT = 14;
   float *nsmaxgDt, *nsmaxgE, *nsmaxgT, *nsmaxgFlxs;
+  const char *carbFl = "carb.tab";
+  int numCarbE = 1000;
+  int numCarbT = 61;
+  int numCarbG = 9;
+  float *carbDt, *carbE, *carbT, *carbG, *carbFlxs;
 };
 
 __host__ int grid1D ( const int );
