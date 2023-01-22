@@ -1,12 +1,12 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="spdeTest6_"
-LOGFILE="LogSpdeTest6"
+CHAINFILE="spdeTest777_"
+LOGFILE="LogSpdeTest777"
 NWALK=128
 LSTEP=512
 DIM=100
 i=$1
-NCHAINS=1
+NCHAINS=2
 SRT=-1
 let NCHAINS=NCHAINS+i
 printf "Start>"
