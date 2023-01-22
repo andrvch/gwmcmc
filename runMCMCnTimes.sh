@@ -1,18 +1,19 @@
 #!/bin/bash
 CUDAID=0
-CHAINFILE="spdeTest777_"
-LOGFILE="LogSpdeTest777"
+CHAINFILE="spdeTest888_"
+LOGFILE="LogSpdeTest888"
 NWALK=128
-LSTEP=512
-DIM=100
+LSTEP=1024
+DIM=64
 i=$1
-NCHAINS=2
+NCHAINS=1
 SRT=-1
 let NCHAINS=NCHAINS+i
 printf "Start>"
 while [ $i -lt $NCHAINS ]; do
   ./runSFH $CUDAID $CHAINFILE $NWALK $LSTEP $i $DIM $SRT > $LOGFILE
   ./plotChain.py $CHAINFILE $i $NWALK
+  ./plotTrngl.py $CHAINFILE $i
   let i=i+1
   let TOTAL=i*LSTEP
   printf "$TOTAL"

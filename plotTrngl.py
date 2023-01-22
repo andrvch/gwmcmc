@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os, sys
@@ -25,7 +25,9 @@ nbins2D = 200
 
 #nsm = 500000
 #samples = read_data_nsmpl(sys.argv[1],nsm)
-samples = read_data(sys.argv[1])
+chname = sys.argv[1]
+chindx = int(sys.argv[2])
+samples = read_data(sys.argv[1]+"%i"%(chindx)+".chain")
 print(samples.shape)
 #samples = samples[:samples.shape[0],:]
 #samples = samples[:3,:]
@@ -33,9 +35,9 @@ print(samples.shape)
 #samples = samples[:,np.where(samples[-1,:]<14000)[0]]
 #print samples.shape
 
-npars = 5 #len(samples)
+npars = 3 #len(samples)
 
-qlevel = float(sys.argv[2]) # percent
+qlevel = 90 #float(sys.argv[2]) # percent
 #quont = [0.999,0.99,0.95,0.90]
 #quont = [0.99,0.95,0.90,0.68,0.40]
 quont = [0.999,0.99,0.90,0.68,0.40]
