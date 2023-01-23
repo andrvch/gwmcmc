@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os, sys
@@ -172,6 +172,7 @@ def kde_gauss_cuda1d(x,nbins1D):
     nsmpl = len(x)
     nbins = nbins1D
     sigmax = np.std(x)
+    print(sigmax[0])
     bandwidth = 1.06*sigmax*nsmpl**(-1./5.)
     xi = linspace(x.min(),x.max(),nbins1D)
     x_gpu = gpuarray.to_gpu(x.astype(np.float32))

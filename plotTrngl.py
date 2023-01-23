@@ -12,7 +12,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from pylab import *
 import random
 import time
-from cudakde import *
+from cudakde_1 import *
 
 Mns = 1.4
 Rns = 13.
