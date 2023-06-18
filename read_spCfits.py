@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os, sys
@@ -18,6 +18,7 @@ fl = "spC.fits"
 
 hdul = fits.open(fl)
 print(shape(hdul)[0])
+
 f = open("carb.tab", "w")
 
 for i in range(shape(hdul)[0]):
